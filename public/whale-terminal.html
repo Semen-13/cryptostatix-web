@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoStatix PRO - Whale Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #000b1a;
+            --panel-bg: #001529;
+            --border-color: #1a3a5a;
+            --text-main: #ffffff;
+            --text-dim: #6688aa;
+            --accent-blue: #1890ff;
+            --up-color: #52c41a;
+            --down-color: #ff4d4f;
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            margin: 0; 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            color: var(--text-main); 
+            display: flex; 
+            justify-content: center; 
+            padding: 30px; 
+        }
+
+        .terminal-container {
+            width: 960px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .title { font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 800; }
+
+        .info-btn {
+            background: #1a3a5a; border: 1px solid var(--accent-blue); color: var(--accent-blue);
+            padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase;
+        }
+        .info-btn:hover { background: var(--accent-blue); color: #fff; box-shadow: 0 0 15px rgba(24, 144, 255, 0.4); }
+
+        .control-panel {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(26, 58, 90, 0.3); border-radius: 10px; padding: 12px 20px; margin-bottom: 25px;
+        }
+        .filters { display: flex; gap: 25px; }
+        .filter-item { display: flex; align-items: center; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .filter-item input { margin-right: 8px; width: 16px; height: 16px; accent-color: var(--accent-blue); cursor: pointer; }
+
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; width: 100%; }
+        .chart-box {
+            background: linear-gradient(180deg, rgba(26, 58, 90, 0.4) 0%, rgba(0, 21, 41, 0) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 15px; height: 160px;
+            display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+        }
+        .chart-box.hidden { display: none; }
+        .chart-info { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .current-price { font-size: 18px; font-weight: bold; font-family: monospace; }
+
+        .feed { 
+            height: 380px; display: flex; flex-direction: column; gap: 6px; 
+            overflow: hidden; border-top: 1px solid rgba(26, 58, 90, 0.5); padding-top: 15px; 
+        }
+        .trade {
+            background: rgba(26, 58, 90, 0.15); border-radius: 6px; padding: 10px 20px;
+            display: grid; grid-template-columns: 100px 1fr 150px 150px; align-items: center;
+            animation: slideIn 0.4s ease-out; border-left: 4px solid var(--accent-blue);
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .side-buy { border-left-color: var(--up-color); color: var(--up-color); }
+        .side-sell { border-left-color: var(--down-color); color: var(--down-color); }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 11, 26, 0.85); backdrop-filter: blur(8px); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            width: 750px; padding: 30px; border-radius: 16px; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); animation: modalFade 0.3s ease-out;
+        }
+        @keyframes modalFade { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-dim); }
+    </style>
+</head>
+<body>
+
+<div class="terminal-container">
+    <div class="header">
+        <div class="title">CryptoStatix PRO / Market Monitor</div>
+        <button class="info-btn" onclick="openModal()">Terminal Info</button>
+    </div>
+
+    <div class="control-panel">
+        <div class="filters">
+            <label class="filter-item"><input type="checkbox" id="checkBTC" checked onchange="toggleAsset('BTC')"> BTC MONITOR</label>
+            <label class="filter-item"><input type="checkbox" id="checkETH" checked onchange="toggleAsset('ETH')"> ETH MONITOR</label>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim);">WS: <span style="color: var(--up-color);">● LIVE</span></div>
+    </div>
+
+    <div class="charts-grid" id="chartsGrid">
+        <div id="boxBTC" class="chart-box">
+            <div class="chart-info">
+                <span style="color:var(--text-dim); font-weight:bold;">BTC / USDT</span>
+                <span id="priceBTC" class="current-price">---</span>
+            </div>
+            <div style="flex-grow:1; min-height:0;"><canvas id="chartBTC"></canvas></div>
+        </div>
+        <div id="boxETH" class="chart-box">
+            <div class="chart-info">
+                <span style="color:var(--text-dim); font-weight:bold;">ETH / USDT</span>
+                <span id="priceETH" class="current-price">---</span>
+            </div>
+            <div style="flex-grow:1; min-height:0;"><canvas id="chartETH"></canvas></div>
+        </div>
+    </div>
+
+    <div id="tradeFeed" class="feed">
+        <div id="placeholder" style="text-align: center; color: #4a6a8a; padding-top: 100px;">Connecting to data stream...</div>
+    </div>
+</div>
+
+<div id="infoModal" class="modal-overlay" onclick="closeModalOutside(event)">
+    <div class="modal-content" id="modal-content">
+        <!-- Content filled by JS -->
+    </div>
+</div>
+
+<script>
+    function initLanguage() {
+        const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+        const translations = {
+            'ENG': {
+                terminalTitle: 'CryptoStatix PRO / Market Monitor',
+                infoBtn: 'Terminal Info',
+                btcMon: 'BTC MONITOR',
+                ethMon: 'ETH MONITOR',
+                connecting: 'Connecting to data stream...',
+                mBuy: 'MARKET BUY',
+                mSell: 'MARKET SELL',
+                modalHeader: '🚀 CryptoStatix PRO: Full Guide',
+                guideTitle: '📖 How to Use the Terminal',
+                focusTitle: 'Focus Management:',
+                focusDesc: 'Use the BTC/ETH toggles to analyze specific assets or their correlation.',
+                tapeTitle: 'Tape Analysis:',
+                tapeDesc: 'Each entry represents a real market order with a volume exceeding <b>$50,000</b>.',
+                colorsTitle: 'Colors:',
+                colorsDesc: '<span style="color: var(--up-color)">Market Buy</span> (Green) indicates aggressive buying. <span style="color: var(--down-color)">Market Sell</span> (Red) indicates aggressive selling.',
+                chartsTitle: 'Live Charts:',
+                chartsDesc: 'Reflect price micro-structure and volatility in real-time.',
+                tipHeader: '🤖 Strategic Advice from Gemini',
+                tipWave: 'Look for a <b>"Liquidity Wave"</b>. If the price remains stagnant while 3–5 large green trades flash in the tape consecutively, this often signals hidden accumulation by whales.',
+                goldRule: 'Golden Rule:',
+                goldRuleDesc: 'A single $100k trade is often less significant than a series of $50k trades occurring within one second. The latter indicates a trading algorithm entering a position via "laddering".',
+                startBtn: 'Start Monitoring'
+            },
+            'UKR': {
+                terminalTitle: 'CryptoStatix PRO / Market Monitor',
+                infoBtn: 'Інфо терміналу',
+                btcMon: 'BTC МОНІТОР',
+                ethMon: 'ETH МОНІТОР',
+                connecting: 'Підключення до потоку даних...',
+                mBuy: 'MARKET BUY',
+                mSell: 'MARKET SELL',
+                modalHeader: '🚀 CryptoStatix PRO: Повний посібник',
+                guideTitle: '📖 Як користуватися терміналом',
+                focusTitle: 'Управління фокусом:',
+                focusDesc: 'Використовуйте перемикачі BTC/ETH для аналізу активів або їх кореляції.',
+                tapeTitle: 'Аналіз стрічки:',
+                tapeDesc: 'Кожен запис — це реальний ринковий ордер об’ємом понад <b>$50,000</b>.',
+                colorsTitle: 'Кольори:',
+                colorsDesc: '<span style="color: var(--up-color)">Market Buy</span> (зелений) — агресивні покупки. <span style="color: var(--down-color)">Market Sell</span> (червоний) — продажі.',
+                chartsTitle: 'Живі графіки:',
+                chartsDesc: 'Відображають мікроструктуру ціни та волатильність у реальному часі.',
+                tipHeader: '🤖 Стратегічна порада від Gemini',
+                tipWave: 'Шукайте <b>«Хвилю ліквідності»</b>. Якщо ціна стоїть на місці, а в стрічці пролітає 3-5 великих зелених угод поспіль — це прихований закуп китів.',
+                goldRule: 'Золоте правило:',
+                goldRuleDesc: 'Одиночна угода на $100k менш важлива, ніж серія угод по $50k за секунду. Це вказує на роботу торгового алгоритму, що заходить у позицію «драбинкою».',
+                startBtn: 'Приступити до моніторингу'
+            },
+            'RUS': {
+                terminalTitle: 'CryptoStatix PRO / Market Monitor',
+                infoBtn: 'Инфо терминала',
+                btcMon: 'BTC МОНИТОР',
+                ethMon: 'ETH МОНИТОР',
+                connecting: 'Подключение к потоку данных...',
+                mBuy: 'MARKET BUY',
+                mSell: 'MARKET SELL',
+                modalHeader: '🚀 CryptoStatix PRO: Полное руководство',
+                guideTitle: '📖 Как пользоваться терминалом',
+                focusTitle: 'Управление фокусом:',
+                focusDesc: 'Используйте переключатели BTC/ETH для анализа активов или их корреляции.',
+                tapeTitle: 'Анализ ленты:',
+                tapeDesc: 'Каждая запись — это реальный рыночный ордер объемом более <b>$50,000</b>.',
+                colorsTitle: 'Цвета:',
+                colorsDesc: '<span style="color: var(--up-color)">Market Buy</span> (зеленый) — агрессивные покупки. <span style="color: var(--down-color)">Market Sell</span> (красный) — продажи.',
+                chartsTitle: 'Живые графики:',
+                chartsDesc: 'Отражают микро-структуру цены и волатильность в реальном времени.',
+                tipHeader: '🤖 Стратегический совет от Gemini',
+                tipWave: 'Ищите <b>«Волну Ликвидности»</b>. Если цена стоит на месте, а в ленте пролетает 3-5 крупных зеленых сделок подряд — это скрытый закуп китов.',
+                goldRule: 'Золотое правило:',
+                goldRuleDesc: 'Одиночная сделка на $100k менее важна, чем серия сделок по $50k за секунду. Это указывает на работу торгового алгоритму, заходящего в позицию «лесенкой».',
+                startBtn: 'Приступить к мониторингу'
+            }
+        };
+
+        const t = translations[lang] || translations['RUS'];
+        window.ttpLabels = t;
+
+        document.querySelector('.title').textContent = t.terminalTitle;
+        document.querySelector('.info-btn').textContent = t.infoBtn;
+        document.querySelectorAll('.filter-item')[0].innerHTML = `<input type="checkbox" id="checkBTC" checked onchange="toggleAsset('BTC')"> ${t.btcMon}`;
+        document.querySelectorAll('.filter-item')[1].innerHTML = `<input type="checkbox" id="checkETH" checked onchange="toggleAsset('ETH')"> ${t.ethMon}`;
+        
+        if (document.getElementById('placeholder')) {
+            document.getElementById('placeholder').textContent = t.connecting;
+        }
+
+        document.getElementById('modal-content').innerHTML = `
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 style="color: var(--accent-blue); margin-top: 0; display: flex; align-items: center; gap: 12px; font-size: 22px;">
+                <span style="font-size: 28px;">🚀</span> ${t.modalHeader}
+            </h2>
+            
+            <div style="display: grid; grid-row-gap: 25px; margin-top: 25px;">
+                <div style="background: rgba(255, 255, 255, 0.03); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <h4 style="color: var(--text-dim); text-transform: uppercase; font-size: 12px; letter-spacing: 1.5px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                        ${t.guideTitle}
+                    </h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <ul style="color: #fff; font-size: 13.5px; padding-left: 18px; line-height: 1.7; margin: 0;">
+                            <li><b>${t.focusTitle}</b> ${t.focusDesc}</li>
+                            <li><b>${t.tapeTitle}</b> ${t.tapeDesc}</li>
+                        </ul>
+                        <ul style="color: #fff; font-size: 13.5px; padding-left: 18px; line-height: 1.7; margin: 0;">
+                            <li><b>${t.colorsTitle}</b> ${t.colorsDesc}</li>
+                            <li><b>${t.chartsTitle}</b> ${t.chartsDesc}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="background: rgba(24, 144, 255, 0.08); padding: 20px; border-radius: 12px; border: 1px solid rgba(24, 144, 255, 0.3);">
+                    <h4 style="color: var(--accent-blue); text-transform: uppercase; font-size: 12px; letter-spacing: 1.5px; margin-top: 0; margin-bottom: 12px;">
+                        ${t.tipHeader}
+                    </h4>
+                    <p style="font-size: 14px; line-height: 1.6; color: #e6f7ff; margin: 0;">
+                        ${t.tipWave}
+                        <br><br>
+                        <b style="color: var(--accent-blue);">${t.goldRule}</b> ${t.goldRuleDesc}
+                    </p>
+                </div>
+            </div>
+
+            <button class="info-btn" style="width: 100%; margin-top: 25px; padding: 12px;" onclick="closeModal()">${t.startBtn}</button>
+        `;
+    }
+
+    function openModal() { document.getElementById('infoModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
+    function closeModalOutside(e) { if(e.target.id === 'infoModal') closeModal(); }
+
+    const WHALE_LIMIT = 50000;
+    const charts = {};
+
+    function initChart(id, color) {
+        return new Chart(document.getElementById(id), {
+            type: 'line',
+            data: {
+                labels: Array(30).fill(''),
+                datasets: [{
+                    data: Array(30).fill(null),
+                    borderColor: color,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: true,
+                    backgroundColor: color.replace('1)', '0.05)'),
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+    }
+
+    charts['BTC'] = initChart('chartBTC', 'rgba(247, 147, 26, 1)');
+    charts['ETH'] = initChart('chartETH', 'rgba(98, 126, 234, 1)');
+
+    function toggleAsset(asset) {
+        const isChecked = document.getElementById('check' + asset).checked;
+        const box = document.getElementById('box' + asset);
+        const grid = document.getElementById('chartsGrid');
+        
+        if (isChecked) box.classList.remove('hidden');
+        else box.classList.add('hidden');
+        
+        const activeBoxes = document.querySelectorAll('.chart-box:not(.hidden)').length;
+        grid.style.gridTemplateColumns = activeBoxes === 1 ? '1fr' : '1fr 1fr';
+
+        setTimeout(() => {
+            Object.values(charts).forEach(chart => {
+                chart.resize();
+                chart.update('none');
+            });
+        }, 50);
+    }
+
+    const socket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade/ethusdt@trade');
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const symbol = data.s.replace('USDT', '');
+        const price = parseFloat(data.p);
+        const usdValue = price * parseFloat(data.q);
+        const isVisible = document.getElementById('check' + symbol).checked;
+
+        if (isVisible) {
+            document.getElementById('price' + symbol).innerText = '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2});
+            const chart = charts[symbol];
+            chart.data.datasets[0].data.shift();
+            chart.data.datasets[0].data.push(price);
+            chart.update('none');
+
+            if (usdValue >= WHALE_LIMIT) {
+                if (document.getElementById('placeholder')) document.getElementById('placeholder').remove();
+                addTrade(symbol, usdValue, parseFloat(data.q), data.m);
+            }
+        }
+    };
+
+    function addTrade(asset, usd, qty, isSell) {
+        const t = window.ttpLabels || { mBuy: 'MARKET BUY', mSell: 'MARKET SELL' };
+        const div = document.createElement('div');
+        div.className = `trade ${isSell ? 'side-sell' : 'side-buy'}`;
+        const time = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+        div.innerHTML = `
+            <div style="font-size:11px; color:var(--text-dim); font-family:monospace;">${time}</div>
+            <div style="font-weight:bold;">${asset} / USDT</div>
+            <div style="font-size:11px; font-weight:700;">${isSell ? t.mSell : t.mBuy}</div>
+            <div style="text-align:right; font-weight:bold; font-size:16px;">$${(usd / 1000).toFixed(1)}k</div>
+        `;
+        const feed = document.getElementById('tradeFeed');
+        feed.prepend(div);
+        if (feed.children.length > 12) feed.lastChild.remove();
+    }
+
+    initLanguage();
+
+    let lastLang = localStorage.getItem('selectedLanguage');
+    setInterval(() => {
+        const currentLang = localStorage.getItem('selectedLanguage');
+        if (currentLang !== lastLang) {
+            lastLang = currentLang;
+            initLanguage();
+        }
+    }, 1000);
+</script>
+</body>
+</html>

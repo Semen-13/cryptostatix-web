@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoStatix Pro | Pure Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060b1a; 
+            --card: #0f172a; 
+            --text: #ffffff; 
+            --dim: #94a3b8;
+            --accent: #38bdf8; 
+            --up: #22c55e;
+            --down: #ef4444;
+            --border: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0 25px 0;
+        }
+
+        .logo { font-weight: 800; font-size: 24px; letter-spacing: -0.8px; }
+
+        .search-box {
+            background: #1e293b;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 15px;
+            color: white;
+            outline: none;
+            width: 250px;
+            font-size: 13px;
+        }
+
+        .search-box:focus { border-color: var(--accent); }
+
+        .global-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .stat-value { font-size: 18px; font-weight: 700; color: var(--text); }
+
+        .table-container { background: var(--card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+        th {
+            background: #1e293b;
+            text-align: left;
+            padding: 12px;
+            color: var(--dim);
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        th:hover { color: var(--text); }
+
+        tbody tr { cursor: pointer; transition: background 0.1s; }
+        tbody tr:hover { background-color: #1e293b; }
+
+        td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+        .coin-cell { display: flex; align-items: center; gap: 8px; }
+        .coin-icon { width: 20px; height: 20px; border-radius: 50%; }
+        .symbol { font-weight: 700; color: var(--text); }
+        .full-name { color: var(--dim); font-size: 12px; font-weight: 400; margin-left: 4px; }
+        
+        .pos { color: var(--up); font-weight: 600; }
+        .neg { color: var(--down); font-weight: 600; }
+
+        #loader { text-align: center; padding: 40px; color: var(--accent); font-weight: bold; }
+
+        /* Полноэкранный график */
+        #chart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+        }
+
+        #chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #0f172a;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #chart-title { font-weight: 700; font-size: 16px; color: #fff; }
+
+        .close-chart {
+            background: var(--down);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        #tv-chart-container { flex-grow: 1; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div id="chart-overlay">
+    <div id="chart-header">
+        <div id="chart-title">Загрузка...</div>
+        <button class="close-chart" onclick="closeChart()">ЗАКРЫТЬ (X)</button>
+    </div>
+    <div id="tv-chart-container"></div>
+</div>
+
+<div class="container">
+    <header>
+        <div class="logo">CryptoStatix <span style="color:var(--accent)">PRO</span></div>
+        <input type="text" id="coinSearch" class="search-box" placeholder="Поиск (BTC, SOL...)" oninput="filterCoins()">
+    </header>
+
+    <div class="global-stats">
+        <div class="stat-item"><span class="stat-label">🌐 Total Market Cap</span><span class="stat-value" id="total-cap">...</span></div>
+        <div class="stat-item"><span class="stat-label">📊 24h Volume</span><span class="stat-value" id="total-vol">...</span></div>
+        <div class="stat-item"><span class="stat-label">₿ BTC Dominance</span><span class="stat-value" id="btc-dom">...</span></div>
+        <div class="stat-item"><span class="stat-label">💎 Active Cryptos</span><span class="stat-value" id="active-coins">...</span></div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th onclick="setSort('market_cap_rank')">#</th>
+                    <th onclick="setSort('name')">Название</th>
+                    <th onclick="setSort('current_price')">Цена</th>
+                    <th onclick="setSort('price_change_percentage_1h_in_currency')">1ч %</th>
+                    <th onclick="setSort('price_change_percentage_24h_in_currency')">24ч %</th>
+                    <th onclick="setSort('price_change_percentage_7d_in_currency')">7д %</th>
+                    <th onclick="setSort('total_volume')">Объем (24ч)</th>
+                    <th onclick="setSort('market_cap')">Капитализация</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+        <div id="loader">Загрузка данных рынка...</div>
+    </div>
+</div>
+
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
+<script>
+    let cryptoData = [];
+    let currentSort = { key: 'market_cap_rank', asc: true };
+
+    const API_MARKETS = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=1h,24h,7d';
+    const API_GLOBAL = 'https://api.coingecko.com/api/v3/global';
+
+    async function fetchData() {
+        try {
+            const [resMarkets, resGlobal] = await Promise.all([fetch(API_MARKETS), fetch(API_GLOBAL)]);
+            cryptoData = await resMarkets.json();
+            const globalData = await resGlobal.json();
+            renderTable(cryptoData);
+            renderGlobal(globalData.data);
+            document.getElementById('loader').style.display = 'none';
+        } catch (e) {
+            document.getElementById('loader').innerText = 'Ошибка API (Лимит запросов CoinGecko).';
+        }
+    }
+
+    function renderGlobal(g) {
+        document.getElementById('total-cap').innerText = '$' + (g.total_market_cap.usd / 1e12).toFixed(2) + 'T';
+        document.getElementById('total-vol').innerText = '$' + (g.total_volume.usd / 1e9).toFixed(2) + 'B';
+        document.getElementById('btc-dom').innerText = g.market_cap_percentage.btc.toFixed(1) + '%';
+        document.getElementById('active-coins').innerText = g.active_cryptocurrencies.toLocaleString();
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+
+        const sorted = [...data].sort((a, b) => {
+            let valA = a[currentSort.key] || 0;
+            let valB = b[currentSort.key] || 0;
+            return currentSort.asc ? (valA > valB ? 1 : -1) : (valB > valA ? 1 : -1);
+        });
+
+        sorted.forEach(coin => {
+            tbody.innerHTML += `
+                <tr onclick="openChart('${coin.symbol.toUpperCase()}')">
+                    <td style="color:var(--dim)">${coin.market_cap_rank}</td>
+                    <td>
+                        <div class="coin-cell">
+                            <img src="${coin.image}" class="coin-icon">
+                            <span class="symbol">${coin.symbol.toUpperCase()}</span>
+                            <span class="full-name">${coin.name}</span>
+                        </div>
+                    </td>
+                    <td style="font-weight:600">$${formatPrice(coin.current_price)}</td>
+                    <td class="${getColor(coin.price_change_percentage_1h_in_currency)}">${formatPct(coin.price_change_percentage_1h_in_currency)}%</td>
+                    <td class="${getColor(coin.price_change_percentage_24h_in_currency)}">${formatPct(coin.price_change_percentage_24h_in_currency)}%</td>
+                    <td class="${getColor(coin.price_change_percentage_7d_in_currency)}">${formatPct(coin.price_change_percentage_7d_in_currency)}%</td>
+                    <td style="color: #cbd5e1">$${formatLarge(coin.total_volume)}</td>
+                    <td style="color:var(--dim)">$${formatLarge(coin.market_cap)}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function openChart(symbol) {
+        document.getElementById('chart-overlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        document.getElementById('chart-title').innerText = `${symbol} / USDT (BINANCE)`;
+        document.getElementById('tv-chart-container').innerHTML = '';
+
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": `BINANCE:${symbol}USDT`,
+            "interval": "D",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "ru",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "container_id": "tv-chart-container",
+            "studies": [] // ПУСТОЙ МАССИВ - НЕТ ИНДИКАТОРОВ
+        });
+    }
+
+    function closeChart() {
+        document.getElementById('chart-overlay').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        document.getElementById('tv-chart-container').innerHTML = '';
+    }
+
+    function setSort(key) {
+        currentSort.asc = (currentSort.key === key) ? !currentSort.asc : false;
+        currentSort.key = key;
+        filterCoins();
+    }
+
+    function filterCoins() {
+        const q = document.getElementById('coinSearch').value.toLowerCase();
+        renderTable(cryptoData.filter(c => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)));
+    }
+
+    function formatPrice(p) { return p > 1 ? p.toLocaleString(undefined, {minimumFractionDigits: 2}) : p.toFixed(5); }
+    function formatPct(n) { return n ? n.toFixed(2) : '0.00'; }
+    function getColor(n) { return n >= 0 ? 'pos' : 'neg'; }
+    function formatLarge(n) {
+        if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+        return n.toLocaleString();
+    }
+
+    fetchData();
+    setInterval(fetchData, 300000); 
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeChart();
+    });
+</script>
+</body>
+</html>

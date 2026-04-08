@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synced Crypto Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0b0e11;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .widget-wrapper {
+            position: relative;
+            width: 98%;
+            height: 95vh;
+            background: #161a1e;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2b2f36;
+        }
+
+        /* Кнопка "Справка" */
+        .info-trigger {
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            z-index: 101;
+            background: #f7931a;
+            /* Оранжевый BTC */
+            color: #000;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .info-trigger:hover {
+            background: #ffab4a;
+            transform: translateY(-1px);
+        }
+
+        /* Модальное окно */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-window {
+            background: #1e222d;
+            border: 1px solid #363a45;
+            color: #d1d4dc;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-header {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ffffff;
+            border-bottom: 1px solid #363a45;
+            padding-bottom: 10px;
+        }
+
+        .modal-body {
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .modal-body ul {
+            padding-left: 20px;
+            margin: 15px 0;
+        }
+
+        .modal-body li {
+            margin-bottom: 10px;
+        }
+
+        .modal-footer {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .close-modal {
+            background: #363a45;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .close-modal:hover {
+            background: #454a59;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="widget-wrapper">
+        <button class="info-trigger" id="info-btn" onclick="openModal()">Справка</button>
+
+        <div id="tradingview_synced" style="height: 100%; width: 100%;"></div>
+
+        <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    </div>
+
+    <div class="modal-overlay" id="infoModal" onclick="if(event.target === this) closeModal()">
+        <div class="modal-window">
+            <div class="modal-header" id="modal-header">Руководство по дашборду</div>
+            <div class="modal-body" id="modal-body">
+                <!-- Контент заполняется через JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="close-modal" id="close-btn" onclick="closeModal()">Закрыть инструкцию</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('infoModal');
+        function openModal() { modal.style.display = 'flex'; }
+        function closeModal() { modal.style.display = 'none'; }
+
+        function initLanguage() {
+            const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+            const locale = lang === 'RUS' ? 'ru' : (lang === 'UKR' ? 'uk' : 'en');
+            
+            const translations = {
+                'ENG': {
+                    btn: 'Guide',
+                    header: 'Dashboard Guide',
+                    body: `
+                        <p>This tool analyzes liquidity and the balance of power in the crypto market:</p>
+                        <ul>
+                            <li><strong>Synchronization:</strong> Move any chart, and the second one will follow automatically. This allows you to correlate market growth with changes in BTC dominance.</li>
+                            <li><strong>Separation:</strong> Right-click on <em>BTC Dominance</em> in the corner → <em>"Move to -> New pane below"</em> for a convenient "stacked" view.</li>
+                            <li><strong>4H Timeframe:</strong> The optimal balance between long-term trends and quick reactions to capital rotation.</li>
+                            <li><strong>Interactivity:</strong> Hover over any point on the chart to see the exact market cap values and percentages.</li>
+                        </ul>
+                    `,
+                    close: 'Close Instructions'
+                },
+                'UKR': {
+                    btn: 'Довідка',
+                    header: 'Посібник по дашборду',
+                    body: `
+                        <p>Цей інструмент аналізує ліквідність та баланс сил на крипторинку:</p>
+                        <ul>
+                            <li><strong>Синхронізація:</strong> Рухайте будь-який графік — другий переміститься автоматично. Це дозволяє зіставити ріст ринку зі зміною домінації BTC.</li>
+                            <li><strong>Поділ:</strong> Клацніть правою кнопкою на <em>BTC Dominance</em> в кутку → <em>«Перемістити в -> Нову панель нижче»</em> для зручного відображення «один під одним».</li>
+                            <li><strong>Таймфрейм 4H:</strong> Оптимальний баланс між довгостроковим трендом та швидкою реакцією на перелив капіталу.</li>
+                            <li><strong>Інтерактивність:</strong> Наводьте курсор на будь-яку точку графіка, щоб побачити точні значення капіталізації та відсотків.</li>
+                        </ul>
+                    `,
+                    close: 'Закрити інструкцію'
+                },
+                'RUS': {
+                    btn: 'Справка',
+                    header: 'Руководство по дашборду',
+                    body: `
+                        <p>Этот инструмент анализирует ликвидность и баланс сил на крипторынке:</p>
+                        <ul>
+                            <li><strong>Синхронизация:</strong> Двигайте любой график — второй переместится автоматически. Это позволяет сопоставить рост рынка с изменением доминации BTC.</li>
+                            <li><strong>Разделение:</strong> Кликните правой кнопкой на <em>BTC Dominance</em> в углу → <em>«Переместить в -> Новую панель ниже»</em> для удобного отображения «друг под другом».</li>
+                            <li><strong>Таймфрейм 4H:</strong> Оптимальный баланс между долгосрочным трендом и быстрой реакцией на перелив капитала.</li>
+                            <li><strong>Интерактивность:</strong> Наводите курсор на любую точку графика, чтобы увидеть точные значения капитализации и процентов.</li>
+                        </ul>
+                    `,
+                    close: 'Закрыть инструкцию'
+                }
+            };
+
+            const t = translations[lang] || translations['RUS'];
+            document.getElementById('info-btn').textContent = t.btn;
+            document.getElementById('modal-header').textContent = t.header;
+            document.getElementById('modal-body').innerHTML = t.body;
+            document.getElementById('close-btn').textContent = t.close;
+
+            // Initialize TradingView Widget
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": "CRYPTOCAP:TOTAL",
+                "interval": "240",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "3",
+                "locale": locale,
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_top_toolbar": false,
+                "hide_legend": false,
+                "save_image": false,
+                "container_id": "tradingview_synced",
+                "range": "3M",
+                "studies": [
+                    {
+                        "id": "Overlay@tv-basicstudies",
+                        "displayName": "BTC Dominance",
+                        "inputs": { "symbol": "CRYPTOCAP:BTC.D" }
+                    }
+                ],
+                "disabled_features": ["volume_force_overlay", "create_volume_indicator_by_default"],
+                "overrides": {
+                    "paneProperties.background": "#161a1e"
+                }
+            });
+        }
+
+        // Initial load
+        initLanguage();
+
+        // Polling for language changes
+        let lastLang = localStorage.getItem('selectedLanguage');
+        setInterval(() => {
+            const currentLang = localStorage.getItem('selectedLanguage');
+            if (currentLang !== lastLang) {
+                lastLang = currentLang;
+                location.reload();
+            }
+        }, 1000);
+    </script>
+
+</body>
+
+</html>

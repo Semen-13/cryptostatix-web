@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoStatix Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b0e11; --card: #181a20; --text: #eaecef;
+            --sub: #848e9c; --border: #2b3139; --blue: #4a90e2;
+            --c-ex-fear: #ff4d4d; --c-fear: #ffad33;
+            --c-neutral: #ffeb3b; --c-greed: #b2ff59; --c-ex-greed: #00e676;
+        }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: var(--text); font-family: sans-serif; overflow: hidden; }
+        
+        .main-layout { display: flex; height: 100vh; padding: 15px; box-sizing: border-box; gap: 20px; }
+        
+        .sidebar { 
+            flex: 1; 
+            height: 100%; 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 24px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+
+        .content-area {
+            flex: 1;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 25px 30px;
+            overflow-y: auto;
+            color: var(--text);
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .section { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; }
+        .section:last-child { border-bottom: none; flex-grow: 1; }
+        h2 { width: 100%; font-size: 0.75rem; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px 0; }
+        
+        /* Спидометр */
+        .gauge-wrap { position: relative; width: 200px; height: 100px; margin-bottom: 10px; }
+        .gauge-arc { width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(from -90deg, var(--c-ex-fear) 0deg 36deg, var(--c-fear) 36deg 72deg, var(--c-neutral) 72deg 108deg, var(--c-greed) 108deg 144deg, var(--c-ex-greed) 144deg 180deg, transparent 180deg); }
+        .gauge-mask { width: 160px; height: 160px; background: var(--card); border-radius: 50%; position: absolute; top: 20px; left: 20px; z-index: 2; }
+        .needle { width: 3px; height: 80px; background: #fff; position: absolute; bottom: 0; left: 98.5px; transform-origin: bottom center; transition: 2s; z-index: 5; }
+        .val-num { position: absolute; bottom: -5px; width: 100%; text-align: center; font-size: 2rem; font-weight: bold; z-index: 10; }
+
+        /* Таблица */
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        td { padding: 8px 0; border-bottom: 1px solid var(--border); font-weight: bold; }
+        .tr { text-align: right; }
+        .t-ex-fear { color: var(--c-ex-fear); } .t-fear { color: var(--c-fear); }
+        .t-neutral { color: var(--c-neutral); } .t-greed { color: var(--c-greed); }
+        .t-ex-greed { color: var(--c-ex-greed); }
+
+        .chart-container { width: 100%; flex-grow: 1; min-height: 0; }
+
+        /* Стили для текста в правом блоке */
+        .info-title { color: var(--blue); margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; font-weight: 700; }
+        .info-subtitle { color: var(--blue); margin-top: 25px; margin-bottom: 12px; font-size: 1.1rem; }
+        .info-block-item { margin-bottom: 15px; }
+        .info-block-item strong { color: var(--blue); display: block; margin-bottom: 4px; }
+        .info-rule-box { background: rgba(74, 144, 226, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--blue); margin: 20px 0; }
+        .gemini-tip { color: var(--c-ex-greed); font-style: italic; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+
+<div class="main-layout">
+    <aside class="sidebar">
+        <div class="section" style="height: 35%;">
+            <h2 id="status-text">Индекс: --</h2>
+            <div class="gauge-wrap">
+                <div class="gauge-arc"></div><div class="gauge-mask"></div>
+                <div class="val-num" id="val-num">--</div>
+                <div class="needle" id="needle" style="transform: rotate(-90deg)"></div>
+            </div>
+            <div class="chart-container"><canvas id="miniChart"></canvas></div>
+        </div>
+
+        <div class="section" style="height: 30%;">
+            <h2>Распределение (365 дней)</h2>
+            <table><tbody id="stat-table"></tbody></table>
+        </div>
+
+        <div class="section">
+            <h2>Тренд индекса (10д среднее) (за 365 дней)</h2>
+            <div class="chart-container"><canvas id="mainChart"></canvas></div>
+        </div>
+    </aside>
+
+    <main class="content-area">
+        <h1 class="info-title">Обзор панели CryptoStatix: Fear & Greed Terminal</h1>
+        <p>Этот аналитический модуль предназначен для быстрого определения рыночных настроений. Индекс Fear & Greed (Страх и Жадность) агрегирует данные о волатильности, объемах торгов, социальных сетях и доминировании BTC, помогая понять, находится ли рынок в фазе панических распродаж или неоправданного оптимизма.</p>
+
+        <h2 class="info-subtitle">Описание функциональных блоков</h2>
+        <div class="info-block-item">
+            <strong>Текущий статус (Спидометр):</strong> Мгновенная визуализация настроения.
+            <ul>
+                <li><span class="t-ex-fear">0–25 (Extreme Fear):</span> Время искать точки входа.</li>
+                <li><span class="t-ex-greed">75–100 (Extreme Greed):</span> Время фиксировать прибыль.</li>
+            </ul>
+        </div>
+        
+        <div class="info-block-item">
+            <strong>Мини-график:</strong> Показывает динамику за последние 7 дней с точными значениями над точками для отслеживания краткосрочного импульса.
+        </div>
+
+        <div class="info-block-item">
+            <strong>Статистика распределения (365 дней):</strong> Уникальный инструмент для оценки «нормальности» текущего состояния. Таблица показывает, сколько дней за последний год рынок находился в каждом из состояний. Это помогает понять, является ли текущая «Жадность» затянувшейся или только началась.
+        </div>
+
+        <div class="info-block-item">
+            <strong>Годовой тренд (10-дневное среднее):</strong> Сглаженный график за год. Использование среднего значения за 10 дней убирает рыночный «шум», позволяя увидеть глобальные смены циклов.
+        </div>
+
+        <h2 class="info-subtitle">Инструкция по эффективному использованию</h2>
+        <p>Чтобы извлечь максимум пользы из дашборда, следуйте этим правилам:</p>
+        <div class="info-rule-box">
+            <strong>1. Стратегия контртренда:</strong> Используйте индекс как осциллятор. Если годовой тренд (нижний виджет) долгое время находился в зоне 20–30 и начинает разворачиваться вверх — это сильный сигнал на восстановление рынка.
+        </div>
+        <div class="info-rule-box">
+            <strong>2. Анализ аномалий:</strong> Сравнивайте текущее значение с таблицей распределения. Например, если рынок в «Extreme Greed» уже 40 дней (согласно таблице), вероятность глубокой коррекции значительно возрастает, так как это нетипично долгое состояние.
+        </div>
+        <div class="info-rule-box">
+            <strong>3. Проверка «Шума»:</strong> Если спидометр показывает резкий скачок страха, посмотрите на мини-график за неделю. Если это разовый «шип», а не тренд, скорее всего, это манипуляция или временная новость, которую можно использовать для покупки.
+        </div>
+        <div class="info-rule-box">
+            <strong>4. Интерактивность:</strong> Используйте наведение курсора на нижний график. Это позволит вам точно сопоставить исторические события (например, резкий пролив BTC в конкретную дату) с тем, как на это реагировала толпа.
+        </div>
+
+        <p class="gemini-tip"><strong>Совет от Gemini:</strong> Помните, что индекс — это «барометр толпы». Самые прибыльные сделки часто совершаются, когда вы действует вопреки показаниям спидометра (покупаете в страхе, продаете в жадности).</p>
+    </main>
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+
+async function init() {
+    const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+    const isEng = lang === 'ENG';
+
+    const translations = {
+        'ENG': {
+            index: 'Index:',
+            distribution: 'Distribution Statistics (365 days)',
+            trend: 'Yearly Trend (10-day Average)',
+            cats: ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"],
+            days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            unitDay: ' days',
+            infoTitle: 'CryptoStatix Panel Review: Fear & Greed Terminal',
+            infoIntro: 'This analytical module is designed to quickly determine market sentiment. The Fear & Greed Index aggregates data on volatility, trading volume, social media, and BTC dominance, helping users understand whether the market is in a phase of panic selling or irrational exuberance.',
+            infoSub1: 'Functional Blocks Description',
+            infoItem1Title: 'Current Status (Speedometer):',
+            infoItem1Desc: 'Instant sentiment visualization.',
+            infoItem1Fear: '0–25 (Extreme Fear): Time to look for entry points.',
+            infoItem1Greed: '75–100 (Extreme Greed): Time to take profits.',
+            infoItem2Title: 'Mini-chart:',
+            infoItem2Desc: 'Shows dynamics over the last 7 days with exact values above data points to track short-term momentum.',
+            infoItem3Title: 'Distribution Statistics (365 days):',
+            infoItem3Desc: 'A unique tool for assessing the "normality" of the current state. The table shows how many days over the past year the market spent in each state. This helps determine if the current "Greed" is prolonged or has just begun.',
+            infoItem4Title: 'Yearly Trend (10-day Average):',
+            infoItem4Desc: 'A smoothed yearly graph. Using a 10-day moving average removes market "noise," allowing you to identify global cycle shifts.',
+            infoSub2: 'Instructions for Effective Use',
+            infoIntro2: 'To get the most out of the dashboard, follow these rules:',
+            infoRule1Title: '1. Counter-trend Strategy:',
+            infoRule1Desc: 'Use the index as an oscillator. If the yearly trend (bottom widget) has been in the 20–30 zone for a long time and starts to turn upward, it is a strong signal for market recovery.',
+            infoRule2Title: '2. Anomaly Analysis:',
+            infoRule2Desc: 'Compare the current value with the distribution table. For example, if the market has been in "Extreme Greed" for 40 days (according to the table), the probability of a deep correction increases significantly, as this is an atypically long duration.',
+            infoRule3Title: '3. Noise Check:',
+            infoRule3Desc: 'If the speedometer shows a sharp spike in fear, look at the weekly mini-chart. If it is a one-time "spike" rather than a trend, it is likely manipulation or temporary news that can be used as a buying opportunity.',
+            infoRule4Title: '4. Interactivity:',
+            infoRule4Desc: 'Hover over the bottom graph. This allows you to precisely match historical events (e.g., a sharp BTC dump on a specific date) with how the crowd reacted.',
+            infoTip: '<strong>Gemini\'s Tip:</strong> Remember that the index is a "crowd barometer." The most profitable trades are often made when you act contrary to the speedometer\'s readings (buying in fear, selling in greed).'
+        },
+        'RUS': {
+            index: 'Индекс:',
+            distribution: 'Распределение (365 дней)',
+            trend: 'Тренд индекса (10д среднее) (за 365 дней)',
+            cats: ["Крайний страх", "Страх", "Нейтрально", "Жадность", "Крайняя жадность"],
+            days: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+            months: ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"],
+            unitDay: ' дн.',
+            infoTitle: 'Обзор панели CryptoStatix: Fear & Greed Terminal',
+            infoIntro: 'Этот аналитический модуль предназначен для быстрого определения рыночных настроений. Индекс Fear & Greed (Страх и Жадность) агрегирует данные о волатильности, объемах торгов, социальных сетях и доминировании BTC, помогая понять, находится ли рынок в фазе панических распродаж или неоправданного оптимизма.',
+            infoSub1: 'Описание функциональных блоков',
+            infoItem1Title: 'Текущий статус (Спидометр):',
+            infoItem1Desc: 'Мгновенная визуализация настроения.',
+            infoItem1Fear: '0–25 (Extreme Fear): Время искать точки входа.',
+            infoItem1Greed: '75–100 (Extreme Greed): Время фиксировать прибыль.',
+            infoItem2Title: 'Мини-график:',
+            infoItem2Desc: 'Показывает динамику за последние 7 дней с точными значениями над точками для отслеживания краткосрочного импульса.',
+            infoItem3Title: 'Статистика распределения (365 дней):',
+            infoItem3Desc: 'Уникальный инструмент для оценки «нормальности» текущего состояния. Таблица показывает, сколько дней за последний год рынок находился в каждом из состояний. Это помогает понять, является ли текущая «Жадность» затянувшейся или только началась.',
+            infoItem4Title: 'Годовой тренд (10-дневное среднее):',
+            infoItem4Desc: 'Сглаженный график за год. Использование среднего значения за 10 дней убирает рыночный «шум», позволяя увидеть глобальные смены циклов.',
+            infoSub2: 'Инструкция по эффективному использованию',
+            infoIntro2: 'Чтобы извлечь максимум пользы из дашборда, следуйте этим правилам:',
+            infoRule1Title: '1. Стратегия контртренда:',
+            infoRule1Desc: 'Используйте индекс как осциллятор. Если годовой тренд (нижний виджет) долгое время находился в зоне 20–30 и начинает разворачиваться вверх — это сильный сигнал на восстановление рынка.',
+            infoRule2Title: '2. Анализ аномалий:',
+            infoRule2Desc: 'Сравнивайте текущее значение с таблицей распределения. Например, если рынок в «Extreme Greed» уже 40 дней (согласно таблице), вероятность глубокой коррекции значительно возрастает, так как это нетипично долгое состояние.',
+            infoRule3Title: '3. Проверка «Шума»:',
+            infoRule3Desc: 'Если спидометр показывает резкий скачок страха, посмотрите на мини-график за неделю. Если это разовый «шип», а не тренд, скорее всего, это манипуляция или временная новость, которую можно использовать для покупки.',
+            infoRule4Title: '4. Интерактивность:',
+            infoRule4Desc: 'Используйте наведение курсора на нижний график. Это позволит вам точно сопоставить исторические события (например, резкий пролив BTC в конкретную дату) с тем, как на это реагировала толпа.',
+            infoTip: '<strong>Совет от Gemini:</strong> Помните, что индекс — это «барометр толпы». Самые прибыльные сделки часто совершаются, когда вы действует вопреки показаниям спидометра (покупаете в страхе, продаете в жадности).'
+        },
+        'UKR': {
+            index: 'Індекс:',
+            distribution: 'Статистика розподілу (365 днів)',
+            trend: 'Річний тренд (10-денне середнє)',
+            cats: ["Крайній страх", "Страх", "Нейтрально", "Жадібність", "Крайня жадібність"],
+            days: ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+            months: ["січ", "лют", "бер", "кві", "тра", "чер", "лип", "сер", "вер", "жов", "лис", "гру"],
+            unitDay: ' дн.',
+            infoTitle: 'Огляд панелі CryptoStatix: Fear & Greed Terminal',
+            infoIntro: 'Цей аналітичний модуль призначений для швидкого визначення ринкових настроїв. Індекс Fear & Greed (Страх і Жадібність) агрегує дані про волатильність, обсяги торгів, соціальні мережі та домінування BTC, допомагаючи зрозуміти, чи перебуває ринок у фазі панічних розпродажів або невиправданого оптимізму.',
+            infoSub1: 'Опис функціональних блоків',
+            infoItem1Title: 'Поточний статус (Спідометр):',
+            infoItem1Desc: 'Миттєва візуалізація настрою.',
+            infoItem1Fear: '0–25 (Extreme Fear): Час шукати точки входу.',
+            infoItem1Greed: '75–100 (Extreme Greed): Час фіксувати прибуток.',
+            infoItem2Title: 'Міні-графік:',
+            infoItem2Desc: 'Показує динаміку за останні 7 днів з точними значеннями над точками для відстеження короткострокового імпульсу.',
+            infoItem3Title: 'Статистика розподілу (365 днів):',
+            infoItem3Desc: 'Унікальний інструмент для оцінки «нормальності» поточного стану. Таблиця показує, скільки днів за останній рік ринок перебував у кожному зі станів. Це допомагає зрозуміти, чи є поточна «Жадібність» затяжною, чи вона тільки-но почалася.',
+            infoItem4Title: 'Річний тренд (10-денне середнє):',
+            infoItem4Desc: 'Згладжений графік за рік. Використання середнього значення за 10 днів прибирає ринковий «шум», дозволяючи побачити глобальні зміни циклів.',
+            infoSub2: 'Інструкція з ефективного використання',
+            infoIntro2: 'Щоб отримати максимум користі з дашборду, дотримуйтесь цих правил:',
+            infoRule1Title: '1. Стратегія контртренду:',
+            infoRule1Desc: 'Використовуйте індекс як осциллятор. Якщо річний тренд (нижній віджет) тривалий час перебував у зоні 20–30 і починає розвертатися вгору — це сильний сигнал на відновлення ринку.',
+            infoRule2Title: '2. Аналіз аномалій:',
+            infoRule2Desc: 'Порівнюйте поточне значення з таблицею розподілу. Наприклад, якщо ринок у стані «Extreme Greed» уже 40 днів (згідно з таблицею), ймовірність глибокої корекції значно зростає, оскільки це нетипично тривалий стан.',
+            infoRule3Title: '3. Перевірка «Шуму»:',
+            infoRule3Desc: 'Якщо спідометр показує різкий стрибок страху, подивіться на міні-график за тиждень. Якщо це разовий «шип», а не тренд, швидше за все, це маніпуляція або тимчасова новина, яку можна використати для покупки.',
+            infoRule4Title: '4. Інтерактивність:',
+            infoRule4Desc: 'Використовуйте наведення курсору на нижній графік. Це дозволить вам точно зіставити історичні події (наприклад, різкий пролив BTC у конкретну дату) з тим, як на це реагував натовп.',
+            infoTip: '<strong>Порада від Gemini:</strong> Пам\'ятайте, що індекс — це «барометр натовпу». Найприбутковіші угоди часто відбуваються, коли ви дієте всупереч показникам спідометра (купуєте у страху, продаєте у жадібності).'
+        }
+    };
+
+    const t = translations[lang] || translations['RUS'];
+
+    // Update Text Content
+    document.querySelector('.info-title').innerText = t.infoTitle;
+    document.querySelector('.info-title + p').innerText = t.infoIntro;
+    const subtitles = document.querySelectorAll('.info-subtitle');
+    subtitles[0].innerText = t.infoSub1;
+    subtitles[1].innerText = t.infoSub2;
+    document.querySelector('.info-subtitle + p').innerText = t.infoIntro2;
+
+    const items = document.querySelectorAll('.info-block-item');
+    items[0].innerHTML = `<strong>${t.infoItem1Title}</strong> ${t.infoItem1Desc}
+        <ul>
+            <li><span class="t-ex-fear">${t.infoItem1Fear}</span></li>
+            <li><span class="t-ex-greed">${t.infoItem1Greed}</span></li>
+        </ul>`;
+    items[1].innerHTML = `<strong>${t.infoItem2Title}</strong> ${t.infoItem2Desc}`;
+    items[2].innerHTML = `<strong>${t.infoItem3Title}</strong> ${t.infoItem3Desc}`;
+    items[3].innerHTML = `<strong>${t.infoItem4Title}</strong> ${t.infoItem4Desc}`;
+
+    const rules = document.querySelectorAll('.info-rule-box');
+    rules[0].innerHTML = `<strong>${t.infoRule1Title}</strong> ${t.infoRule1Desc}`;
+    rules[1].innerHTML = `<strong>${t.infoRule2Title}</strong> ${t.infoRule2Desc}`;
+    rules[2].innerHTML = `<strong>${t.infoRule3Title}</strong> ${t.infoRule3Desc}`;
+    rules[3].innerHTML = `<strong>${t.infoRule4Title}</strong> ${t.infoRule4Desc}`;
+
+    document.querySelector('.gemini-tip').innerHTML = t.infoTip;
+
+    document.querySelectorAll('aside .section h2')[1].innerText = t.distribution;
+    document.querySelectorAll('aside .section h2')[2].innerText = t.trend;
+
+    try {
+        const res = await fetch('https://api.alternative.me/fng/?limit=365');
+        const json = await res.json();
+        const data = json.data;
+
+        // 1. Спидометр
+        const cur = data[0];
+        document.getElementById('val-num').innerText = cur.value;
+        document.getElementById('status-text').innerText = `${t.index} ${cur.value_classification}`;
+        document.getElementById('needle').style.transform = `rotate(${(cur.value/100)*180-90}deg)`;
+
+        // 2. Мини-график
+        const week = [...data.slice(0, 7)].reverse();
+        new Chart(document.getElementById('miniChart'), {
+            type: 'line',
+            data: {
+                labels: week.map(d => {
+                    const date = new Date(d.timestamp*1000);
+                    return t.days[date.getDay()];
+                }),
+                datasets: [{ data: week.map(d=>d.value), borderColor: '#4a90e2', tension: 0.4, pointRadius: 4 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: {display: false}, datalabels: {align:'top', color:'#fff', font:{size:10, weight:'bold'}} },
+                scales: { x: { ticks:{color:'#848e9c', font:{size:9}} }, y: { display: false, max: 120 } }
+            }
+        });
+
+        // 3. Таблица
+        const cats = [
+            { n: t.cats[0], m: 0, x: 25, cls: "t-ex-fear", c: 0 },
+            { n: t.cats[1], m: 26, x: 45, cls: "t-fear", c: 0 },
+            { n: t.cats[2], m: 46, x: 55, cls: "t-neutral", c: 0 },
+            { n: t.cats[3], m: 56, x: 75, cls: "t-greed", c: 0 },
+            { n: t.cats[4], m: 76, x: 100, cls: "t-ex-greed", c: 0 }
+        ];
+        data.forEach(d => {
+            const v = parseInt(d.value);
+            cats.forEach(cat => { if(v >= cat.m && v <= cat.x) cat.c++; });
+        });
+        const tbody = document.getElementById('stat-table');
+        tbody.innerHTML = ''; // Clear previous
+        cats.forEach(cat => {
+            const p = ((cat.c/365)*100).toFixed(1);
+            tbody.innerHTML += `<tr class="${cat.cls}"><td>${cat.n}</td><td class="tr">${cat.c}${t.unitDay}</td><td class="tr">${p}%</td></tr>`;
+        });
+
+        // 4. Главный график (Тренд)
+        const history = [...data].reverse();
+        const avgs = []; const fullDates = []; const displayLabels = [];
+
+        for(let i=0; i < history.length; i += 10) {
+            const chunk = history.slice(i, i + 10);
+            const val = (chunk.reduce((a,b)=>a+parseInt(b.value),0)/chunk.length).toFixed(1);
+            avgs.push(val);
+            
+            const d = new Date(chunk[0].timestamp * 1000);
+            const formattedDate = isEng 
+                ? `${t.months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
+                : `${d.getDate()} ${t.months[d.getMonth()]} ${d.getFullYear()}`;
+            fullDates.push(formattedDate);
+            
+            const month = d.getMonth();
+            if (month % 3 === 0) {
+                displayLabels.push(`1 ${t.months[month]}`);
+            } else {
+                displayLabels.push("");
+            }
+        }
+
+        new Chart(document.getElementById('mainChart'), {
+            type: 'line',
+            data: {
+                labels: fullDates,
+                datasets: [{ data: avgs, borderColor: '#4a90e2', borderWidth: 2, pointRadius: 0, tension: 0.2 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(24, 26, 32, 0.9)',
+                        titleColor: '#848e9c',
+                        bodyColor: '#fff',
+                        callbacks: { label: (ctx) => ` ${t.index} ${ctx.parsed.y}%` }
+                    }
+                },
+                scales: {
+                    y: { min: 0, max: 100, ticks: { color: '#848e9c', font: { size: 8 } } },
+                    x: {
+                        ticks: {
+                            color: '#848e9c',
+                            font: { size: 9 },
+                            maxRotation: 0,
+                            callback: function(val, index) {
+                                return displayLabels[index];
+                            }
+                        },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    } catch (e) { console.error(e); }
+}
+
+// Watch for language changes in localStorage
+window.addEventListener('storage', (e) => {
+    if (e.key === 'selectedLanguage') {
+        location.reload(); // Simplest way to re-init everything with new lang
+    }
+});
+
+// Also check periodically in case 'storage' event doesn't fire (same document in some browsers)
+let lastLang = localStorage.getItem('selectedLanguage');
+setInterval(() => {
+    const currentLang = localStorage.getItem('selectedLanguage');
+    if (currentLang !== lastLang) {
+        lastLang = currentLang;
+        location.reload();
+    }
+}, 1000);
+
+window.onload = init;
+</script>
+</body>
+</html>

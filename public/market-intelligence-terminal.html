@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoStatix | Market Intelligence Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #0f172a;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- START: CryptoStatix Full-Page Terminal with Modal -->
+    <section id="stx-terminal" style="margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; position: relative; font-family: 'Inter', sans-serif;">
+        
+        <!-- ТЕРМИНАЛ -->
+        <div style="background: #0f172a; border: 1px solid #1e293b; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+            
+            <!-- Шапка блока -->
+            <div style="padding: 15px 20px; border-bottom: 1px solid #1e293b; background: #1e293b; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; box-shadow: 0 0 10px #3b82f6; animation: pulse 2s infinite;"></div>
+                    <h3 style="color: #f9fafb; margin: 0; font-size: 14px; text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px;">
+                        Market Intelligence Terminal
+                    </h3>
+                </div>
+                
+                <!-- КНОПКА МОДАЛЬНОГО ОКНА -->
+                <button onclick="document.getElementById('stx-modal').style.display='flex'" style="
+                    background: #3b82f6; color: white; border: none; padding: 6px 14px; 
+                    border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;
+                    transition: 0.3s; box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+                " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                    📊 IMPORTANCE GUIDE
+                </button>
+            </div>
+
+            <!-- Контейнер виджета -->
+            <div style="flex-grow: 1; width: 100%; background: #111827;">
+                <iframe 
+                    src="https://www.tradingview-widget.com/embed-widget/events/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CJPY%2CGBP%2CAUD%2CCAD%2CCHF%22%7D" 
+                    width="100%" height="100%" frameborder="0" style="border: none; min-height: 85vh;">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- МОДАЛЬНОЕ ОКНО (Скрыто по умолчанию) -->
+        <div id="stx-modal" style="
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        ">
+            <div style="
+                background: #1e293b; border: 1px solid #3b82f6; width: 90%; max-width: 500px;
+                padding: 30px; border-radius: 16px; position: relative; color: #f1f5f9;
+            ">
+                <button onclick="document.getElementById('stx-modal').style.display='none'" style="
+                    position: absolute; top: 15px; right: 15px; background: none; border: none;
+                    color: #64748b; font-size: 20px; cursor: pointer;
+                ">✕</button>
+
+                <h2 style="margin-top: 0; color: #38bdf8; font-size: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
+                    Event Importance Guide
+                </h2>
+                
+                <p style="font-size: 14px; color: #94a3b8; line-height: 1.6;">
+                    Календарь использует 3 уровня влияния на волатильность рынка:
+                </p>
+
+                <!-- Легенда важности -->
+                <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div style="min-width: 60px; height: 24px; background: #ef4444; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">HIGH</div>
+                        <div style="font-size: 13px;"><b>Критично:</b> Решения ФРС по ставке (FOMC), данные по инфляции (CPI/PCE). Вызывают резкие движения BTC и ликвидации.</div>
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div style="min-width: 60px; height: 24px; background: #f59e0b; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">MEDIUM</div>
+                        <div style="font-size: 13px;"><b>Умеренно:</b> Речи глав Центробанков, индексы деловой активности. Влияют на локальный тренд внутри дня.</div>
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div style="min-width: 60px; height: 24px; background: #64748b; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">LOW</div>
+                        <div style="font-size: 13px;"><b>Низко:</b> Второстепенные отчеты. Обычно не меняют рыночную ситуацию значительно.</div>
+                    </div>
+                </div>
+
+                <button onclick="document.getElementById('stx-modal').style.display='none'" style="
+                    margin-top: 30px; width: 100%; padding: 12px; background: #334155; border: none;
+                    border-radius: 8px; color: white; font-weight: bold; cursor: pointer;
+                ">UNDERSTOOD</button>
+            </div>
+        </div>
+
+    </section>
+</body>
+</html>

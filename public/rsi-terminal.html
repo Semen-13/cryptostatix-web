@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>CryptoStatix RSI PRO - Signal Only</title>
+    <style>
+        :root {
+            --bg-main: #0a0e17; --bg-card: #111827; --border: #1e293b;
+            --white: #ffffff; --dim: #94a3b8; --accent: #60a5fa;
+            --up: #10b981; --down: #ef4444;
+        }
+        html, body { height: 100%; margin: 0; background: #05070a; overflow: hidden; font-family: 'Inter', sans-serif; color: var(--white); }
+        .scanner-container { display: flex; flex-direction: column; width: 100%; max-width: 800px; height: 100vh; margin: 0 auto; background: var(--bg-main); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+        
+        .header { padding: 20px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .title { font-weight: 900; font-size: 16px; text-transform: uppercase; color: var(--accent); letter-spacing: 1.5px; }
+        
+        .progress-container { width: 100%; height: 2px; background: #05070a; margin-bottom: 15px; border-radius: 2px; overflow: hidden; }
+        #progressBar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s; }
+
+        .tf-selector { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tf-btn { background: #05070a; border: 1px solid var(--border); color: var(--dim); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .tf-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .table-wrapper { flex-grow: 1; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { position: sticky; top: 0; background: var(--bg-card); color: var(--dim); font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 1px solid var(--border); z-index: 5; }
+        td { padding: 14px 15px; border-bottom: 1px solid #161e2c; font-size: 14px; }
+        
+        .rsi-val { font-family: 'JetBrains Mono', monospace; font-weight: bold; font-size: 15px; }
+        .oversold { color: var(--up); } 
+        .overbought { color: var(--down); }
+
+        .badge { padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .bg-up { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--up); color: var(--up); }
+        .bg-down { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--down); color: var(--down); }
+        
+        .empty-state { padding: 40px; text-align: center; color: var(--dim); font-size: 13px; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body>
+
+<div class="scanner-container">
+    <div class="header">
+        <div class="header-top">
+            <span class="title">RSI Signals Only</span>
+            <div id="status" style="font-size: 11px; color: var(--dim);">Ready</div>
+        </div>
+        <div class="progress-container"><div id="progressBar"></div></div>
+        <div class="tf-selector">
+            <button class="tf-btn" onclick="changeTF('histominute', 5, this)">5M</button>
+            <button class="tf-btn active" onclick="changeTF('histohour', 1, this)">1H</button>
+            <button class="tf-btn" onclick="changeTF('histoday', 1, this)">1D</button>
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>RSI (14)</th>
+                    <th style="text-align: right;">Signal</th>
+                </tr>
+            </thead>
+            <tbody id="scannerBody"></tbody>
+        </table>
+        <div id="noSignals" class="empty-state" style="display: none;">
+            Поиск сигналов... <br><small>Монеты появятся здесь, когда RSI выйдет за пределы 30/70</small>
+        </div>
+    </div>
+</div>
+
+<script>
+    const COINS = ['BTC','ETH','SOL','XRP','ADA','DOGE','AVAX','TRX','DOT','LINK','MATIC','LTC','NEAR','UNI','ICP','SHIB','XLM','BCH','ATOM','ETC','ALGO','FIL','LDO','HBAR','APT','ARB','OP','SUI','RNDR','FET','KAS','STX','INJ','TIA','IMX','VET','RUNE','FLOW','EGLD','SEI','THETA','BEAM','LUNC','GALA','AAVE','MKR','SNX','GRT','NEO','JUP'];
+
+    let currentTF = 'histohour';
+    let currentAgg = 1;
+    let cacheData = [];
+    let isScanning = false;
+
+    async function fetchRSI(symbol) {
+        try {
+            const url = `https://min-api.cryptocompare.com/data/v2/${currentTF}?fsym=${symbol}&tsym=USD&limit=30&aggregate=${currentAgg}`;
+            const resp = await fetch(url);
+            const json = await resp.json();
+            if (json.Response !== "Success") return null;
+            const prices = json.Data.Data.map(d => d.close);
+            return calculateRSI(prices);
+        } catch (e) { return null; }
+    }
+
+    function calculateRSI(prices, period = 14) {
+        if (prices.length <= period) return 50;
+        let gains = 0, losses = 0;
+        for (let i = prices.length - period; i < prices.length; i++) {
+            let diff = prices[i] - prices[i - 1];
+            diff >= 0 ? gains += diff : losses -= diff;
+        }
+        return losses === 0 ? 100 : 100 - (100 / (1 + (gains / losses)));
+    }
+
+    function renderTable() {
+        const body = document.getElementById('scannerBody');
+        const empty = document.getElementById('noSignals');
+        
+        // ФИЛЬТР: только RSI <= 30 или RSI >= 70
+        const signals = cacheData.filter(item => item.rsi !== null && (item.rsi <= 30 || item.rsi >= 70));
+
+        if (signals.length === 0) {
+            body.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+
+        empty.style.display = 'none';
+        body.innerHTML = signals.map(item => {
+            const isOversold = item.rsi <= 30;
+            return `<tr>
+                <td style="font-weight:700">${item.ticker}</td>
+                <td class="rsi-val ${isOversold ? 'oversold' : 'overbought'}">${item.rsi.toFixed(2)}</td>
+                <td style="text-align: right;">
+                    <span class="badge ${isOversold ? 'bg-up' : 'bg-down'}">
+                        ${isOversold ? 'Oversold / Buy' : 'Overbought / Sell'}
+                    </span>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    async function startScanner() {
+        if (isScanning) return;
+        isScanning = true;
+        const status = document.getElementById('status');
+        const bar = document.getElementById('progressBar');
+        cacheData = [];
+
+        for (let i = 0; i < COINS.length; i++) {
+            status.innerText = `Scanning: ${i+1}/${COINS.length}`;
+            bar.style.width = `${((i + 1) / COINS.length) * 100}%`;
+            
+            const rsi = await fetchRSI(COINS[i]);
+            if (rsi !== null) {
+                cacheData.push({ ticker: COINS[i], rsi: rsi });
+                renderTable(); // Обновляем сразу при нахождении сигнала
+            }
+            await new Promise(r => setTimeout(r, 120)); 
+        }
+
+        status.innerText = `Updated: ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+        isScanning = false;
+        setTimeout(() => { bar.style.width = '0%'; }, 2000);
+    }
+
+    function changeTF(tf, agg, btn) {
+        if (isScanning) return;
+        currentTF = tf; currentAgg = agg;
+        document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        startScanner();
+    }
+
+    startScanner();
+    setInterval(startScanner, 300000);
+</script>
+
+</body>
+</html>

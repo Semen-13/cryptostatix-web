@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --bg: transparent; 
+            --card: #0d0d0f; 
+            --border: #1c1c1e;
+        }
+
+        body {
+            background: var(--bg);
+            margin: 0;
+            padding: 0; 
+            font-family: 'SF Mono', 'Menlo', monospace;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .sidebar-analytics {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5vh;
+            width: 100%;
+            height: 100%;
+        }
+
+        .widget-frame {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        /* Оптимальные высоты для исключения скролла */
+        .frame-top { height: 48%; } 
+        .frame-bottom { height: 49%; }
+
+        .header { 
+            text-align: center; 
+            margin-bottom: 12px; 
+            color: #636366; 
+            font-size: 11px; 
+            letter-spacing: 2px; 
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .tradingview-widget-container {
+            flex-grow: 1;
+            width: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar-analytics">
+    
+    <div class="widget-frame frame-top">
+        <div id="header-top" class="header">Market Share</div>
+        <div id="widget-top" class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+        </div>
+    </div>
+
+    <div class="widget-frame frame-bottom">
+        <div id="header-bottom" class="header">Sentiment Analysis</div>
+        <div id="widget-bottom" class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function updateLanguage() {
+        const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+        const locale = lang === 'RUS' ? 'ru' : (lang === 'UKR' ? 'uk' : 'en');
+        
+        // Headers translation
+        const headerTop = document.getElementById('header-top');
+        const headerBottom = document.getElementById('header-bottom');
+        
+        if (lang === 'ENG') {
+            headerTop.textContent = 'Market Share';
+            headerBottom.textContent = 'Sentiment Analysis';
+        } else if (lang === 'UKR') {
+            headerTop.textContent = 'Частка ринку';
+            headerBottom.textContent = 'Аналіз настроїв';
+        } else {
+            headerTop.textContent = 'Доля рынка';
+            headerBottom.textContent = 'Анализ настроений';
+        }
+
+        // Widgets injection
+        const containerTop = document.getElementById('widget-top');
+        const containerBottom = document.getElementById('widget-bottom');
+
+        // Clear previous widgets
+        containerTop.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
+        containerBottom.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
+
+        // Add Top Widget
+        const scriptTop = document.createElement('script');
+        scriptTop.type = 'text/javascript';
+        scriptTop.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
+        scriptTop.async = true;
+        
+        const symbolsDescriptions = lang === 'ENG' ? {
+            btc: 'Bitcoin',
+            eth: 'Ethereum',
+            bnb: 'Binance',
+            xrp: 'Ripple',
+            sol: 'Solana'
+        } : (lang === 'UKR' ? {
+            btc: 'Біткоїн',
+            eth: 'Ефіріум',
+            bnb: 'Бінанс',
+            xrp: 'Ріпл',
+            sol: 'Солана'
+        } : {
+            btc: 'Биткоин',
+            eth: 'Эфириум',
+            bnb: 'Бинанс',
+            xrp: 'Рипл',
+            sol: 'Солана'
+        });
+
+        scriptTop.innerHTML = JSON.stringify({
+            "colorTheme": "dark",
+            "isTransparent": true,
+            "showSymbolLogo": true,
+            "showChart": false,
+            "width": "100%",
+            "height": "100%",
+            "locale": locale,
+            "tabs": [{
+                "title": lang === 'ENG' ? "Dominance" : (lang === 'UKR' ? "Домінація" : "Доминация"),
+                "symbols": [
+                    { "s": "CRYPTOCAP:BTC.D", "d": symbolsDescriptions.btc },
+                    { "s": "CRYPTOCAP:ETH.D", "d": symbolsDescriptions.eth },
+                    { "s": "CRYPTOCAP:BNB.D", "d": symbolsDescriptions.bnb },
+                    { "s": "CRYPTOCAP:XRP.D", "d": symbolsDescriptions.xrp },
+                    { "s": "CRYPTOCAP:SOL.D", "d": symbolsDescriptions.sol }
+                ]
+            }]
+        });
+
+        // Add Bottom Widget
+        const scriptBottom = document.createElement('script');
+        scriptBottom.type = 'text/javascript';
+        scriptBottom.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
+        scriptBottom.async = true;
+        
+        // TradingView Technical Analysis might not support 'uk' locale. Fallback to 'ru' or 'en' if it doesn't.
+        // Usually 'ru' is better for Ukrainian users if 'uk' is missing, or 'en'.
+        // Let's try 'uk' first, but be aware.
+        scriptBottom.innerHTML = JSON.stringify({
+            "interval": "4h",
+            "width": "100%",
+            "height": "100%",
+            "isTransparent": true,
+            "symbol": "CRYPTOCAP:BTC.D",
+            "showIntervalTabs": true,
+            "displayMode": "single",
+            "locale": locale,
+            "colorTheme": "dark"
+        });
+
+        containerTop.appendChild(scriptTop);
+        containerBottom.appendChild(scriptBottom);
+    }
+
+    // Initial load
+    updateLanguage();
+
+    // Listen for storage changes (when user switch language in main page)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'selectedLanguage') {
+            updateLanguage();
+        }
+    });
+
+    // Also poll every second because storage event might not trigger for same window/tab in some browsers
+    setInterval(() => {
+        const currentLang = localStorage.getItem('selectedLanguage') || 'RUS';
+        if (window.lastLang !== currentLang) {
+            window.lastLang = currentLang;
+            updateLanguage();
+        }
+    }, 1000);
+</script>
+
+</body>
+</html>

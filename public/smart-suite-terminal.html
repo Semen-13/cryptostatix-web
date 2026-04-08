@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoStatix Terminal - Smart Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #000b1a;
+            --card-bg: #001529;
+            --border: #1a3a5a;
+            --accent: #00a2ff;
+            --up-color: #52c41a;
+            --down-color: #ff4d4f;
+            --text-dim: #6688aa;
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            color: white; 
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-layout {
+            display: flex; 
+            height: 100vh; 
+            padding: 15px; 
+            box-sizing: border-box; 
+            gap: 20px;
+        }
+
+        /* --- ЛЕВАЯ ПАНЕЛЬ (АНАЛИТИКА) --- */
+        .sidebar-analytics {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .widget-card {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: var(--accent); }
+        .timer { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--text-dim); }
+
+        /* --- ПРАВАЯ ПАНЕЛЬ (ИНСТРУКЦИЯ) --- */
+        .main-content {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: radial-gradient(circle at top right, #001a33 0%, #000b1a 100%);
+        }
+
+        .content-wrapper { max-width: 800px; }
+
+        h1 { font-size: 32px; margin-bottom: 10px; font-weight: 700; }
+        .subtitle { color: var(--text-dim); margin-bottom: 40px; font-size: 18px; }
+
+        .guide-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .guide-item h3 { color: var(--accent); font-size: 16px; margin-bottom: 10px; }
+        .guide-item p { color: #ccddee; font-size: 14px; line-height: 1.6; margin: 0; }
+
+        .gemini-advice {
+            background: linear-gradient(135deg, rgba(0, 162, 255, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+            border-left: 4px solid var(--accent);
+            padding: 30px;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .gemini-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .gemini-avatar { width: 30px; height: 30px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+        
+        .advice-text { font-style: italic; color: #eef4ff; line-height: 1.8; font-size: 16px; }
+
+        .stats-row { display: flex; justify-content: space-between; margin-top: 15px; font-size: 12px; }
+        .stat-val { font-family: 'JetBrains Mono'; font-weight: bold; display: block; }
+    </style>
+</head>
+<body>
+<div class="main-layout">
+<aside class="sidebar-analytics">
+    <!-- NET FLOW -->
+    <div class="widget-card">
+        <div class="header">
+            <div class="title">Net Flow BTC</div>
+            <div class="timer">REFRESH: <span id="countdown">10:00</span></div>
+        </div>
+        <div style="height: 180px;"><canvas id="netFlowChart"></canvas></div>
+        <div class="stats-row">
+            <div style="color: var(--down-color)">INFLOW <span id="inflowVal" class="stat-val">0.0</span></div>
+            <div style="color: var(--up-color)">OUTFLOW <span id="outflowVal" class="stat-val">0.0</span></div>
+            <div style="text-align: right;">NET <span id="netVal" class="stat-val">0.0</span></div>
+        </div>
+    </div>
+
+    <!-- LIQUIDATIONS -->
+    <div class="widget-card">
+        <div class="header">
+            <div class="title">Liquidation Heatmap</div>
+            <div class="timer" style="color: var(--up-color)">LIVE SOCKET</div>
+        </div>
+        <div style="height: 240px;"><canvas id="liqChart"></canvas></div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 10px; text-align: right;">
+            Session Total: <span id="totalLiqVal" style="color:white">$0.0k</span>
+        </div>
+    </div>
+</aside>
+
+<main class="main-content">
+    <div class="content-wrapper">
+        <h1>CryptoStatix Intelligence</h1>
+        <p class="subtitle">Интерпретация данных в реальном времени</p>
+
+        <div class="guide-section">
+            <div class="guide-item">
+                <h3>📊 Net Flow (Биржевые потоки)</h3>
+                <p>Если столбики <b>красные</b> (Inflow) — киты заводят BTC на биржи. Это риск продаж. Если <b>зеленые</b> (Outflow) — активы уходят на холодные кошельки, создавая дефицит предложения.</p>
+            </div>
+            <div class="guide-item">
+                <h3>🧼 Liquidation Heatmap</h3>
+                <p>Пузырьки показывают принудительное закрытие позиций. Большие красные пузыри на падении часто сигнализируют о <b>капитуляции</b> и близости локального дна.</p>
+            </div>
+        </div>
+
+        <div class="gemini-advice">
+            <div class="gemini-header">
+                <div class="gemini-avatar">G</div>
+                <span style="font-weight: bold; color: var(--accent);">Совет от Gemini</span>
+            </div>
+            <div class="advice-text">
+                "Никогда не торгуйте только по одному индикатору. Если вы видите огромный приток (Inflow) на биржи, но ликвидаций шортов (зеленые пузыри) становится всё больше — это признак сильной борьбы. Ждите, пока Net Flow стабилизируется, прежде чем открывать позицию. Помните: ликвидации — это топливо для разворота!"
+            </div>
+        </div>
+    </div>
+</main>
+</div>
+
+<script>
+    // --- JS LOGIC (Синхронизированная версия из предыдущих шагов) ---
+    const API_KEY = 'ВАШ_КЛЮЧ_ЗДЕСЬ';
+    
+    // Net Flow
+    const netCtx = document.getElementById('netFlowChart').getContext('2d');
+    let timeLeft = 600;
+    const netChart = new Chart(netCtx, {
+        type: 'bar',
+        data: { labels: ['T-50','T-40','T-30','T-20','T-10','NOW'], datasets: [{ data: [0,0,0,0,0,0], backgroundColor: [], borderRadius: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#6688aa', font: {size: 9} }, grid: { color: '#1a3a5a'} }, x: { ticks: { color: '#6688aa', font: {size: 9} } } } }
+    });
+
+    async function fetchNetFlow() {
+        if (API_KEY === 'ВАШ_КЛЮЧ_ЗДЕСЬ') { updateNetUI(Math.random()*300, Math.random()*350); return; }
+        try {
+            const start = Math.floor(Date.now()/1000)-600;
+            const res = await fetch(`https://api.whale-alert.io/v1/transactions?api_key=${API_KEY}&min_value=500000&start=${start}&currency=bitcoin`);
+            const data = await res.json();
+            let inf = 0, out = 0;
+            if(data.transactions) {
+                data.transactions.forEach(tx => {
+                    if(tx.to.owner_type === 'exchange') inf += tx.amount;
+                    if(tx.from.owner_type === 'exchange') out += tx.amount;
+                });
+            }
+            updateNetUI(inf, out);
+        } catch(e) { timeLeft = 30; }
+    }
+
+    function updateNetUI(inf, out) {
+        const net = parseFloat((inf - out).toFixed(1));
+        const d = netChart.data.datasets[0].data; d.shift(); d.push(net);
+        netChart.data.datasets[0].backgroundColor = d.map(v => v >= 0 ? '#ff4d4f' : '#52c41a');
+        netChart.update();
+        document.getElementById('inflowVal').innerText = inf.toFixed(1);
+        document.getElementById('outflowVal').innerText = out.toFixed(1);
+        document.getElementById('netVal').innerText = (net>0?'+':'')+net;
+        document.getElementById('netVal').style.color = net>=0?'#ff4d4f':'#52c41a';
+        timeLeft = 600;
+    }
+
+    // Liquidations
+    const liqCtx = document.getElementById('liqChart').getContext('2d');
+    let liqData = [];
+    let totalLiqSum = 0;
+    const liqChart = new Chart(liqCtx, {
+        type: 'bubble',
+        data: { datasets: [{ data: [], backgroundColor: [] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#6688aa', font: {size: 9} }, grid: { color: '#1a3a5a'} }, x: { type: 'time', time: { unit: 'minute' }, ticks: { color: '#6688aa', font: {size: 9} } } } }
+    });
+
+    const ws = new WebSocket('wss://fstream.binance.com/ws/btcusdt@forceOrder');
+    ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data).o;
+        const p = parseFloat(msg.p), q = parseFloat(msg.q), side = msg.S, usd = p * q;
+        if(usd < 1000) return;
+        const newPoint = { x: Date.now(), y: p, r: Math.max(3, Math.log10(usd)*2) };
+        liqData.push(newPoint);
+        liqChart.data.datasets[0].backgroundColor.push(side === 'SELL' ? 'rgba(255, 77, 79, 0.7)' : 'rgba(82, 196, 26, 0.7)');
+        totalLiqSum += usd;
+        document.getElementById('totalLiqVal').innerText = `$${(totalLiqSum/1000).toFixed(1)}k`;
+        if(liqData.length > 50) { liqData.shift(); liqChart.data.datasets[0].backgroundColor.shift(); }
+        liqChart.data.datasets[0].data = liqData; liqChart.update('none');
+    };
+
+    setInterval(() => {
+        timeLeft--; if(timeLeft < 0) fetchNetFlow();
+        const m = Math.floor(timeLeft/60), s = timeLeft%60;
+        document.getElementById('countdown').innerText = `${m}:${s<10?'0'+s:s}`;
+    }, 1000);
+
+    fetchNetFlow();
+</script>
+</body>
+</html>

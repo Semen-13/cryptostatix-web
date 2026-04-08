@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>CryptoStatix PRO - OI Terminal Left Axis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #000b1a; margin: 0; font-family: 'Inter', sans-serif; color: white; display: flex; justify-content: center; padding: 20px; }
+        .widget-container {
+            width: 480px;
+            background-color: #001529;
+            border: 1px solid #1a3a5a;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .label { font-size: 11px; color: #6688aa; text-transform: uppercase; letter-spacing: 1px; }
+        #totalOiUsd { font-size: 26px; font-weight: bold; display: block; margin-top: 4px; }
+        
+        /* Таблица без скролла */
+        .oi-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        .oi-table th { text-align: left; color: #6688aa; padding-bottom: 10px; border-bottom: 1px solid #1a3a5a; font-size: 11px; }
+        .oi-table td { padding: 10px 0; border-bottom: 1px solid rgba(26, 58, 90, 0.4); }
+        .coin-name { font-weight: bold; color: #fff; }
+        .trend-up { color: #52c41a; }
+        .trend-down { color: #ff4d4f; }
+        
+        #oiChartContainer { height: 180px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="widget-container">
+    <div class="header">
+        <div>
+            <div class="label">BTC Open Interest (Total)</div>
+            <span id="totalOiUsd">$0.00 M</span>
+        </div>
+        <div style="text-align: right">
+            <div class="label">Funding Rate</div>
+            <span id="fundingValue" style="color: #52c41a; font-weight: bold; font-size: 14px;">0.0000%</span>
+        </div>
+    </div>
+    
+    <div id="oiChartContainer">
+        <canvas id="oiChart"></canvas>
+    </div>
+
+    <table class="oi-table">
+        <thead>
+            <tr>
+                <th>TOP 10 ALTS BY VOLUME</th>
+                <th style="text-align: right;">VOL (24H)</th>
+                <th style="text-align: right;">CHANGE</th>
+            </tr>
+        </thead>
+        <tbody id="oiTableBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const ctx = document.getElementById('oiChart').getContext('2d');
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+    gradient.addColorStop(0, 'rgba(24, 144, 255, 0.2)');
+    gradient.addColorStop(1, 'rgba(24, 144, 255, 0)');
+
+    const oiChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array(15).fill(''),
+            datasets: [{
+                data: Array(15).fill(null),
+                borderColor: '#1890ff',
+                borderWidth: 2,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false },
+                y: {
+                    position: 'left', // Шкала теперь слева
+                    grid: { 
+                        color: 'rgba(26, 58, 90, 0.5)', 
+                        drawBorder: false 
+                    },
+                    ticks: {
+                        color: '#6688aa',
+                        font: { size: 10 },
+                        padding: 8,
+                        callback: function(value) { return '$' + value + 'M'; }
+                    }
+                }
+            }
+        }
+    });
+
+    async function updateData() {
+        try {
+            // Данные BTC
+            const btcOiRes = await fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT');
+            const btcOiData = await btcOiRes.json();
+            const priceRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/price?symbol=BTCUSDT');
+            const priceData = await priceRes.json();
+            const fundRes = await fetch('https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT');
+            const fundData = await fundRes.json();
+
+            const btcPrice = parseFloat(priceData.price);
+            const btcOiUsd = (parseFloat(btcOiData.openInterest) * btcPrice / 1000000).toFixed(1);
+            
+            document.getElementById('totalOiUsd').innerText = `$${parseFloat(btcOiUsd).toLocaleString()} M`;
+            document.getElementById('fundingValue').innerText = (parseFloat(fundData.lastFundingRate) * 100).toFixed(4) + '%';
+
+            oiChart.data.datasets[0].data.shift();
+            oiChart.data.datasets[0].data.push(btcOiUsd);
+            oiChart.update('none');
+
+            // Данные Альтов
+            const allTickersRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr');
+            const allData = await allTickersRes.json();
+            
+            const topCoins = allData
+                .filter(coin => coin.symbol.endsWith('USDT') && !coin.symbol.startsWith('BTC'))
+                .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+                .slice(0, 10);
+
+            const tableBody = document.getElementById('oiTableBody');
+            tableBody.innerHTML = ''; 
+
+            topCoins.forEach(coin => {
+                const change = parseFloat(coin.priceChangePercent);
+                const volume = (parseFloat(coin.quoteVolume)/1000000).toFixed(1);
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="coin-name">${coin.symbol.replace('USDT', '')}</td>
+                        <td style="text-align: right; color: #6688aa;">$${volume}M</td>
+                        <td style="text-align: right;" class="${change >= 0 ? 'trend-up' : 'trend-down'}">
+                            ${change >= 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%
+                        </td>
+                    </tr>
+                `;
+            });
+
+        } catch (e) { console.error("Update Error:", e); }
+    }
+
+    updateData();
+    setInterval(updateData, 20000);
+</script>
+</body>
+</html>
