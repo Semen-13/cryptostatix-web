@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoStatix | Premium Analytics Dashboard</title>
+    <meta name="description"
+        content="CryptoStatix provides real-time cryptocurrency analytics and screening with a high-performance, institutional-grade interface.">
+    <!-- Meta for SEO -->
+    <meta property="og:title" content="CryptoStatix">
+    <meta property="og:description" content="Next-gen Crypto Analytics">
+    <meta property="og:image" content="/logo_new.png">
+</head>
+
+<body>
+
+    <div id="home">
+        <header class="header">
+            <div class="logo-wrapper">
+                <img src="/logo_new.png" alt="CryptoStatix Logo" class="logo-img">
+                <h1>CryptoStatix</h1>
+            </div>
+
+            <!-- Top Right Circle Button -->
+            <button class="top-circle-btn" onclick="toggleModal(true)">
+                <span id="current-lang"
+                    style="font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 0.85rem; letter-spacing: 1px;">Eng.</span>
+            </button>
+
+
+
+        </header>
+
+        <div class="crypto-ticker-container">
+            <div class="crypto-ticker" id="ticker-wrapper">
+                <div class="ticker-content" id="ticker-box">Загрузка данных...</div>
+                <div class="ticker-content" id="ticker-box-copy"></div>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="#" class="nav-btn" id="nav-analytics" onclick="showPage('analytics')">Analytics</a>
+            <a href="#" class="nav-btn" id="nav-about" onclick="showPage('about')">About us</a>
+        </div>
+
+        <footer class="main-footer">
+            © 2026 CryptoStatix PRO
+        </footer>
+
+        <!-- Language Selection Dropdown Overlay -->
+        <div id="system-modal" class="modal-overlay" onclick="if(event.target === this) toggleModal(false)">
+            <div class="modal-container lang-dropdown-container">
+                <div class="modal-body lang-menu-body">
+                    <div class="lang-option selected" onclick="selectLanguage('ENG')">Eng.</div>
+                    <div class="lang-option" onclick="selectLanguage('RUS')">Rus.</div>
+                    <div class="lang-option" onclick="selectLanguage('UKR')">Ukr.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Analytics Page -->
+    <div id="analytics" class="subpage">
+        <h2>Аналитика</h2>
+        <div class="subpage-content">
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 1)">
+                <img src="/fear-greed.jpg" alt="Crypto Fear & Greed Index" class="grid-img">
+                <span class="grid-caption">Crypto Fear &amp; Greed Index</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 2)">
+                <img src="/global_exchange_radar.png" alt="Global Exchange Radar" class="grid-img">
+                <span class="grid-caption">Global Exchange Radar</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 3)">
+                <img src="/dominance.png" alt="Dominance" class="grid-img">
+                <span class="grid-caption">Dominance</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 4)">
+                <img src="/open_interest.png" alt="Open Interest" class="grid-img">
+                <span class="grid-caption">dominance(history)</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 5)">
+                <img src="/heatmap.png" alt="Heatmap" class="grid-img">
+                <span class="grid-caption">Heatmap</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 6)">
+                <img src="/rsi.png" alt="RSI PRO Signals" class="grid-img">
+                <span class="grid-caption">RSI PRO Signals</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 7)">
+                <img src="/whale.png" alt="Whale Terminal" class="grid-img">
+                <span class="grid-caption">Whale Terminal</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 8)">
+                <img src="/oi.png" alt="OI Terminal" class="grid-img">
+                <span class="grid-caption">OI Terminal</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 9)">
+                <img src="/smart-suite.png" alt="Smart Suite" class="grid-img">
+                <span class="grid-caption">Smart Suite Intelligence</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 10)">
+                <img src="/market-intelligence.png" alt="Market Intelligence" class="grid-img">
+                <span class="grid-caption">Market Intelligence</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 11)">
+                <img src="/binance-futures.png" alt="Binance Futures PRO" class="grid-img">
+                <span class="grid-caption">Binance Futures PRO</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('analytics', 12)">
+                <img src="/ai-forecast.png" alt="CryptoStatix Tracker" class="grid-img">
+                <span class="grid-caption">CryptoStatix Tracker</span>
+            </div>
+        </div>
+        <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
+    </div>
+
+    <!-- About Page -->
+    <div id="about" class="subpage">
+        <h2>О проекте</h2>
+        <div class="subpage-content"
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; text-align: center;">
+            <div
+                style="max-width: 950px; width: 100%; background: rgba(255, 255, 255, 0.02); border: none; border-radius: 12px; padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 136, 0.08); overflow: hidden;">
+                <h3
+                    style="color: var(--accent); margin-bottom: 15px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px;">
+                    О проекте CryptoStatix</h3>
+                <p style="font-size: 0.85rem; line-height: 1.5; color: rgba(255,255,255,0.9); margin-bottom: 15px;">
+                    <strong>CryptoStatix</strong> — это аналитическая платформа, созданная для трейдеров и инвесторов,
+                    которым важна чистота данных и оперативность. Мы не просто показываем графики, мы помогаем увидеть
+                    структуру рынка через призму ключевых метрик.
+                </p>
+
+                <h4
+                    style="color: var(--accent); margin-bottom: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; text-align: left;">
+                    Что мы делаем?</h4>
+                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.7); text-align: left; margin-bottom: 15px;">Наш
+                    сервис агрегирует данные напрямую с Binance и CoinGecko, предоставляя вам инструменты
+                    профессионального уровня в один клик:</p>
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; text-align: left;">
+                    <div
+                        style="background: rgba(255,255,255,0.02); padding: 12px; border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 8px;">
+                        <h4
+                            style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
+                            Real-time Мониторинг</h4>
+                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Отслеживание
+                            волатильности и объемов в реальном времени.</p>
+                    </div>
+                    <div
+                        style="background: rgba(255,255,255,0.02); padding: 12px; border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 8px;">
+                        <h4
+                            style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
+                            Смарт-аналитика</h4>
+                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Быстрый доступ к
+                            RSI, тепловым картам ликвидности и доминированию активов.</p>
+                    </div>
+                    <div
+                        style="background: rgba(255,255,255,0.02); padding: 12px; border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 8px;">
+                        <h4
+                            style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
+                            Фокус на трендах</h4>
+                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Мы подсвечиваем
+                            перспективные экосистемы, такие как MemeCore, AI-инфраструктуру и Layer-2 решения.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 20px; align-items: flex-start; text-align: left; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <h4
+                            style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.8rem; margin-bottom: 8px; text-transform: uppercase;">
+                            Наша миссия</h4>
+                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Упростить процесс
+                            принятия решений. В мире, где информация обновляется каждую секунду, CryptoStatix становится
+                            вашим фильтром, отсекая шум и оставляя только факты.</p>
+                    </div>
+                    <div style="flex: 1; border-left: 1px solid rgba(0, 255, 136, 0.2); padding-left: 20px;">
+                        <h4
+                            style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.8rem; margin-bottom: 8px; text-transform: uppercase;">
+                            Присоединяйтесь к нашему комьюнити</h4>
+                        <p
+                            style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4; margin-bottom: 10px;">
+                            Для тех, кто хочет держать руку на пульсе 24/7, мы запустили официальный Telegram-канал. Там
+                            мы публикуем:</p>
+                        <ul
+                            style="font-size: 0.7rem; color: rgba(255,255,255,0.6); padding-left: 15px; margin-bottom: 12px; line-height: 1.3;">
+                            <li>Срочные уведомления об аномальных движениях рынка.</li>
+                            <li>Обзоры перспективных токенов.</li>
+                            <li>Обновления функционала нашего сайта.</li>
+                        </ul>
+                        <a href="https://t.me/cryptostatix_news" target="_blank"
+                            style="display: inline-flex; align-items: center; gap: 8px; background: #0088cc; color: #fff; text-decoration: none; padding: 6px 14px; border-radius: 50px; font-weight: 600; font-size: 0.75rem; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 136, 204, 0.3); border: 1px solid rgba(255,255,255,0.1);">
+                            <div
+                                style="width: 26px; height: 26px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#0088cc"
+                                    style="margin-left: -1px;">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.35-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.99-.74 3.84-1.67 6.41-2.77 7.7-3.31 3.65-1.53 4.41-1.8 4.91-1.81.11 0 .35.03.5.16.13.1.17.24.18.34.02.06.02.13.01.19z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <span style="font-size: 0.8rem; letter-spacing: 0.5px;">CryptoStatix_news/Аналитика и
+                                данные</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
+    </div>
+
+
+
+
+
+    <!-- Detail Subpage (shared, populated dynamically) -->
+    <div id="detail-page" class="subpage detail-subpage">
+        <h2 id="detail-title">Блок</h2>
+        <div class="detail-content" id="detail-body">
+            <!-- Filled by JS -->
+        </div>
+        <button class="back-btn" id="detail-back-btn" onclick="closeDetail()">← НАЗАД</button>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
