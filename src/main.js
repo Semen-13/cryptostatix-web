@@ -1,5 +1,14 @@
 import './style.css'
 
+// --- ДОБАВЬТЕ ЭТОТ БЛОК ДЛЯ АВТО-ПРОВЕРКИ ЯЗЫКА ---
+const initLanguage = () => {
+    const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+    const langCodes = { 'ENG': 'en', 'UKR': 'uk', 'RUS': 'ru' };
+    document.documentElement.lang = langCodes[lang] || 'ru';
+};
+initLanguage(); // Запускаем проверку мгновенно
+// ------------------------------------------------
+
 // Crypto Data
 const coinIds = ['bitcoin', 'ethereum', 'tether', 'binancecoin', 'ripple', 'solana', 'cardano'];
 const coinList = [
