@@ -116,7 +116,13 @@ window.showDetail = function (section, itemIndex) {
   currentDetailIndex = itemIndex;
 
   // Set content
+// 1. Получаем язык из хранилища
   const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+
+  // 2. ДОБАВЛЯЕМ ЭТИ ДВЕ СТРОКИ:
+  const langCodes = { 'ENG': 'en', 'UKR': 'uk', 'RUS': 'ru' };
+  document.documentElement.lang = langCodes[lang] || 'ru';
+
   let label = config.label;
   if (lang === 'ENG') {
     if (section === 'analytics') label = 'ANALYTICS';
@@ -128,7 +134,6 @@ window.showDetail = function (section, itemIndex) {
 
   document.getElementById('detail-title').textContent = `${label} — ${item.title}`;
   document.getElementById('detail-body').innerHTML = buildDetailBody(section, itemIndex, item, lang);
-
   // Hide parent subpage first
   const parentPage = document.getElementById(section);
   parentPage.classList.remove('active');
