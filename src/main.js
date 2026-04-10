@@ -1,25 +1,50 @@
 import './style.css'
 
-// --- ДОБАВЬТЕ ЭТОТ БЛОК ДЛЯ АВТО-ПРОВЕРКИ ЯЗЫКА ---
+// --- ИСПРАВЛЕННЫЙ БЛОК ЯЗЫКА ---
 const initLanguage = () => {
-    const lang = localStorage.getItem('selectedLanguage') || 'RUS';
-    const langCodes = { 'ENG': 'en', 'UKR': 'uk', 'RUS': 'ru' };
-    document.documentElement.lang = langCodes[lang] || 'ru';
-};
-initLanguage(); // Запускаем проверку мгновенно
-// ------------------------------------------------
+    // 1. Проверяем, есть ли сохраненный язык. Если нет — ставим по умолчанию ENG (раз сайт теперь международный)
+    let lang = localStorage.getItem('selectedLanguage');
+    
+    if (!lang) {
+        lang = 'ENG';
+        localStorage.setItem('selectedLanguage', 'ENG');
+    }
 
-// Crypto Data
-const coinIds = ['bitcoin', 'ethereum', 'tether', 'binancecoin', 'ripple', 'solana', 'cardano'];
-const coinList = [
-  { name: 'BTC', id: 'bitcoin' },
-  { name: 'ETH', id: 'ethereum' },
-  { name: 'USDT', id: 'tether' },
-  { name: 'BNB', id: 'binancecoin' },
-  { name: 'XRP', id: 'ripple' },
-  { name: 'SOL', id: 'solana' },
-  { name: 'ADA', id: 'cardano' }
-];
+    const langCodes = { 'ENG': 'en', 'UKR': 'uk', 'RUS': 'ru' };
+    const displayNames = { 'ENG': 'Eng.', 'UKR': 'Ukr.', 'RUS': 'Rus.' };
+
+    // Устанавливаем атрибут для HTML
+    document.documentElement.lang = langCodes[lang] || 'en';
+
+    // Обновляем текст на главной кнопке выбора языка (чтобы там не висело всегда "Eng.")
+    const langBtn = document.getElementById('current-lang');
+    if (langBtn) {
+        langBtn.innerText = displayNames[lang];
+    }
+};
+
+// Функция, которая вызывается при клике в меню (добавь её!)
+window.selectLanguage = function(lang) {
+    localStorage.setItem('selectedLanguage', lang); // Сохраняем выбор
+    initLanguage(); // Перерисовываем Lang атрибут и кнопку
+    
+    // Закрываем модалку (вызываем твою функцию из HTML)
+    if (window.toggleModal) window.toggleModal(false);
+    
+    // Перезагружаем страницу, чтобы все переводы в блоках применились
+    window.location.reload(); 
+};
+
+// Функция открытия/закрытия модалки (если её нет в main.js, добавь)
+window.toggleModal = function(show) {
+    const modal = document.getElementById('system-modal');
+    if (modal) {
+        modal.style.display = show ? 'flex' : 'none';
+    }
+}
+
+initLanguage(); 
+// ------------------------------------------------
 
 async function updatePrices() {
   const tickerBox = document.getElementById('ticker-box');
