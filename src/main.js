@@ -1,50 +1,56 @@
 import './style.css'
 
-// --- ИСПРАВЛЕННЫЙ БЛОК ЯЗЫКА ---
-const initLanguage = () => {
-    // 1. Проверяем, есть ли сохраненный язык. Если нет — ставим по умолчанию ENG (раз сайт теперь международный)
-    let lang = localStorage.getItem('selectedLanguage');
-    
-    if (!lang) {
-        lang = 'ENG';
-        localStorage.setItem('selectedLanguage', 'ENG');
-    }
+/** * 1. УПРАВЛЕНИЕ ЯЗЫКОМ
+ */
+const langCodes = { 'ENG': 'en', 'UKR': 'uk', 'RUS': 'ru' };
+const displayNames = { 'ENG': 'Eng.', 'UKR': 'Ukr.', 'RUS': 'Rus.' };
 
-    const langCodes = { 'ENG': 'en', 'UKR': 'uk', 'RUS': 'ru' };
-    const displayNames = { 'ENG': 'Eng.', 'UKR': 'Ukr.', 'RUS': 'Rus.' };
-
-    // Устанавливаем атрибут для HTML
+window.initLanguage = function() {
+    const lang = localStorage.getItem('selectedLanguage') || 'ENG';
     document.documentElement.lang = langCodes[lang] || 'en';
 
-    // Обновляем текст на главной кнопке выбора языка (чтобы там не висело всегда "Eng.")
     const langBtn = document.getElementById('current-lang');
     if (langBtn) {
         langBtn.innerText = displayNames[lang];
     }
+
+    document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.classList.remove('selected');
+        const optText = opt.innerText.trim();
+        if (optText === displayNames[lang]) {
+            opt.classList.add('selected');
+        }
+    });
 };
 
-// Функция, которая вызывается при клике в меню (добавь её!)
 window.selectLanguage = function(lang) {
-    localStorage.setItem('selectedLanguage', lang); // Сохраняем выбор
-    initLanguage(); // Перерисовываем Lang атрибут и кнопку
-    
-    // Закрываем модалку (вызываем твою функцию из HTML)
+    localStorage.setItem('selectedLanguage', lang);
     if (window.toggleModal) window.toggleModal(false);
-    
-    // Перезагружаем страницу, чтобы все переводы в блоках применились
     window.location.reload(); 
 };
 
-// Функция открытия/закрытия модалки (если её нет в main.js, добавь)
 window.toggleModal = function(show) {
     const modal = document.getElementById('system-modal');
     if (modal) {
         modal.style.display = show ? 'flex' : 'none';
     }
-}
+};
 
-initLanguage(); 
-// ------------------------------------------------
+// Запуск инициализации
+window.initLanguage();
+
+/** * 2. ДАННЫЕ КРИПТОВАЛЮТ (TICKER)
+ */
+const coinIds = ['bitcoin', 'ethereum', 'tether', 'binancecoin', 'ripple', 'solana', 'cardano'];
+const coinList = [
+  { name: 'BTC', id: 'bitcoin' },
+  { name: 'ETH', id: 'ethereum' },
+  { name: 'USDT', id: 'tether' },
+  { name: 'BNB', id: 'binancecoin' },
+  { name: 'XRP', id: 'ripple' },
+  { name: 'SOL', id: 'solana' },
+  { name: 'ADA', id: 'cardano' }
+];
 
 async function updatePrices() {
   const tickerBox = document.getElementById('ticker-box');
@@ -59,7 +65,6 @@ async function updatePrices() {
     coinList.forEach(coin => {
       const coinData = data[coin.id];
       if (!coinData) return;
-
       const price = coinData.usd;
       const change = coinData.usd_24h_change.toFixed(2);
       const changeClass = change >= 0 ? 'price-up' : 'price-down';
@@ -76,69 +81,59 @@ async function updatePrices() {
 
     tickerBox.innerHTML = htmlContent;
     tickerBoxCopy.innerHTML = htmlContent;
-
   } catch (error) {
-    console.error("Ошибка:", error);
+    console.error("Ticker Error:", error);
   }
 }
+setInterval(updatePrices, 60000);
+updatePrices();
 
-// Detail content config per section
+/** * 3. КОНФИГУРАЦИЯ АНАЛИТИКИ
+ */
 const detailConfig = {
   analytics: {
     label: 'АНАЛИТИКА',
+    labelEng: 'ANALYTICS',
+    labelUkr: 'АНАЛІТИКА',
     items: [
-      { title: 'Fear & Greed Terminal', desc: 'Общая капитализация криптовалютного рынка и доминирование BTC.' },
-      { title: 'Global Exchange Radar', desc: 'Анализ текущих рыночных тенденций и макро-сигналов.' },
-      { title: 'Dominance', desc: 'Доминирование Bitcoin (BTC) над остальным рынком криптовалют.' },
-      { title: 'dominance(history)', desc: 'Анализ ликвидности и доминирования Bitcoin на крипторынке.' },
-      { title: 'Heatmap', desc: 'Тепловая карта ликвидности и рыночной капитализации топ-25 криптовалют.' },
-      { title: 'RSI PRO Signals', desc: 'Автоматический поиск сигналов перепроданности и перекупленности по RSI (14).' },
-      { title: 'Whale Terminal', desc: 'Мониторинг крупных сделок и активности китов в реальном времени.' },
-      { title: 'OI Terminal', desc: 'Анализ открытого интереса и ставок финансирования BTC.' },
-      { title: 'Smart Suite Intelligence', desc: 'Аналитика биржевых потоков и тепловая карта ликвидаций в реальном времени.' },
-      { title: 'Market Intelligence', desc: 'Анализ экономических событий и их влияния на волатильность рынка.' },
-      { title: 'Binance Futures PRO', desc: 'Профессиональный терминал для торговли фьючерсами на Binance.' },
-      { title: 'NFT Рынок', desc: 'Объём и динамика рынка NFT по коллекциям и блокчейнам.' },
-      { title: 'CryptoStatix Tracker', desc: 'Сигналы машинного обучения на основе технического анализа.' }
+      { title: 'Fear & Greed Terminal', desc: 'Crypto market sentiment and BTC dominance.' },
+      { title: 'Global Exchange Radar', desc: 'Market trends and macro signals.' },
+      { title: 'Dominance', desc: 'BTC market share analysis.' },
+      { title: 'dominance(history)', desc: 'Historical BTC dominance tracking.' },
+      { title: 'Heatmap', desc: 'Market cap heatmap of top 25 assets.' },
+      { title: 'RSI PRO Signals', desc: 'Automatic RSI oversold/overbought detection.' },
+      { title: 'Whale Terminal', desc: 'Real-time large transaction tracking.' },
+      { title: 'OI Terminal', desc: 'Open Interest and Funding Rates.' },
+      { title: 'Smart Suite Intelligence', desc: 'Exchange flows and liquidation heatmaps.' },
+      { title: 'Market Intelligence', desc: 'Economic events and volatility analysis.' },
+      { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
+      { title: 'NFT Рынок', desc: 'NFT market volume and dynamics.' },
+      { title: 'CryptoStatix Tracker', desc: 'ML signals based on technical analysis.' }
     ]
   }
 };
 
-// Track where we came from for back navigation
-let detailOrigin = null;
-let currentDetailIndex = null;
-
-
-
-// Page Switching Logic
+/** * 4. ЛОГИКА СТРАНИЦ (NAVIGATION)
+ */
 window.showPage = function (pageId) {
   const home = document.getElementById('home');
   const pages = document.querySelectorAll('.subpage');
 
   if (pageId === 'home') {
-    // Back to home
     pages.forEach(p => p.classList.remove('active'));
     setTimeout(() => {
       home.classList.remove('hidden-home');
       pages.forEach(p => p.style.display = 'none');
     }, 600);
-    detailOrigin = null;
   } else {
-    // Show subpage
     const targetPage = document.getElementById(pageId);
     if (!targetPage) return;
-
     home.classList.add('hidden-home');
     targetPage.style.display = 'flex';
-
-    // Trigger animation frame
-    requestAnimationFrame(() => {
-      targetPage.classList.add('active');
-    });
+    requestAnimationFrame(() => targetPage.classList.add('active'));
   }
-}
+};
 
-// Show Detail Subpage for a specific grid item
 window.showDetail = function (section, itemIndex) {
   const config = detailConfig[section];
   if (!config) return;
@@ -146,63 +141,34 @@ window.showDetail = function (section, itemIndex) {
   const item = config.items[itemIndex - 1];
   if (!item) return;
 
-  detailOrigin = section;
-  currentDetailIndex = itemIndex;
-
-  // Set content
-// 1. Получаем язык из хранилища
-  const lang = localStorage.getItem('selectedLanguage') || 'RUS';
-
-  // 2. ДОБАВЛЯЕМ ЭТИ ДВЕ СТРОКИ:
-  const langCodes = { 'ENG': 'en', 'UKR': 'uk', 'RUS': 'ru' };
-  document.documentElement.lang = langCodes[lang] || 'ru';
-
+  const lang = localStorage.getItem('selectedLanguage') || 'ENG';
+  
   let label = config.label;
-  if (lang === 'ENG') {
-    if (section === 'analytics') label = 'ANALYTICS';
-  } else if (lang === 'UKR') {
-    if (section === 'analytics') label = 'АНАЛІТИКА';
-  } else {
-    if (section === 'analytics') label = 'АНАЛИТИКА';
-  }
+  if (lang === 'ENG') label = config.labelEng;
+  if (lang === 'UKR') label = config.labelUkr;
 
   document.getElementById('detail-title').textContent = `${label} — ${item.title}`;
   document.getElementById('detail-body').innerHTML = buildDetailBody(section, itemIndex, item, lang);
-  // Hide parent subpage first
-  const parentPage = document.getElementById(section);
-  parentPage.classList.remove('active');
 
-  // Show detail page
+  document.getElementById(section).classList.remove('active');
   const detailPage = document.getElementById('detail-page');
   detailPage.style.display = 'flex';
-
   setTimeout(() => {
-    parentPage.style.display = 'none';
+    document.getElementById(section).style.display = 'none';
     detailPage.classList.add('active');
   }, 100);
-}
+};
 
-// Close Detail and go back to parent subpage
 window.closeDetail = function () {
-  const detailPage = document.getElementById('detail-page');
-  detailPage.classList.remove('active');
-
-  if (detailOrigin) {
-    const parentPage = document.getElementById(detailOrigin);
-    parentPage.style.display = 'flex';
+    window.showPage('analytics'); // Упрощенный возврат в аналитику
+    document.getElementById('detail-page').classList.remove('active');
     setTimeout(() => {
-      detailPage.style.display = 'none';
-      parentPage.classList.add('active');
-    }, 100);
-  } else {
-    setTimeout(() => {
-      detailPage.style.display = 'none';
-    }, 600);
-  }
-}
+        document.getElementById('detail-page').style.display = 'none';
+    }, 300);
+};
 
-// Build detail page body content
-function buildDetailBody(section, index, item, lang = 'RUS') {
+
+function buildDetailBody(section, index, item, lang = 'ENG') {
   const sectionColors = {
     analytics: '#00ff88'
   };
