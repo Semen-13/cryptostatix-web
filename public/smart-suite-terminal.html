@@ -135,25 +135,25 @@
 <main class="main-content">
     <div class="content-wrapper">
         <h1>CryptoStatix Intelligence</h1>
-        <p class="subtitle">Интерпретация данных в реальном времени</p>
+        <p id="sub-title" class="subtitle">Интерпретация данных в реальном времени</p>
 
         <div class="guide-section">
             <div class="guide-item">
-                <h3>📊 Net Flow (Биржевые потоки)</h3>
-                <p>Если столбики <b>красные</b> (Inflow) — киты заводят BTC на биржи. Это риск продаж. Если <b>зеленые</b> (Outflow) — активы уходят на холодные кошельки, создавая дефицит предложения.</p>
+                <h3 id="net-flow-title">📊 Net Flow (Биржевые потоки)</h3>
+                <p id="net-flow-desc">Если столбики <b>красные</b> (Inflow) — киты заводят BTC на биржи. Это риск продаж. Если <b>зеленые</b> (Outflow) — активы уходят на холодные кошельки, создавая дефицит предложения.</p>
             </div>
             <div class="guide-item">
-                <h3>🧼 Liquidation Heatmap</h3>
-                <p>Пузырьки показывают принудительное закрытие позиций. Большие красные пузыри на падении часто сигнализируют о <b>капитуляции</b> и близости локального дна.</p>
+                <h3 id="liq-heatmap-title">🧼 Liquidation Heatmap</h3>
+                <p id="liq-heatmap-desc">Пузырьки показывают принудительное закрытие позиций. Большие красные пузыри на падении часто сигнализируют о <b>капитуляции</b> и близости локального дна.</p>
             </div>
         </div>
 
         <div class="gemini-advice">
             <div class="gemini-header">
                 <div class="gemini-avatar">G</div>
-                <span style="font-weight: bold; color: var(--accent);">Совет от Gemini</span>
+                <span id="gemini-title" style="font-weight: bold; color: var(--accent);">Совет от Gemini</span>
             </div>
-            <div class="advice-text">
+            <div id="gemini-advice-text" class="advice-text">
                 "Никогда не торгуйте только по одному индикатору. Если вы видите огромный приток (Inflow) на биржи, но ликвидаций шортов (зеленые пузыри) становится всё больше — это признак сильной борьбы. Ждите, пока Net Flow стабилизируется, прежде чем открывать позицию. Помните: ликвидации — это топливо для разворота!"
             </div>
         </div>
@@ -162,7 +162,68 @@
 </div>
 
 <script>
-    // --- JS LOGIC (Синхронизированная версия из предыдущих шагов) ---
+    // --- ДИНАМИЧЕСКИЙ ПЕРЕВОД ---
+    const translations = {
+        'ENG': {
+            subtitle: 'Real-Time Data Interpretation',
+            netFlowTitle: '📊 Net Flow (Exchange Flows)',
+            netFlowDesc: 'Red Bars (Inflow): Whales are depositing BTC onto exchanges. This signals potential sell-side pressure. Green Bars (Outflow): Assets are being moved to cold storage, creating a supply crunch (deficit).',
+            liqHeatmapTitle: '🧼 Liquidation Heatmap',
+            liqHeatmapDesc: 'The bubbles represent forced position closures. Large red bubbles during a downtrend often signal capitulation and suggest a local bottom is close at hand.',
+            geminiTitle: '💡 Gemini’s Pro Tip',
+            geminiAdvice: '"Never trade based on a single indicator alone. If you see massive Inflows to exchanges while short liquidations (green bubbles) are simultaneously rising, it’s a sign of a fierce market battle. Wait for the Net Flow to stabilize before entering a position. Remember: liquidations are the fuel for a market reversal!"'
+        },
+        'RUS': {
+            subtitle: 'Интерпретация данных в реальном времени',
+            netFlowTitle: '📊 Net Flow (Биржевые потоки)',
+            netFlowDesc: 'Если столбики <b>красные</b> (Inflow) — киты заводят BTC на биржи. Это риск продаж. Если <b>зеленые</b> (Outflow) — активы уходят на холодные кошельки, создавая дефицит предложения.',
+            liqHeatmapTitle: '🧼 Liquidation Heatmap',
+            liqHeatmapDesc: 'Пузырьки показывают принудительное закрытие позиций. Большие красные пузыри на падении часто сигнализируют о <b>капитуляции</b> и близости локального дна.',
+            geminiTitle: '💡 Совет от Gemini',
+            geminiAdvice: '"Никогда не торгуйте только по одному индикатору. Если вы видите огромный приток (Inflow) на биржи, но ликвидаций шортов (зеленые пузыри) становится всё больше — это признак сильной борьбы. Ждите, пока Net Flow стабилизируется, прежде чем открывать позицию. Помните: ликвидации — это топливо для разворота!"'
+        },
+        'UKR': {
+            subtitle: 'Інтерпретація даних у реальному часі',
+            netFlowTitle: '📊 Net Flow (Біржові потоки)',
+            netFlowDesc: 'Якщо стовпчики <b>червоні</b> (Inflow) — кити заводять BTC на біржі. Це ризик продажів. Якщо <b>зелені</b> (Outflow) — активи йдуть на холодні гаманці, створюючи дефіцит пропозиції.',
+            liqHeatmapTitle: '🧼 Liquidation Heatmap',
+            liqHeatmapDesc: 'Бульбашки показують примусове закриття позицій. Великі червоні бульбашки на падінні часто сигналізують про <b>капітуляцію</b> і близькість локального дна.',
+            geminiTitle: '💡 Порада від Gemini',
+            geminiAdvice: '"Ніколи не торгуйте тільки за одним індикатором. Якщо ви бачите величезний приплив (Inflow) на біржі, але ліквідацій шортів (зелені бульбашки) стає все більше — це ознака сильної боротьби. Чекайте, поки Net Flow стабілізується, перш ніж відкривати позицію. Пам\'ятайте: ліквідації — це паливо для розвороту!"'
+        }
+    };
+
+    function applyTranslations() {
+        const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+        const t = translations[lang] || translations['RUS'];
+        
+        document.getElementById('sub-title').innerText = t.subtitle;
+        document.getElementById('net-flow-title').innerText = t.netFlowTitle;
+        document.getElementById('net-flow-desc').innerHTML = t.netFlowDesc;
+        document.getElementById('liq-heatmap-title').innerText = t.liqHeatmapTitle;
+        document.getElementById('liq-heatmap-desc').innerHTML = t.liqHeatmapDesc;
+        document.getElementById('gemini-title').innerText = t.geminiTitle;
+        document.getElementById('gemini-advice-text').innerText = t.geminiAdvice;
+    }
+
+    // Слушатель изменений
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'selectedLanguage') applyTranslations();
+    });
+    
+    // Периодическая проверка (на всякий случай)
+    let currentLang = localStorage.getItem('selectedLanguage');
+    setInterval(() => {
+        const lang = localStorage.getItem('selectedLanguage');
+        if (lang !== currentLang) {
+            currentLang = lang;
+            applyTranslations();
+        }
+    }, 1000);
+
+    applyTranslations();
+
+    // --- JS LOGIC ---
     const API_KEY = 'ВАШ_КЛЮЧ_ЗДЕСЬ';
     
     // Net Flow
