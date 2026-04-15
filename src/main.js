@@ -168,6 +168,7 @@ window.closeDetail = function () {
 };
 
 
+// Build detail page body content
 function buildDetailBody(section, index, item, lang = 'ENG') {
   const sectionColors = {
     analytics: '#00ff88'
@@ -590,6 +591,62 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
   }
 
   if (section === 'analytics' && index === 10) {
+    const t = {
+      'ENG': {
+        manual: 'Terminal Manual',
+        timeTitle: '🕒 Time Settings',
+        timeDesc: 'By default, the terminal displays your local time. To verify the time zone or switch to UTC, click the gear icon within the widget or check your system settings.',
+        columnsTitle: '📊 Column Definitions:',
+        actual: 'ACTUAL',
+        actualDesc: 'The real-time data point. Released at the exact moment of the event.',
+        forecast: 'FORECAST',
+        forecastDesc: 'Analyst consensus. The market has typically already priced this in.',
+        previous: 'PREVIOUS',
+        previousDesc: 'Data from the prior period for comparison.',
+        volatilityTitle: '🔥 Volatility Levels:',
+        highDesc: '<b>Critical:</b> Includes Fed rate decisions and inflation data (CPI/PCE). Expect sharp movements in BTC.',
+        medDesc: '<b>Moderate:</b> Includes speeches by officials and PMI indices. These influence the intraday trend.',
+        lowDesc: '<b>Low:</b> Minor reports. Usually, these do not significantly impact market conditions.',
+        button: 'GOT IT'
+      },
+      'RUS': {
+        manual: 'Инструкция терминала',
+        timeTitle: '🕒 Настройка времени',
+        timeDesc: 'По умолчанию отображается <b>ваше местное время</b>. Чтобы сверить пояс или переключить на UTC, нажмите на иконку шестеренки внутри виджета или проверьте настройки вашей системы.',
+        columnsTitle: '📊 Значение колонок:',
+        actual: 'ACTUAL',
+        actualDesc: 'Текущий факт. Выходит в момент события.',
+        forecast: 'FORECAST',
+        forecastDesc: 'Прогноз аналитиков. Рынок уже учел его в цене.',
+        previous: 'PREVIOUS',
+        previousDesc: 'Данные прошлого периода для сравнения.',
+        volatilityTitle: '🔥 Уровни волатильности:',
+        highDesc: '<b>Критично:</b> Ставки ФРС, инфляция (CPI/PCE). Возможны резкие движения BTC.',
+        medDesc: '<b>Умеренно:</b> Речи чиновников, индексы PMI. Влияют на внутридневной тренд.',
+        lowDesc: '<b>Низко:</b> Второстепенные отчеты. Обычно не меняют рыночную ситуацию значительно.',
+        button: 'ПОНЯТНО'
+      },
+      'UKR': {
+        manual: 'Інструкція термінала',
+        timeTitle: '🕒 Налаштування часу',
+        timeDesc: 'За замовчуванням відображається <b>ваш місцевий час</b>. Щоб звірити пояс або переключити на UTC, натисніть на іконку шестерні всередині віджета або перевірте налаштування вашої системи.',
+        columnsTitle: '📊 Значення колонок:',
+        actual: 'ACTUAL',
+        actualDesc: 'Поточний факт. Виходить у момент події.',
+        forecast: 'FORECAST',
+        forecastDesc: 'Прогноз аналітиків. Ринок уже врахував його в ціні.',
+        previous: 'PREVIOUS',
+        previousDesc: 'Дані минулого періоду для порівняння.',
+        volatilityTitle: '🔥 Рівні волатильності:',
+        highDesc: '<b>Критично:</b> Ставки ФРС, інфляція (CPI/PCE). Можливі різкі рухи BTC.',
+        medDesc: '<b>Помірно:</b> Промови чиновників, індекси PMI. Впливають на внутрішньоденний тренд.',
+        lowDesc: '<b>Низько:</b> Другорядні звіти. Зазвичай не змінюють ринкову ситуацію значно.',
+        button: 'ЗРОЗУМІЛО'
+      }
+    };
+
+    const cur = t[lang] || t['RUS'];
+
     return `
       <section id="stx-terminal" style="margin: 0; padding: 0; height: calc(100vh - 120px); display: flex; flex-direction: column; position: relative; font-family: 'Inter', sans-serif; width: calc(100% - 60px); margin: 0 auto;">
           
@@ -609,13 +666,13 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
                       transition: 0.3s; box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
                       text-transform: uppercase; letter-spacing: 1px;
                   " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
-                      📊 TERMINAL GUIDE
+                      📊 ${lang === 'ENG' ? 'TERMINAL GUIDE' : (lang === 'UKR' ? 'ІНСТРУКЦІЯ ТЕРМІНАЛА' : 'ИНСТРУКЦИЯ ТЕРМИНАЛА')}
                   </button>
               </div>
 
               <div style="flex-grow: 1; width: 100%; background: #111827;">
                   <iframe 
-                      src="https://www.tradingview-widget.com/embed-widget/events/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CJPY%2CGBP%2CAUD%2CCAD%2CCHF%22%7D" 
+                      src="https://www.tradingview-widget.com/embed-widget/events/?locale=${lang === 'ENG' ? 'en' : 'ru'}#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CJPY%2CGBP%2CAUD%2CCAD%2CCHF%22%7D" 
                       width="100%" height="100%" frameborder="0" style="border: none; min-height: 500px;">
                   </iframe>
               </div>
@@ -626,49 +683,49 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
                   <button onclick="document.getElementById('stx-modal').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 32px; height: 32px; color: #64748b; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.color='#fff'; this.style.borderColor='#3b82f6'" onmouseout="this.style.color='#64748b'; this.style.borderColor='rgba(255,255,255,0.1)'">✕</button>
 
                   <h2 style="margin: 0 0 10px 0; color: #38bdf8; font-size: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; text-transform: uppercase; font-family: 'Orbitron', sans-serif; letter-spacing: 2px;">
-                      Инструкция терминала
+                      ${cur.manual}
                   </h2>
                   
                   <div style="margin-top: 10px; background: rgba(59, 130, 246, 0.1); padding: 18px; border-left: 4px solid #3b82f6; border-radius: 8px;">
-                      <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #3b82f6; text-transform: uppercase; font-weight: 800;">🕒 Настройка времени</h4>
+                      <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #3b82f6; text-transform: uppercase; font-weight: 800;">${cur.timeTitle}</h4>
                       <p style="font-size: 13px; color: #94a3b8; margin: 0; line-height: 1.6;">
-                          По умолчанию отображается <b>ваше местное время</b>. Чтобы сверить пояс или переключить на UTC, нажмите на иконку шестеренки внутри виджета или проверьте настройки вашей системы.
+                          ${cur.timeDesc}
                       </p>
                   </div>
 
-                  <h4 style="margin: 10px 0 0px 0; font-size: 14px; color: #38bdf8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">📊 Значение колонок:</h4>
+                  <h4 style="margin: 10px 0 0px 0; font-size: 14px; color: #38bdf8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">${cur.columnsTitle}</h4>
                   <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 10px;">
                       <div style="background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
-                          <div style="color: #f1f5f9; font-size: 11px; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px;">ACTUAL</div>
-                          <div style="font-size: 10px; color: #94a3b8; line-height: 1.4;">Текущий факт. Выходит в момент события.</div>
+                          <div style="color: #f1f5f9; font-size: 11px; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px;">${cur.actual}</div>
+                          <div style="font-size: 10px; color: #94a3b8; line-height: 1.4;">${cur.actualDesc}</div>
                       </div>
                       <div style="background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
-                          <div style="color: #f1f5f9; font-size: 11px; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px;">FORECAST</div>
-                          <div style="font-size: 10px; color: #94a3b8; line-height: 1.4;">Прогноз аналитиков. Рынок уже учел его в цене.</div>
+                          <div style="color: #f1f5f9; font-size: 11px; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px;">${cur.forecast}</div>
+                          <div style="font-size: 10px; color: #94a3b8; line-height: 1.4;">${cur.forecastDesc}</div>
                       </div>
                       <div style="background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
-                          <div style="color: #f1f5f9; font-size: 11px; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px;">PREVIOUS</div>
-                          <div style="font-size: 10px; color: #94a3b8; line-height: 1.4;">Данные прошлого периода для сравнения.</div>
+                          <div style="color: #f1f5f9; font-size: 11px; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px;">${cur.previous}</div>
+                          <div style="font-size: 10px; color: #94a3b8; line-height: 1.4;">${cur.previousDesc}</div>
                       </div>
                   </div>
 
-                  <h4 style="margin: 10px 0 0px 0; font-size: 14px; color: #38bdf8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">🔥 Уровни волатильности:</h4>
+                  <h4 style="margin: 10px 0 0px 0; font-size: 14px; color: #38bdf8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">${cur.volatilityTitle}</h4>
                   <div style="display: flex; flex-direction: column; gap: 15px;">
                       <div style="display: flex; gap: 15px; align-items: flex-start; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 10px;">
                           <div style="min-width: 70px; height: 26px; background: #ef4444; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #fff; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">HIGH</div>
-                          <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;"><b>Критично:</b> Ставки ФРС, инфляция (CPI/PCE). Возможны резкие движения BTC.</div>
+                          <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">${cur.highDesc}</div>
                       </div>
                       <div style="display: flex; gap: 15px; align-items: flex-start; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 10px;">
                           <div style="min-width: 70px; height: 26px; background: #f59e0b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #fff; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);">MEDIUM</div>
-                          <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;"><b>Умеренно:</b> Речи чиновников, индексы PMI. Влияют на внутридневной тренд.</div>
+                          <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">${cur.medDesc}</div>
                       </div>
                       <div style="display: flex; gap: 15px; align-items: flex-start; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 10px;">
                           <div style="min-width: 70px; height: 26px; background: #64748b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #f1f5f9;">LOW</div>
-                          <div style="font-size: 13px; color: #94a3b8; line-height: 1.5;"><b>Низко:</b> Второстепенные отчеты. Обычно не меняют рыночную ситуацию значительно.</div>
+                          <div style="font-size: 13px; color: #94a3b8; line-height: 1.5;">${cur.lowDesc}</div>
                       </div>
                   </div>
 
-                  <button onclick="document.getElementById('stx-modal').style.display='none'" style="margin-top: 15px; width: 100%; padding: 16px; background: #3b82f6; border: none; border-radius: 12px; color: white; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);" onmouseover="this.style.background='#2563eb'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#3b82f6'; this.style.transform='translateY(0)'">ПОНЯТНО</button>
+                  <button onclick="document.getElementById('stx-modal').style.display='none'" style="margin-top: 15px; width: 100%; padding: 16px; background: #3b82f6; border: none; border-radius: 12px; color: white; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);" onmouseover="this.style.background='#2563eb'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#3b82f6'; this.style.transform='translateY(0)'">${cur.button}</button>
               </div>
           </div>
       </section>
@@ -786,19 +843,73 @@ window.selectLanguage = function (langCode) {
       button: 'Eng.',
       options: ['Eng.', 'Rus.', 'Ukr.'],
       navAnalytics: 'Analytics',
-      navAbout: 'About us'
+      navAbout: 'About us',
+      aboutTitle: 'About CryptoStatix',
+      aboutDesc: '<strong>CryptoStatix</strong> is an analytical platform built for traders and investors who prioritize data integrity and speed. We don’t just display charts—we help you visualize market structure through the lens of key metrics.',
+      aboutWhatTitle: 'What We Do',
+      aboutWhatDesc: 'Our service aggregates data directly from Binance and CoinGecko, providing you with professional-grade tools in a single click:',
+      aboutCard1Title: 'Real-time Monitoring',
+      aboutCard1Desc: 'Track volatility and trading volumes as they happen.',
+      aboutCard2Title: 'Smart Analytics',
+      aboutCard2Desc: 'Instant access to RSI, liquidity heatmaps, and asset dominance.',
+      aboutCard3Title: 'Trend Focus',
+      aboutCard3Desc: 'We highlight promising ecosystems, such as MemeCore, AI infrastructure, and Layer-2 solutions.',
+      aboutMissionTitle: 'Our Mission',
+      aboutMissionDesc: 'To streamline your decision-making process. In a world where information updates every second, CryptoStatix acts as your filter—cutting through the noise to leave only the facts.',
+      aboutCommunityTitle: 'Join Our Community',
+      aboutCommunityDesc: 'For those who want to keep their finger on the pulse 24/7, we’ve launched our official Telegram channel. There, we provide:',
+      aboutItem1: 'Urgent alerts on abnormal market movements.',
+      aboutItem2: 'Deep dives into promising tokens.',
+      aboutItem3: 'Feature updates for our web platform.',
+      aboutTgLink: '🔗 CryptoStatix_news | Analytics & Data'
     },
     'RUS': {
       button: 'Рус.',
       options: ['Анг.', 'Рус.', 'Укр.'],
       navAnalytics: 'Аналитика',
-      navAbout: 'О проекте'
+      navAbout: 'О проекте',
+      aboutTitle: 'О проекте CryptoStatix',
+      aboutDesc: '<strong>CryptoStatix</strong> — это аналитическая платформа, созданная для трейдеров и инвесторов, которым важна чистота данных и оперативность. Мы не просто показываем графики, мы помогаем увидеть структуру рынка через призму ключевых метрик.',
+      aboutWhatTitle: 'Что мы делаем?',
+      aboutWhatDesc: 'Наш сервис агрегирует данные напрямую с Binance и CoinGecko, предоставляя вам инструменты профессионального уровня в один клик:',
+      aboutCard1Title: 'Real-time Мониторинг',
+      aboutCard1Desc: 'Отслеживание волатильности и объемов в реальном времени.',
+      aboutCard2Title: 'Смарт-аналитика',
+      aboutCard2Desc: 'Быстрый доступ к RSI, тепловым картам ликвидности и доминированию активов.',
+      aboutCard3Title: 'Фокус на трендах',
+      aboutCard3Desc: 'Мы подсвечиваем перспективные экосистемы, такие как MemeCore, AI-инфраструктуру и Layer-2 решения.',
+      aboutMissionTitle: 'Наша миссия',
+      aboutMissionDesc: 'Упростить процесс принятия решений. В мире, где информация обновляется каждую секунду, CryptoStatix становится вашим фильтром, отсекая шум и оставляя только факты.',
+      aboutCommunityTitle: 'Присоединяйтесь к нашему комьюнити',
+      aboutCommunityDesc: 'Для тех, кто хочет держать руку на пульсе 24/7, мы запустили официальный Telegram-канал. Там мы публикуем:',
+      aboutItem1: 'Срочные уведомления об аномальных движениях рынка.',
+      aboutItem2: 'Обзоры перспективных токенов.',
+      aboutItem3: 'Обновления функционала нашего сайта.',
+      aboutTgLink: 'CryptoStatix_news/Аналитика и данные'
     },
     'UKR': {
       button: 'Укр.',
       options: ['Анг.', 'Рос.', 'Укр.'],
       navAnalytics: 'Аналітика',
-      navAbout: 'Про проект'
+      navAbout: 'Про проект',
+      aboutTitle: 'Про проект CryptoStatix',
+      aboutDesc: '<strong>CryptoStatix</strong> — це аналітична платформа, створена для трейдерів та інвесторів, яким важлива чистота даних та оперативність. Ми не просто показуємо графіки, ми допомагаємо побачити структуру ринку через призму ключових метрик.',
+      aboutWhatTitle: 'Що ми робимо?',
+      aboutWhatDesc: 'Наш сервіс агрегує дані безпосередньо з Binance та CoinGecko, надаючи вам інструменти професійного рівня в один клік:',
+      aboutCard1Title: 'Real-time Моніторинг',
+      aboutCard1Desc: 'Відстеження волатильності та обсягів у реальному часі.',
+      aboutCard2Title: 'Смарт-аналітика',
+      aboutCard2Desc: 'Швидкий доступ до RSI, теплових карт ліквідності та домінування активів.',
+      aboutCard3Title: 'Фокус на трендах',
+      aboutCard3Desc: 'Ми підсвічуємо перспективні екосистеми, такі як MemeCore, AI-інфраструктуру та Layer-2 рішення.',
+      aboutMissionTitle: 'Наша місія',
+      aboutMissionDesc: 'Спростити процес прийняття рішень. У світі, де інформація оновлюється кожну секунду, CryptoStatix стає вашим фільтром, відсікаючи шум і залишаючи лише факти.',
+      aboutCommunityTitle: 'Приєднуйтесь до нашої спільноти',
+      aboutCommunityDesc: 'Для тих, хто хоче тримати руку на пульсі 24/7, ми запустили офіційний Telegram-канал. Там ми публікуємо:',
+      aboutItem1: 'Термінові повідомлення про аномальні рухи ринку.',
+      aboutItem2: 'Огляди перспективних токенів.',
+      aboutItem3: 'Оновлення функціоналу нашого сайту.',
+      aboutTgLink: '🔗 CryptoStatix_news | Аналітика та дані'
     }
   };
 
@@ -830,6 +941,49 @@ window.selectLanguage = function (langCode) {
       btn.textContent = langCode === 'RUS' ? 'НА ГЛАВНУЮ' : (langCode === 'UKR' ? 'НА ГОЛОВНУ' : 'TO HOME');
     }
   });
+
+  // Update About page content
+  const ids = {
+    'about-title': 'aboutTitle',
+    'about-desc': 'aboutDesc',
+    'about-what-title': 'aboutWhatTitle',
+    'about-what-desc': 'aboutWhatDesc',
+    'about-card-1-title': 'aboutCard1Title',
+    'about-card-1-desc': 'aboutCard1Desc',
+    'about-card-2-title': 'aboutCard2Title',
+    'about-card-2-desc': 'aboutCard2Desc',
+    'about-card-3-title': 'aboutCard3Title',
+    'about-card-3-desc': 'aboutCard3Desc',
+    'about-mission-title': 'aboutMissionTitle',
+    'about-mission-desc': 'aboutMissionDesc',
+    'about-community-title': 'aboutCommunityTitle',
+    'about-community-desc': 'aboutCommunityDesc',
+    'about-community-item-1': 'aboutItem1',
+    'about-community-item-2': 'aboutItem2',
+    'about-community-item-3': 'aboutItem3',
+    'about-tg-link': 'aboutTgLink'
+  };
+
+  for (const [id, key] of Object.entries(ids)) {
+    const el = document.getElementById(id);
+    if (el) {
+      if (key === 'aboutDesc') el.innerHTML = current[key];
+      else el.textContent = current[key];
+    }
+  }
+
+  // Hide/Show Community block (Russian only)
+  const communitySec = document.getElementById('about-community-section');
+  const missionSec = document.getElementById('about-mission-section');
+  if (communitySec && missionSec) {
+    if (langCode === 'RUS') {
+      communitySec.style.display = 'block';
+      missionSec.style.flex = '1';
+    } else {
+      communitySec.style.display = 'none';
+      missionSec.style.flex = '1 1 100%';
+    }
+  }
 
   // Update labels and selection highlight in the menu
   const langCodes = ['ENG', 'RUS', 'UKR'];
