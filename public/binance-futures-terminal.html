@@ -136,7 +136,7 @@
 <div id="chart-overlay">
     <div id="chart-header">
         <div id="chart-title">Загрузка...</div>
-        <button class="close-chart" onclick="closeChart()">ЗАКРЫТЬ (ESC)</button>
+        <button id="close-chart-btn" class="close-chart" onclick="closeChart()">ЗАКРЫТЬ (ESC)</button>
     </div>
     <div id="tv-chart-container"></div>
 </div>
@@ -148,10 +148,10 @@
     </header>
 
     <div class="global-stats">
-        <div class="stat-item"><span class="stat-label">Market Cap (Global)</span><span class="stat-value" id="total-cap">...</span></div>
-        <div class="stat-item"><span class="stat-label">24h Volume (Global)</span><span class="stat-value" id="total-vol">...</span></div>
-        <div class="stat-item"><span class="stat-label">BTC Dominance</span><span class="stat-value" id="btc-dom">...</span></div>
-        <div class="stat-item"><span class="stat-label">Binance Listed</span><span class="stat-value" id="active-coins">...</span></div>
+        <div class="stat-item"><span id="lbl-cap" class="stat-label">Market Cap (Global)</span><span class="stat-value" id="total-cap">...</span></div>
+        <div class="stat-item"><span id="lbl-vol" class="stat-label">24h Volume (Global)</span><span class="stat-value" id="total-vol">...</span></div>
+        <div class="stat-item"><span id="lbl-dom" class="stat-label">BTC Dominance</span><span class="stat-value" id="btc-dom">...</span></div>
+        <div class="stat-item"><span id="lbl-listed" class="stat-label">Binance Listed</span><span class="stat-value" id="active-coins">...</span></div>
     </div>
 
     <div class="table-container">
@@ -159,13 +159,13 @@
             <thead>
                 <tr>
                     <th onclick="setSort('market_cap_rank')">#</th>
-                    <th onclick="setSort('symbol')">Инструмент</th>
-                    <th onclick="setSort('current_price')">Цена USDT</th>
+                    <th id="th-asset" onclick="setSort('symbol')">Инструмент</th>
+                    <th id="th-price" onclick="setSort('current_price')">Цена USDT</th>
                     <th onclick="setSort('price_change_percentage_1h_in_currency')">1ч %</th>
                     <th onclick="setSort('price_change_percentage_24h_in_currency')">24ч %</th>
                     <th onclick="setSort('price_change_percentage_7d_in_currency')">7д %</th>
-                    <th onclick="setSort('total_volume')">Объем 24ч</th>
-                    <th onclick="setSort('market_cap')">Капитализация</th>
+                    <th id="th-vol" onclick="setSort('total_volume')">Объем 24ч</th>
+                    <th id="th-cap" onclick="setSort('market_cap')">Капитализация</th>
                 </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -177,6 +177,97 @@
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
+    // --- ДИНАМИЧЕСКИЙ ПЕРЕВОД ---
+    const translations = {
+        'ENG': {
+            searchPlaceholder: 'Search futures...',
+            colAsset: 'Asset',
+            colPrice: 'Price USDT',
+            colVol: '24h Volume',
+            colCap: 'Market Cap',
+            loader: 'Syncing with Binance Futures...',
+            closeChart: 'CLOSE (ESC)',
+            chartLoading: 'Loading...',
+            errorMsg: 'Update failed. Retrying in 30s...',
+            tvLocale: 'en',
+            statCap: 'Market Cap (Global)',
+            statVol: '24h Volume (Global)',
+            statDom: 'BTC Dominance',
+            statListed: 'Binance Listed'
+        },
+        'RUS': {
+            searchPlaceholder: 'Поиск фьючерса...',
+            colAsset: 'Инструмент',
+            colPrice: 'Цена USDT',
+            colVol: 'Объем 24ч',
+            colCap: 'Капитализация',
+            loader: 'Синхронизация с Binance Futures...',
+            closeChart: 'ЗАКРЫТЬ (ESC)',
+            chartLoading: 'Загрузка...',
+            errorMsg: 'Ошибка обновления. Повтор через 30 сек...',
+            tvLocale: 'ru',
+            statCap: 'Кап. рынка (Global)',
+            statVol: 'Объем 24ч (Global)',
+            statDom: 'Доминация BTC',
+            statListed: 'Листинг Binance'
+        },
+        'UKR': {
+            searchPlaceholder: 'Пошук ф’ючерса...',
+            colAsset: 'Інструмент',
+            colPrice: 'Ціна USDT',
+            colVol: 'Обсяг 24г',
+            colCap: 'Капіталізація',
+            loader: 'Синхронізація з Binance Futures...',
+            closeChart: 'ЗАКРИТИ (ESC)',
+            chartLoading: 'Завантаження...',
+            errorMsg: 'Помилка оновлення. Повтор через 30 сек...',
+            tvLocale: 'ru',
+            statCap: 'Кап. ринку (Global)',
+            statVol: 'Обсяг 24г (Global)',
+            statDom: 'Домінація BTC',
+            statListed: 'Лістинг Binance'
+        }
+    };
+
+    function applyTranslations() {
+        const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+        const t = translations[lang] || translations['RUS'];
+        
+        document.getElementById('coinSearch').placeholder = t.searchPlaceholder;
+        document.getElementById('th-asset').innerText = t.colAsset;
+        document.getElementById('th-price').innerText = t.colPrice;
+        document.getElementById('th-vol').innerText = t.colVol;
+        document.getElementById('th-cap').innerText = t.colCap;
+        document.getElementById('close-chart-btn').innerText = t.closeChart;
+        document.getElementById('lbl-cap').innerText = t.statCap;
+        document.getElementById('lbl-vol').innerText = t.statVol;
+        document.getElementById('lbl-dom').innerText = t.statDom;
+        document.getElementById('lbl-listed').innerText = t.statListed;
+        
+        const loader = document.getElementById('loader');
+        if (loader.style.display !== 'none') {
+            loader.innerText = t.loader;
+        }
+    }
+
+    // Слушатель изменений
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'selectedLanguage') applyTranslations();
+    });
+    
+    // Периодическая проверка
+    let currentLangState = localStorage.getItem('selectedLanguage');
+    setInterval(() => {
+        const lang = localStorage.getItem('selectedLanguage');
+        if (lang !== currentLangState) {
+            currentLangState = lang;
+            applyTranslations();
+        }
+    }, 1000);
+
+    applyTranslations();
+
+    // --- JS LOGIC ---
     let cryptoData = [];
     let futuresTickers = new Set();
     let currentSort = { key: 'market_cap_rank', asc: true };
@@ -187,23 +278,19 @@
 
     async function fetchData() {
         try {
-            // 1. Получаем список фьючерсов с Binance
             const resBinance = await fetch(API_BINANCE_FUTURES);
             const binanceData = await resBinance.json();
             
-            // Собираем тикеры (только USDT пары, например BTCUSDT)
             futuresTickers = new Set(
                 binanceData.symbols
                 .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING')
                 .map(s => s.baseAsset.toLowerCase())
             );
 
-            // 2. Получаем данные рынка и глобальную статистику
             const [resMarkets, resGlobal] = await Promise.all([fetch(API_COINGECKO), fetch(API_GLOBAL)]);
             const markets = await resMarkets.json();
             const globalData = await resGlobal.json();
 
-            // 3. Фильтруем: оставляем только те, что есть на фьючерсах
             cryptoData = markets.filter(coin => futuresTickers.has(coin.symbol.toLowerCase()));
 
             renderTable(cryptoData);
@@ -213,7 +300,9 @@
             document.getElementById('active-coins').innerText = cryptoData.length;
         } catch (e) {
             console.error(e);
-            document.getElementById('loader').innerText = 'Ошибка обновления. Повтор через 30 сек...';
+            const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+            const t = translations[lang] || translations['RUS'];
+            document.getElementById('loader').innerText = t.errorMsg;
         }
     }
 
@@ -258,9 +347,12 @@
     }
 
     function openChart(symbol) {
+        const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+        const t = translations[lang] || translations['RUS'];
+
         document.getElementById('chart-overlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
-        document.getElementById('chart-title').innerText = `BINANCE:${symbol}USDT.P (PERP)`;
+        document.getElementById('chart-title').innerText = t.chartLoading;
         
         new TradingView.widget({
             "autosize": true,
@@ -269,7 +361,7 @@
             "timezone": "Etc/UTC",
             "theme": "dark",
             "style": "1",
-            "locale": "ru",
+            "locale": t.tvLocale,
             "container_id": "tv-chart-container",
             "hide_side_toolbar": false,
             "allow_symbol_change": true,
@@ -277,6 +369,10 @@
             "hotlist": true,
             "calendar": true
         });
+
+        setTimeout(() => {
+            document.getElementById('chart-title').innerText = `BINANCE:${symbol}USDT.P (PERP)`;
+        }, 1000);
     }
 
     function closeChart() {
@@ -302,10 +398,7 @@
         return n ? n.toLocaleString() : '0';
     }
 
-    // Инициализация
     fetchData();
-    
-    // Автообновление каждые 5 минут
     setInterval(fetchData, 300000); 
 
     document.addEventListener('keydown', (e) => {
