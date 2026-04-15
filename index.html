@@ -2,7 +2,7 @@
 <html lang="en"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="build-number" content="103">
+    
     <title>CryptoStatix PRO — Premium Analytics Dashboard</title>
     <meta name="description" content="Professional crypto market monitoring: Fear & Greed Index, RSI, and Volume Anomalies. Real-time trading data for Ukraine and worldwide.">
     
@@ -17,7 +17,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://cryptostatix.pp.ua/og-image.jpg">
 
-   <script async src="https://www.googletagmanager.com/gtag/js?id=G-FGDBVKGMM5"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FGDBVKGMM5"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -32,12 +32,7 @@
     gtag('config', 'G-FGDBVKGMM5');
   }
 </script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-FGDBVKGMM5');
-    </script>
+    
 </head>
 
 <body>
@@ -139,7 +134,7 @@
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 12)">
                 <img src="/ai-forecast.png" alt="CryptoStatix Tracker" class="grid-img">
-                <span class="grid-caption">CryptoStatix Tracker</span>
+                <span class="grid-caption">CryptoStatixPro</span>
             </div>
         </div>
         <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
@@ -152,19 +147,19 @@
             style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; text-align: center;">
             <div
                 style="max-width: 950px; width: 100%; background: rgba(255, 255, 255, 0.02); border: none; border-radius: 12px; padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 136, 0.08); overflow: hidden;">
-                <h3
+                <h3 id="about-title"
                     style="color: var(--accent); margin-bottom: 15px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px;">
                     О проекте CryptoStatix</h3>
-                <p style="font-size: 0.85rem; line-height: 1.5; color: rgba(255,255,255,0.9); margin-bottom: 15px;">
+                <p id="about-desc" style="font-size: 0.85rem; line-height: 1.5; color: rgba(255,255,255,0.9); margin-bottom: 15px;">
                     <strong>CryptoStatix</strong> — это аналитическая платформа, созданная для трейдеров и инвесторов,
                     которым важна чистота данных и оперативность. Мы не просто показываем графики, мы помогаем увидеть
                     структуру рынка через призму ключевых метрик.
                 </p>
 
-                <h4
+                <h4 id="about-what-title"
                     style="color: var(--accent); margin-bottom: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; text-align: left;">
                     Что мы делаем?</h4>
-                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.7); text-align: left; margin-bottom: 15px;">Наш
+                <p id="about-what-desc" style="font-size: 0.8rem; color: rgba(255,255,255,0.7); text-align: left; margin-bottom: 15px;">Наш
                     сервис агрегирует данные напрямую с Binance и CoinGecko, предоставляя вам инструменты
                     профессионального уровня в один клик:</p>
 
@@ -172,52 +167,52 @@
                     style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; text-align: left;">
                     <div
                         style="background: rgba(255,255,255,0.02); padding: 12px; border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 8px;">
-                        <h4
+                        <h4 id="about-card-1-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
                             Real-time Мониторинг</h4>
-                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Отслеживание
+                        <p id="about-card-1-desc" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Отслеживание
                             волатильности и объемов в реальном времени.</p>
                     </div>
                     <div
                         style="background: rgba(255,255,255,0.02); padding: 12px; border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 8px;">
-                        <h4
+                        <h4 id="about-card-2-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
                             Смарт-аналитика</h4>
-                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Быстрый доступ к
+                        <p id="about-card-2-desc" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Быстрый доступ к
                             RSI, тепловым картам ликвидности и доминированию активов.</p>
                     </div>
                     <div
                         style="background: rgba(255,255,255,0.02); padding: 12px; border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 8px;">
-                        <h4
+                        <h4 id="about-card-3-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
                             Фокус на трендах</h4>
-                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Мы подсвечиваем
+                        <p id="about-card-3-desc" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Мы подсвечиваем
                             перспективные экосистемы, такие как MemeCore, AI-инфраструктуру и Layer-2 решения.</p>
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 20px; align-items: flex-start; text-align: left; margin-bottom: 15px;">
-                    <div style="flex: 1;">
-                        <h4
+                    <div id="about-mission-section" style="flex: 1;">
+                        <h4 id="about-mission-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.8rem; margin-bottom: 8px; text-transform: uppercase;">
                             Наша миссия</h4>
-                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Упростить процесс
+                        <p id="about-mission-desc" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Упростить процесс
                             принятия решений. В мире, где информация обновляется каждую секунду, CryptoStatix становится
                             вашим фильтром, отсекая шум и оставляя только факты.</p>
                     </div>
-                    <div style="flex: 1; border-left: 1px solid rgba(0, 255, 136, 0.2); padding-left: 20px;">
-                        <h4
+                    <div id="about-community-section" style="flex: 1; border-left: 1px solid rgba(0, 255, 136, 0.2); padding-left: 20px;">
+                        <h4 id="about-community-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.8rem; margin-bottom: 8px; text-transform: uppercase;">
                             Присоединяйтесь к нашему комьюнити</h4>
-                        <p
+                        <p id="about-community-desc"
                             style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4; margin-bottom: 10px;">
                             Для тех, кто хочет держать руку на пульсе 24/7, мы запустили официальный Telegram-канал. Там
                             мы публикуем:</p>
                         <ul
                             style="font-size: 0.7rem; color: rgba(255,255,255,0.6); padding-left: 15px; margin-bottom: 12px; line-height: 1.3;">
-                            <li>Срочные уведомления об аномальных движениях рынка.</li>
-                            <li>Обзоры перспективных токенов.</li>
-                            <li>Обновления функционала нашего сайта.</li>
+                            <li id="about-community-item-1">Срочные уведомления об аномальных движениях рынка.</li>
+                            <li id="about-community-item-2">Обзоры перспективных токенов.</li>
+                            <li id="about-community-item-3">Обновления функционала нашего сайта.</li>
                         </ul>
                         <a href="https://t.me/cryptostatix_news" target="_blank"
                             style="display: inline-flex; align-items: center; gap: 8px; background: #0088cc; color: #fff; text-decoration: none; padding: 6px 14px; border-radius: 50px; font-weight: 600; font-size: 0.75rem; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 136, 204, 0.3); border: 1px solid rgba(255,255,255,0.1);">
@@ -230,7 +225,7 @@
                                     </path>
                                 </svg>
                             </div>
-                            <span style="font-size: 0.8rem; letter-spacing: 0.5px;">CryptoStatix_news/Аналитика и
+                            <span id="about-tg-link" style="font-size: 0.8rem; letter-spacing: 0.5px;">CryptoStatix_news/Аналитика и
                                 данные</span>
                         </a>
                     </div>
