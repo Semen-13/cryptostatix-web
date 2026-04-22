@@ -249,6 +249,92 @@
     </div>
 
     <script type="module" src="/src/main.js"></script>
+<style>
+    #ai-agent-trigger:hover { transform: scale(1.1); }
+    #ai-chat-content::-webkit-scrollbar { width: 5px; }
+    #ai-chat-content::-webkit-scrollbar-track { background: #000d1a; }
+    #ai-chat-content::-webkit-scrollbar-thumb { background: #003366; border-radius: 10px; }
+</style>
+
+<div id="ai-agent-trigger" onclick="toggleAiChat()" style="position: fixed; bottom: 25px; right: 25px; width: 80px; height: 80px; background: transparent; border: none; cursor: pointer; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <img src="/ai-robot.png" alt="AI Agent" style="width: 100%; height: 100%; object-fit: cover; border: 3px solid var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow);">
+</div>
+
+<div id="ai-chat-modal" style="display: none; position: fixed; bottom: 100px; right: 25px; width: 360px; height: 480px; background: #001a33; border: 1px solid #004d99; border-radius: 15px; flex-direction: column; z-index: 10000; box-shadow: 0 15px 50px rgba(0,0,0,0.9); overflow: hidden; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    
+    <div style="background: linear-gradient(90deg, #001a33 0%, #003366 100%); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #004d99;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 8px #00ff00;"></div>
+            <span style="color: #00e6ff; font-weight: bold; letter-spacing: 0.5px; font-size: 14px;">CryptoStatix AI Agent</span>
+        </div>
+        <span onclick="toggleAiChat()" style="color: #fff; cursor: pointer; font-size: 26px; line-height: 20px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</span>
+    </div>
+    
+    <div id="ai-chat-content" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #000d1a; color: #e6f2ff; font-size: 14px; scroll-behavior: smooth;">
+        <div id="ai-welcome-msg" style="background: #002244; padding: 12px; border-radius: 12px; border-bottom-left-radius: 2px; align-self: flex-start; max-width: 85%; border: 1px solid #003366;">
+            Привет! Я твой AI-ассистент в мире CryptoStatix. Анализирую рынок 24/7. Какой актив обсудим сегодня? 📈
+        </div>
+    </div>
+    
+    <div style="padding: 12px; background: #001a33; display: flex; gap: 8px; border-top: 1px solid #003366;">
+        <input type="text" id="ai-user-input" placeholder="Введите ваш запрос..." style="flex: 1; background: #000d1a; border: 1px solid #004d99; color: white; padding: 10px 15px; border-radius: 20px; outline: none; font-size: 13px; transition: 0.3s;" onfocus="this.style.borderColor='#00e6ff'">
+        <button onclick="handleAiSend()" id="ai-send-btn" style="background: #00e6ff; color: #000; border: none; width: 40px; height: 40px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;">
+            <span id="btn-icon">➤</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    function toggleAiChat() {
+        const modal = document.getElementById('ai-chat-modal');
+        const isHidden = modal.style.display === 'none' || modal.style.display === '';
+        modal.style.display = isHidden ? 'flex' : 'none';
+        if(isHidden) document.getElementById('ai-user-input').focus();
+    }
+
+    async function handleAiSend() {
+        const input = document.getElementById('ai-user-input');
+        const content = document.getElementById('ai-chat-content');
+        const btn = document.getElementById('ai-send-btn');
+        const text = input.value.trim();
+
+        if (!text) return;
+
+        // Сообщение пользователя
+        content.innerHTML += `<div style="background: #004d99; padding: 12px; border-radius: 12px; border-bottom-right-radius: 2px; align-self: flex-end; color: white; max-width: 85%; border: 1px solid #0066cc;">${text}</div>`;
+        input.value = '';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        document.getElementById('btn-icon').innerText = '...';
+
+        try {
+            const response = await fetch('/.netlify/functions/ask-ai', {
+                method: 'POST',
+                body: JSON.stringify({ message: text }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await response.json();
+            const reply = data.response || "Извини, возникла ошибка в системе. Попробуй позже.";
+            
+            // Ответ ИИ
+            content.innerHTML += `<div style="background: #002244; padding: 12px; border-radius: 12px; border-bottom-left-radius: 2px; align-self: flex-start; max-width: 85%; border: 1px solid #003366; color: #00e6ff;"><b>PRO:</b> ${reply}</div>`;
+            
+        } catch (err) {
+            content.innerHTML += `<div style="color: #ff4d4d; font-size: 12px; align-self: center;">Ошибка связи. Проверьте Netlify Functions.</div>`;
+        }
+
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        document.getElementById('btn-icon').innerText = '➤';
+        content.scrollTop = content.scrollHeight;
+    }
+
+    // Слушатель Enter
+    document.getElementById('ai-user-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleAiSend();
+    });
+</script>
 </body>
 
 </html>
