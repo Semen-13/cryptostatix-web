@@ -27,4 +27,3 @@ I've successfully created the **CryptoStatix** landing page. It is a high-perfor
 
 ### Verification
 The site is currently running locally at `http://localhost:5173/`. You can view it in your browser to see the animations and transitions in action.
-
