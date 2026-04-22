@@ -861,7 +861,9 @@ window.selectLanguage = function (langCode) {
       aboutItem1: 'Urgent alerts on abnormal market movements.',
       aboutItem2: 'Deep dives into promising tokens.',
       aboutItem3: 'Feature updates for our web platform.',
-      aboutTgLink: '🔗 CryptoStatix_news | Analytics & Data'
+      aboutTgLink: '🔗 CryptoStatix_news | Analytics & Data',
+      aiWelcome: 'Hello! I am your AI assistant in the world of CryptoStatix. Analyzing the market 24/7. Which asset shall we discuss today? 📈',
+      aiPlaceholder: 'Enter your request...'
     },
     'RUS': {
       button: 'Рус.',
@@ -885,7 +887,9 @@ window.selectLanguage = function (langCode) {
       aboutItem1: 'Срочные уведомления об аномальных движениях рынка.',
       aboutItem2: 'Обзоры перспективных токенов.',
       aboutItem3: 'Обновления функционала нашего сайта.',
-      aboutTgLink: 'CryptoStatix_news/Аналитика и данные'
+      aboutTgLink: 'CryptoStatix_news/Аналитика и данные',
+      aiWelcome: 'Привет! Я твой AI-ассистент в мире CryptoStatix. Анализирую рынок 24/7. Какой актив обсудим сегодня? 📈',
+      aiPlaceholder: 'Введите ваш запрос...'
     },
     'UKR': {
       button: 'Укр.',
@@ -909,7 +913,9 @@ window.selectLanguage = function (langCode) {
       aboutItem1: 'Термінові повідомлення про аномальні рухи ринку.',
       aboutItem2: 'Огляди перспективних токенів.',
       aboutItem3: 'Оновлення функціоналу нашого сайту.',
-      aboutTgLink: '🔗 CryptoStatix_news | Аналітика та дані'
+      aboutTgLink: '🔗 CryptoStatix_news | Аналітика та дані',
+      aiWelcome: 'Привіт! Я твій AI-асистент у світі CryptoStatix. Аналізую ринок 24/7. Який актив обговоримо сьогодні? 📈',
+      aiPlaceholder: 'Введіть ваш запит...'
     }
   };
 
@@ -971,6 +977,12 @@ window.selectLanguage = function (langCode) {
       else el.textContent = current[key];
     }
   }
+
+  // Update AI Assistant
+  const aiWelcome = document.getElementById('ai-welcome-msg');
+  const aiInput = document.getElementById('ai-user-input');
+  if (aiWelcome) aiWelcome.textContent = current.aiWelcome;
+  if (aiInput) aiInput.placeholder = current.aiPlaceholder;
 
   // Hide/Show Community block (Russian only)
   const communitySec = document.getElementById('about-community-section');
