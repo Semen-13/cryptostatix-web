@@ -157,8 +157,8 @@ h1 {
 
 /* Navigation Buttons */
 .nav-buttons {
-  position: fixed;
-  bottom: 50px;
+  position: absolute;
+  top: 190px;
   right: 50px;
   display: flex;
   flex-direction: column;
