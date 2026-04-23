@@ -37,6 +37,12 @@ exports.handler = async (event, context) => {
     }
 
     // 6. СИСТЕМНАЯ ИНСТРУКЦИЯ (Системный Промпт)
+    // Временная отладка
+const apiKey = process.env.GEMINI_API_KEY;
+console.log("DEBUG: Ключ получен?", !!apiKey); // Эта строка выведет в логи true или false
+if (!apiKey) {
+    // ...
+}
     // Это "мозг" твоего агента. Напиши сюда всё, что он должен уметь.
     const systemInstruction = `
       Ты — ведущий ИИ-аналитик для терминала CryptoStatix (cryptostatix.pp.ua).
