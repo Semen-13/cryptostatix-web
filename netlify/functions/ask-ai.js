@@ -30,7 +30,7 @@ exports.handler = async (event, context) => {
     }
 
     // Используем максимально стабильный URL и версию модели
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
     const payload = {
       contents: [{
