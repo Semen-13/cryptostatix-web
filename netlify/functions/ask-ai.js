@@ -26,30 +26,16 @@ exports.handler = async (event, context) => {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      console.error('GEMINI_API_KEY is not set on Netlify!');
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'API Key Missing' }) };
     }
 
-    // Правильный URL для Gemini 1.5 Flash
-   const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-    const systemInstruction = `
-      Ты — ведущий ИИ-аналитик для терминала CryptoStatix (cryptostatix.pp.ua).
-      Стиль: профессиональный, лаконичный, используй технический анализ (RSI, уровни).
-      Отвечай кратко, 3-4 предложения.
-    `;
+    // Используем максимально стабильный URL и версию модели
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     const payload = {
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: `Системная инструкция: ${systemInstruction}\nВопрос пользователя: ${message}` }]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 250
-      }
+      contents: [{
+        parts: [{ text: `Ты — ИИ-аналитик CryptoStatix. Отвечай кратко (2-3 предложения) на русском языке. Вопрос: ${message}` }]
+      }]
     };
 
     const response = await fetch(apiUrl, {
@@ -61,11 +47,11 @@ exports.handler = async (event, context) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Gemini API Error:', data);
-      return { statusCode: response.status, headers, body: JSON.stringify({ error: 'Error from Gemini API' }) };
+      console.error('Gemini API Error Detail:', JSON.stringify(data));
+      return { statusCode: response.status, headers, body: JSON.stringify({ error: 'Gemini API Error' }) };
     }
 
-    const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Извини, я не смог сгенерировать ответ.';
+    const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Не удалось получить ответ.';
 
     return {
       statusCode: 200,
@@ -75,10 +61,6 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Function Error:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Internal Server Error' })
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal Server Error' }) };
   }
 };
