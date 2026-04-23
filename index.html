@@ -17,20 +17,31 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://cryptostatix.pp.ua/og-image.jpg">
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FGDBVKGMM5"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  
-  // Проверяем секретный параметр в URL или метку в памяти
-  if (window.location.search.includes('admin=true') || localStorage.getItem('skip_analytics') === 'true') {
-    localStorage.setItem('skip_analytics', 'true'); // Запоминаем на будущее
-    console.log("Analytics disabled for admin session.");
-  } else {
-    // Если мы не админ — запускаем трекинг
-    gtag('js', new Date());
-    gtag('config', 'G-FGDBVKGMM5');
-  }
+    (function() {
+        const GA_ID = 'G-FGDBVKGMM5';
+        const isAdmin = window.location.search.includes('admin=true') || localStorage.getItem('skip_analytics') === 'true';
+
+        if (isAdmin) {
+            localStorage.setItem('skip_analytics', 'true');
+            console.log("Analytics blocked: Admin mode");
+            // Принудительно отключаем, если скрипт уже был в кэше
+            window['ga-disable-' + GA_ID] = true;
+        } else {
+            // Загружаем скрипт динамически только для обычных пользователей
+            var script = document.createElement('script');
+            script.async = true;
+            script.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+            document.head.appendChild(script);
+
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            
+            gtag('js', new Date());
+            gtag('config', GA_ID);
+        }
+    })();
 </script>
     
 </head>
