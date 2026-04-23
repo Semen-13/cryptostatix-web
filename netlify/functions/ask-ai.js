@@ -31,7 +31,7 @@ exports.handler = async (event, context) => {
     }
 
     // Правильный URL для Gemini 1.5 Flash
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+   const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const systemInstruction = `
       Ты — ведущий ИИ-аналитик для терминала CryptoStatix (cryptostatix.pp.ua).
