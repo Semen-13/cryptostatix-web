@@ -1,43 +1,5 @@
 import './style.css'
 
-/** * 1. УПРАВЛЕНИЕ ЯЗЫКОМ
- */
-const langCodes = { 'ENG': 'en', 'UKR': 'uk', 'RUS': 'ru' };
-const displayNames = { 'ENG': 'Eng.', 'UKR': 'Ukr.', 'RUS': 'Rus.' };
-
-window.initLanguage = function() {
-    const lang = localStorage.getItem('selectedLanguage') || 'ENG';
-    document.documentElement.lang = langCodes[lang] || 'en';
-
-    const langBtn = document.getElementById('current-lang');
-    if (langBtn) {
-        langBtn.innerText = displayNames[lang];
-    }
-
-    document.querySelectorAll('.lang-option').forEach(opt => {
-        opt.classList.remove('selected');
-        const optText = opt.innerText.trim();
-        if (optText === displayNames[lang]) {
-            opt.classList.add('selected');
-        }
-    });
-};
-
-window.selectLanguage = function(lang) {
-    localStorage.setItem('selectedLanguage', lang);
-    if (window.toggleModal) window.toggleModal(false);
-    window.location.reload(); 
-};
-
-window.toggleModal = function(show) {
-    const modal = document.getElementById('system-modal');
-    if (modal) {
-        modal.style.display = show ? 'flex' : 'none';
-    }
-};
-
-// Запуск инициализации
-window.initLanguage();
 
 /** * 2. ДАННЫЕ КРИПТОВАЛЮТ (TICKER)
  */
@@ -105,7 +67,7 @@ const detailConfig = {
       { title: 'Whale Terminal', desc: 'Real-time large transaction tracking.' },
       { title: 'OI Terminal', desc: 'Open Interest and Funding Rates.' },
       { title: 'Smart Suite Intelligence', desc: 'Exchange flows and liquidation heatmaps.' },
-      { title: 'Market Intelligence', desc: 'Economic events and volatility analysis.' },
+      { title: 'Market Intelligence', titleRus: 'Календарь событий', titleEng: 'Economic Calendar', titleUkr: 'Календар подій', desc: 'Economic events and volatility analysis.' },
       { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
       { title: 'NFT Рынок', desc: 'NFT market volume and dynamics.' },
       { title: 'CryptoStatix Tracker', desc: 'ML signals based on technical analysis.' }
@@ -147,7 +109,12 @@ window.showDetail = function (section, itemIndex) {
   if (lang === 'ENG') label = config.labelEng;
   if (lang === 'UKR') label = config.labelUkr;
 
-  document.getElementById('detail-title').textContent = `${label} — ${item.title}`;
+  let itemTitle = item.title;
+  if (lang === 'ENG' && item.titleEng) itemTitle = item.titleEng;
+  if (lang === 'UKR' && item.titleUkr) itemTitle = item.titleUkr;
+  if (lang === 'RUS' && item.titleRus) itemTitle = item.titleRus;
+
+  document.getElementById('detail-title').textContent = `${label} — ${itemTitle}`;
   document.getElementById('detail-body').innerHTML = buildDetailBody(section, itemIndex, item, lang);
 
   document.getElementById(section).classList.remove('active');
@@ -526,7 +493,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
       ? '<strong>4. Filtering:</strong> The widget automatically hides "market noise" (neutral coins), leaving only active signals.'
       : (lang === 'UKR'
         ? '<strong>4. Фільтрація:</strong> Віджет автоматично приховує «ринковий шум» (нейтральні монети), залишаючи тільки активні сигнали.'
-        : '<strong>4. Фильтрация:</strong> Виджет автоматически скрывает «рыночный шум» (нейтральные монеты), оставляя только активные сигнали.');
+        : '<strong>4. Фильтрация:</strong> Виджет автоматически скрывает «рыночный шум» (нейтральные монеты), оставляя только активные сигналы.');
 
     const tipTitle = lang === 'ENG' ? '💡 Tip from Gemini' : (lang === 'UKR' ? '💡 Порада від Gemini' : '💡 Совет от Gemini');
     const tipQuote = lang === 'ENG' ? '«Remember, RSI is not a command to act, but context.»' : (lang === 'UKR' ? '«Пам\'ятай, що RSI — це не наказ до дії, а контекст.»' : '«Помни, что RSI — это не приказ к действию, а контекст.»');
@@ -648,27 +615,27 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     const cur = t[lang] || t['RUS'];
 
     return `
-      <section id="stx-terminal" style="margin: 0; padding: 0; height: calc(100vh - 120px); display: flex; flex-direction: column; position: relative; font-family: 'Inter', sans-serif; width: calc(100% - 60px); margin: 0 auto;">
-          
-          <div style="background: #0f172a; border: 1px solid #1e293b; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);">
+      <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%;">
+        <section id="stx-terminal" style="margin: 0; padding: 0; height: 100%; display: flex; flex-direction: column; position: relative; font-family: 'Inter', sans-serif; width: 100%;">
+            <div class="detail-chart-placeholder" style="--detail-color: ${color}; background: #0f172a; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; margin: 0; height: 100%; border-radius: 14px;">
               
-              <div style="padding: 15px 20px; border-bottom: 1px solid #1e293b; background: #1e293b; display: flex; align-items: center; justify-content: space-between;">
-                  <div style="display: flex; align-items: center; gap: 12px;">
-                      <div style="width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; box-shadow: 0 0 10px #3b82f6; animation: stx-pulse 2s infinite;"></div>
-                      <h3 style="color: #f9fafb; margin: 0; font-size: 14px; text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px; font-family: 'Orbitron', sans-serif;">
-                          Market Intelligence Terminal
-                      </h3>
-                  </div>
-                  
-                  <button onclick="document.getElementById('stx-modal').style.display='flex'" style="
-                      background: #3b82f6; color: white; border: none; padding: 8px 18px; 
-                      border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;
-                      transition: 0.3s; box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
-                      text-transform: uppercase; letter-spacing: 1px;
-                  " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
-                      📊 ${lang === 'ENG' ? 'TERMINAL GUIDE' : (lang === 'UKR' ? 'ІНСТРУКЦІЯ ТЕРМІНАЛА' : 'ИНСТРУКЦИЯ ТЕРМИНАЛА')}
-                  </button>
-              </div>
+                <div style="padding: 15px 20px; border-bottom: 1px solid color-mix(in srgb, ${color} 30%, transparent); background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 10px; height: 10px; background: ${color}; border-radius: 50%; box-shadow: 0 0 10px ${color}; animation: stx-pulse 2s infinite;"></div>
+                        <h3 style="color: #f9fafb; margin: 0; font-size: 14px; text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px; font-family: 'Orbitron', sans-serif;">
+                            Market Intelligence Terminal
+                        </h3>
+                    </div>
+                    
+                    <button onclick="document.getElementById('stx-modal').style.display='flex'" style="
+                        background: ${color}; color: #000; border: none; padding: 8px 18px; 
+                        border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;
+                        transition: 0.3s; box-shadow: 0 0 10px color-mix(in srgb, ${color} 40%, transparent);
+                        text-transform: uppercase; letter-spacing: 1px;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        📊 ${lang === 'ENG' ? 'TERMINAL GUIDE' : (lang === 'UKR' ? 'ІНСТРУКЦІЯ ТЕРМІНАЛА' : 'ИНСТРУКЦИЯ ТЕРМИНАЛА')}
+                    </button>
+                </div>
 
               <div style="flex-grow: 1; width: 100%; background: #111827;">
                   <iframe 
@@ -676,24 +643,25 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
                       width="100%" height="100%" frameborder="0" style="border: none; min-height: 500px;">
                   </iframe>
               </div>
-          </div>
-
+            </div>
+        </section>
+      </div>
           <div id="stx-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
-              <div style="background: #1e293b; border: 1px solid #3b82f6; width: 95%; max-width: 600px; padding: 35px; border-radius: 20px; position: relative; color: #f1f5f9; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 20px;">
-                  <button onclick="document.getElementById('stx-modal').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 32px; height: 32px; color: #64748b; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.color='#fff'; this.style.borderColor='#3b82f6'" onmouseout="this.style.color='#64748b'; this.style.borderColor='rgba(255,255,255,0.1)'">✕</button>
+              <div style="background: #1e293b; border: 1px solid ${color}; width: 95%; max-width: 600px; padding: 35px; border-radius: 20px; position: relative; color: #f1f5f9; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 20px;">
+                  <button onclick="document.getElementById('stx-modal').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 32px; height: 32px; color: #64748b; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.color='#fff'; this.style.borderColor='${color}'" onmouseout="this.style.color='#64748b'; this.style.borderColor='rgba(255,255,255,0.1)'">✕</button>
 
-                  <h2 style="margin: 0 0 10px 0; color: #38bdf8; font-size: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; text-transform: uppercase; font-family: 'Orbitron', sans-serif; letter-spacing: 2px;">
+                  <h2 style="margin: 0 0 10px 0; color: ${color}; font-size: 20px; border-bottom: 2px solid ${color}; padding-bottom: 12px; text-transform: uppercase; font-family: 'Orbitron', sans-serif; letter-spacing: 2px;">
                       ${cur.manual}
                   </h2>
                   
-                  <div style="margin-top: 10px; background: rgba(59, 130, 246, 0.1); padding: 18px; border-left: 4px solid #3b82f6; border-radius: 8px;">
-                      <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #3b82f6; text-transform: uppercase; font-weight: 800;">${cur.timeTitle}</h4>
+                  <div style="margin-top: 10px; background: color-mix(in srgb, ${color} 10%, transparent); padding: 18px; border-left: 4px solid ${color}; border-radius: 8px;">
+                      <h4 style="margin: 0 0 10px 0; font-size: 14px; color: ${color}; text-transform: uppercase; font-weight: 800;">${cur.timeTitle}</h4>
                       <p style="font-size: 13px; color: #94a3b8; margin: 0; line-height: 1.6;">
                           ${cur.timeDesc}
                       </p>
                   </div>
 
-                  <h4 style="margin: 10px 0 0px 0; font-size: 14px; color: #38bdf8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">${cur.columnsTitle}</h4>
+                  <h4 style="margin: 10px 0 0px 0; font-size: 14px; color: ${color}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">${cur.columnsTitle}</h4>
                   <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 10px;">
                       <div style="background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
                           <div style="color: #f1f5f9; font-size: 11px; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px;">${cur.actual}</div>
@@ -709,7 +677,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
                       </div>
                   </div>
 
-                  <h4 style="margin: 10px 0 0px 0; font-size: 14px; color: #38bdf8; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">${cur.volatilityTitle}</h4>
+                  <h4 style="margin: 10px 0 0px 0; font-size: 14px; color: ${color}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">${cur.volatilityTitle}</h4>
                   <div style="display: flex; flex-direction: column; gap: 15px;">
                       <div style="display: flex; gap: 15px; align-items: flex-start; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 10px;">
                           <div style="min-width: 70px; height: 26px; background: #ef4444; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #fff; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">HIGH</div>
@@ -725,16 +693,16 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
                       </div>
                   </div>
 
-                  <button onclick="document.getElementById('stx-modal').style.display='none'" style="margin-top: 15px; width: 100%; padding: 16px; background: #3b82f6; border: none; border-radius: 12px; color: white; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);" onmouseover="this.style.background='#2563eb'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#3b82f6'; this.style.transform='translateY(0)'">${cur.button}</button>
+                  <button onclick="document.getElementById('stx-modal').style.display='none'" style="margin-top: 15px; width: 100%; padding: 16px; background: ${color}; border: none; border-radius: 12px; color: #000; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 20px color-mix(in srgb, ${color} 30%, transparent);" onmouseover="this.style.opacity='0.8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)'">${cur.button}</button>
               </div>
           </div>
       </section>
 
       <style>
           @keyframes stx-pulse {
-              0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-              70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-              100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+              0% { transform: scale(0.95); box-shadow: 0 0 0 0 color-mix(in srgb, ${color} 70%, transparent); }
+              70% { transform: scale(1); box-shadow: 0 0 0 10px color-mix(in srgb, ${color} 0%, transparent); }
+              100% { transform: scale(0.95); box-shadow: 0 0 0 0 color-mix(in srgb, ${color} 0%, transparent); }
           }
           /* Стили скроллбара для модального окна */
           #stx-modal .content-container::-webkit-scrollbar { width: 6px; }
@@ -935,6 +903,19 @@ window.selectLanguage = function (langCode) {
   // Update Subpage Titles & Back Buttons
   const analyticsTitle = document.querySelector('#analytics h2');
   if (analyticsTitle) analyticsTitle.textContent = current.navAnalytics;
+
+  // Update Analytics Grid Captions
+  const analyticsItems = detailConfig.analytics.items;
+  const gridCaptions = document.querySelectorAll('#analytics .grid-caption');
+  analyticsItems.forEach((item, idx) => {
+    if (gridCaptions[idx]) {
+      let title = item.title;
+      if (langCode === 'ENG' && item.titleEng) title = item.titleEng;
+      if (langCode === 'UKR' && item.titleUkr) title = item.titleUkr;
+      if (langCode === 'RUS' && item.titleRus) title = item.titleRus;
+      gridCaptions[idx].innerText = title;
+    }
+  });
 
   const aboutTitle = document.querySelector('#about h2');
   if (aboutTitle) aboutTitle.textContent = current.navAbout === 'About us' ? 'About Project' : (current.navAbout === 'О проекте' ? 'О проекте' : 'Про проект');

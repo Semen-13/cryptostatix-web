@@ -234,9 +234,9 @@ h1 {
   display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   z-index: 100;
-  padding: 20px;
+  padding: 10px 10px 20px;
   opacity: 0;
   transform: translateY(100%);
   transition: all 0.6s cubic-bezier(0.85, 0, 0.15, 1);
@@ -262,9 +262,9 @@ h1 {
 }
 
 .subpage-content {
-  width: 95%;
+  width: 98%;
   max-width: 1400px;
-  height: 75vh;
+  height: 85vh;
   background: transparent;
   border: 1px solid var(--accent);
   border-radius: 20px;
@@ -281,7 +281,7 @@ h1 {
 .screener-grid {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: 1fr;
-  height: 75vh;
+  height: 85vh;
 }
 
 .grid-item {

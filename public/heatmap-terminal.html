@@ -15,14 +15,17 @@
             --panel-bg: #1e293b;
         }
 
-        body { 
+        html, body { 
             background-color: var(--bg-color); color: var(--text-main); 
-            font-family: 'Inter', sans-serif; margin: 0; padding: 20px; overflow-x: hidden; 
+            font-family: 'Inter', sans-serif; margin: 0; padding: 0; 
+            height: 100%; width: 100%; overflow: hidden !important; 
         }
+        
+        body { padding: 20px; box-sizing: border-box; }
         
         .terminal-card {
             background: var(--card-bg); border: 1px solid var(--border-color); 
-            border-radius: 4px; padding: 15px; width: 100%; max-width: 1000px; 
+            border-radius: 4px; padding: 15px; width: 100%; max-width: 1180px; 
             margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.7); position: relative;
         }
 
@@ -48,7 +51,7 @@
         }
         .btn-help:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(255,255,255,0.05); }
 
-        #heatmap-container { width: 100%; height: 550px; position: relative; cursor: crosshair; }
+        #heatmap-container { width: 100%; height: 420px; position: relative; cursor: crosshair; }
 
         .tooltip {
             position: absolute; background: rgba(15, 23, 42, 0.9); color: #fff; padding: 12px;
@@ -261,7 +264,7 @@
             const container = d3.select("#heatmap-container");
             if (!container.node()) return;
             const width = container.node().offsetWidth;
-            const height = 550;
+            const height = 420;
             container.html("");
             
             const t = window.ttpLabels || { ttpPrice: 'Price', ttpVol: '24h Vol', ttpMcap: 'M.Cap', ttpChange: 'Change' };
@@ -297,6 +300,26 @@
                 .attr("height", d => d.y1 - d.y0)
                 .attr("fill", d => colorScale(d.data.change))
                 .on("mousemove", (event, d) => {
+                    const tt = tooltip.node();
+                    const ttWidth = tt.offsetWidth || 150;
+                    const ttHeight = tt.offsetHeight || 100;
+                    
+                    let left = event.pageX + 15;
+                    let top = event.pageY - 20;
+                    
+                    // Prevent right overflow (with extra margin for the AI bot in the corner)
+                    if (left + ttWidth > window.innerWidth - 70) {
+                        left = event.pageX - ttWidth - 15;
+                    }
+                    
+                    // Prevent bottom overflow (with extra margin for the AI bot in the corner)
+                    if (top + ttHeight > window.innerHeight - 70) {
+                        top = event.pageY - ttHeight - 15;
+                    }
+                    
+                    // Prevent top overflow (rare but possible)
+                    if (top < 0) top = 10;
+
                     tooltip.style("opacity", 1)
                         .html(`
                             <b style="color:var(--accent)">${d.data.name}</b><br/>
@@ -305,8 +328,8 @@
                             ${t.ttpMcap}: $${(d.data.mcap / 1e9).toFixed(2)}B<br/>
                             ${t.ttpChange}: ${d.data.change.toFixed(2)}%
                         `)
-                        .style("left", (event.pageX + 15) + "px")
-                        .style("top", (event.pageY - 20) + "px");
+                        .style("left", left + "px")
+                        .style("top", top + "px");
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
