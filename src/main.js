@@ -1037,3 +1037,54 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updatePrices, 60000);
   initEffects();
 });
+// --- БЛОК ИИ-АГЕНТА ---
+
+async function askAI(userPrompt) {
+  try {
+    const response = await fetch('/.netlify/functions/ai-agent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: userPrompt }),
+    });
+
+    const result = await response.json();
+    
+    if (result.choices && result.choices[0]) {
+      return result.choices[0].message.content;
+    }
+    return "Ошибка: модель не вернула ответ.";
+  } catch (error) {
+    console.error("AI Error:", error);
+    return "Не удалось связаться с ИИ-агентом.";
+  }
+}
+
+// Слушатель для кнопки чата (убедитесь, что ID совпадают с вашим HTML)
+document.addEventListener('DOMContentLoaded', () => {
+  const aiBtn = document.getElementById('ai-send-btn');
+  const aiInput = document.getElementById('ai-input');
+  const aiDisplay = document.getElementById('ai-response-area');
+
+  if (aiBtn && aiInput) {
+    aiBtn.addEventListener('click', async () => {
+      const text = aiInput.value.trim();
+      if (!text) return;
+
+      aiBtn.disabled = true;
+      const originalBtnText = aiBtn.innerText;
+      aiBtn.innerText = '...';
+
+      const answer = await askAI(text);
+      
+      if (aiDisplay) {
+        aiDisplay.innerText = answer;
+      } else {
+        alert(answer);
+      }
+
+      aiBtn.disabled = false;
+      aiBtn.innerText = originalBtnText;
+      aiInput.value = '';
+    });
+  }
+});
