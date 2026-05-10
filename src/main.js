@@ -1047,22 +1047,18 @@ async function askAI(userPrompt) {
       body: JSON.stringify({ prompt: userPrompt }),
     });
 
-  const result = await response.json();
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+    const result = await response.json();
     
-    // Исправлено: проверяем поле 'reply', которое отправляет наша функция
-    if (result.reply) {
-      return result.reply;
-    }
+    // Пытаемся достать текст из всех возможных мест
+    const answer = result.reply || (result.choices && result.choices[0]?.message?.content);
     
-    // На всякий случай оставляем старую проверку, если функция вернет сырой ответ
-    if (result.choices && result.choices[0]) {
-      return result.choices[0].message.content;
-    }
-    
-    return "Ошибка: модель не вернула текст.";
+    if (answer) return answer;
+    return "Ошибка: ИИ прислал пустой ответ.";
   } catch (error) {
     console.error("AI Error:", error);
-    return "Не удалось связаться с ИИ-агентом.";
+    return "Не удалось связаться с ИИ-агентом. Проверьте консоль (F12).";
   }
 }
 
