@@ -69,8 +69,7 @@ const detailConfig = {
       { title: 'Smart Suite Intelligence', desc: 'Exchange flows and liquidation heatmaps.' },
       { title: 'Market Intelligence', titleRus: 'Календарь событий', titleEng: 'Economic Calendar', titleUkr: 'Календар подій', desc: 'Economic events and volatility analysis.' },
       { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
-      { title: 'NFT Рынок', desc: 'NFT market volume and dynamics.' },
-      { title: 'CryptoStatix Tracker', desc: 'ML signals based on technical analysis.' }
+      { title: 'Grid Screener PRO', titleRus: 'Сеточный Скринер PRO', titleUkr: 'Сітковий Скринер PRO', desc: 'Real-time 3x3 multi-chart terminal' }
     ]
   }
 };
@@ -726,7 +725,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     return `
       <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%;">
         <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; height: 100%;">
-          <iframe src="/ai-forecast-terminal.html" width="100%" style="height: 100%; min-height: 100%; display: block; border-radius: 14px;" frameborder="0"></iframe>
+          <iframe src="/screener-terminal.html" width="100%" style="height: 100%; min-height: 100%; display: block; border-radius: 14px;" frameborder="0"></iframe>
         </div>
       </div>
     `;
