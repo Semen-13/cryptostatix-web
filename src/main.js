@@ -1041,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function askAI(userPrompt) {
   try {
-    const response = await fetch('/.netlify/functions/ai-agent', {
+    const response = await fetch('/.netlify/functions/ask-ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: userPrompt }),
