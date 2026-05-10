@@ -321,7 +321,7 @@
 
  try {
             // 1. Путь должен быть /ai-agent, так как файл называется ai-agent.js
-            const response = await fetch('/.netlify/functions/ai-agent', {
+            const response = await fetch('/.netlify/functions/ask-ai', {
                 method: 'POST',
                 body: JSON.stringify({ prompt: text }), // Отправляем именно prompt
                 headers: { 'Content-Type': 'application/json' }
