@@ -1047,12 +1047,19 @@ async function askAI(userPrompt) {
       body: JSON.stringify({ prompt: userPrompt }),
     });
 
-    const result = await response.json();
+  const result = await response.json();
     
+    // Исправлено: проверяем поле 'reply', которое отправляет наша функция
+    if (result.reply) {
+      return result.reply;
+    }
+    
+    // На всякий случай оставляем старую проверку, если функция вернет сырой ответ
     if (result.choices && result.choices[0]) {
       return result.choices[0].message.content;
     }
-    return "Ошибка: модель не вернула ответ.";
+    
+    return "Ошибка: модель не вернула текст.";
   } catch (error) {
     console.error("AI Error:", error);
     return "Не удалось связаться с ИИ-агентом.";
