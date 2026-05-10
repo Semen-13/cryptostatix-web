@@ -8,6 +8,9 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
   "devDependencies": {
     "vite": "^7.3.1"
   }
