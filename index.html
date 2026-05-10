@@ -319,16 +319,16 @@
         btn.style.opacity = '0.5';
         document.getElementById('btn-icon').innerText = '...';
 
-        try {
-            const response = await fetch('/.netlify/functions/ask-ai', {
+  try {
+            const response = await fetch('/.netlify/functions/ai-agent', {
                 method: 'POST',
-                body: JSON.stringify({ message: text }),
+                body: JSON.stringify({ prompt: text }), // заменили message на prompt
                 headers: { 'Content-Type': 'application/json' }
             });
 
             const data = await response.json();
-            const reply = data.response || "Извини, возникла ошибка в системе. Попробуй позже.";
-            
+            // Берем ответ из поля 'reply' (так обычно возвращают функции)
+            const reply = data.reply || data.response || "Нет ответа";
             // Ответ ИИ
             content.innerHTML += `<div style="background: #002244; padding: 12px; border-radius: 12px; border-bottom-left-radius: 2px; align-self: flex-start; max-width: 85%; border: 1px solid #003366; color: #00e6ff;"><b>PRO:</b> ${reply}</div>`;
             
