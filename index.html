@@ -319,23 +319,26 @@
         btn.style.opacity = '0.5';
         document.getElementById('btn-icon').innerText = '...';
 
-  try {
+ try {
+            // 1. Путь должен быть /ai-agent, так как файл называется ai-agent.js
             const response = await fetch('/.netlify/functions/ai-agent', {
                 method: 'POST',
-                body: JSON.stringify({ prompt: text }), // заменили message на prompt
+                body: JSON.stringify({ prompt: text }), // Отправляем именно prompt
                 headers: { 'Content-Type': 'application/json' }
             });
 
             const data = await response.json();
-            // Берем ответ из поля 'reply' (так обычно возвращают функции)
-            const reply = data.reply || data.response || "Нет ответа";
+            
+            // 2. Берем текст из reply (как мы настроили в последней версии функции)
+            const reply = data.reply || data.response || "ИИ не прислал текст";
+            
             // Ответ ИИ
             content.innerHTML += `<div style="background: #002244; padding: 12px; border-radius: 12px; border-bottom-left-radius: 2px; align-self: flex-start; max-width: 85%; border: 1px solid #003366; color: #00e6ff;"><b>PRO:</b> ${reply}</div>`;
             
         } catch (err) {
-            content.innerHTML += `<div style="color: #ff4d4d; font-size: 12px; align-self: center;">Ошибка связи. Проверьте Netlify Functions.</div>`;
+            console.error("Ошибка чата:", err);
+            content.innerHTML += `<div style="color: #ff4d4d; font-size: 12px; align-self: center;">Ошибка связи. Проверьте консоль.</div>`;
         }
-
         btn.disabled = false;
         btn.style.opacity = '1';
         document.getElementById('btn-icon').innerText = '➤';
