@@ -1,9 +1,9 @@
-exports.handler = async (event) => {
-  // Разрешаем запросы с твоего сайта (CORS)
+export const handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Content-Type": "application/json"
   };
 
   if (event.httpMethod === "OPTIONS") {
@@ -11,54 +11,35 @@ exports.handler = async (event) => {
   }
 
   try {
-    const body = JSON.parse(event.body);
-    // Достаем текст, поддерживая оба варианта имени поля
-    const userPrompt = body.prompt || body.message;
+    const { prompt } = JSON.parse(event.body);
 
-    if (!userPrompt) {
-      return { 
-        statusCode: 400, 
-        headers, 
-        body: JSON.stringify({ error: "Пустой запрос" }) 
-      };
-    }
-
-    // Используем встроенный fetch (не нужен require('node-fetch'))
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "https://cryptostatix.pp.ua",
-      "Content-Type": "application/json"
-    },
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "https://cryptostatix.pp.ua",
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         "model": "meta-llama/llama-3.1-8b-instruct:free",
-        "messages": [{ "role": "user", "content": userPrompt }]
+        "messages": [{ "role": "user", "content": prompt }]
       })
     });
 
     const data = await response.json();
-    
-    // Если OpenRouter вернул ошибку, пробрасываем её для отладки
-    if (data.error) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: "Ошибка API", details: data.error })
-      };
-    }
+    const reply = data.choices?.[0]?.message?.content || "Ошибка: пустой ответ от ИИ";
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ reply: data.choices[0].message.content })
+      body: JSON.stringify({ reply })
     };
 
   } catch (error) {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Внутренняя ошибка сервера", details: error.message })
+      body: JSON.stringify({ error: "Ошибка сервера", details: error.message })
     };
   }
 };
