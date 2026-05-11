@@ -26,11 +26,11 @@ exports.handler = async (event) => {
     // Используем встроенный fetch (не нужен require('node-fetch'))
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "https://cryptostatix.pp.ua",
-        "Content-Type": "application/json"
-      },
+    headers: {
+      "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      "HTTP-Referer": "https://cryptostatix.pp.ua",
+      "Content-Type": "application/json"
+    },
       body: JSON.stringify({
         "model": "meta-llama/llama-3.1-8b-instruct:free",
         "messages": [{ "role": "user", "content": userPrompt }]
