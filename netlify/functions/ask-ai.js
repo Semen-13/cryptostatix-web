@@ -6,40 +6,45 @@ export const handler = async (event) => {
     "Content-Type": "application/json"
   };
 
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
-  }
+  if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "" };
 
   try {
     const body = JSON.parse(event.body);
-    // Проверяем оба варианта названия поля
     const userPrompt = body.prompt || body.message;
 
     if (!userPrompt) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ reply: "Ошибка: запрос пуст" })
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ reply: "Запрос пуст" }) };
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "https://cryptostatix.pp.ua", // Твой домен
+        "HTTP-Referer": "https://cryptostatix.pp.ua", 
+        "X-Title": "CryptoStatix AI",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "meta-llama/llama-3.1-8b-instruct:free",
-        "messages": [{ "role": "user", "content": userPrompt }]
+        "model": "google/gemma-7b-it:free", // Пробуем другую бесплатную модель
+        "messages": [{ "role": "user", "content": userPrompt }],
+        "temperature": 0.7
       })
     });
 
     const data = await response.json();
     
-    // Добавляем проверку на наличие ответа в данных от OpenRouter
-    const aiReply = data.choices?.[0]?.message?.content || "Ошибка: OpenRouter прислал пустой ответ";
+    // Выводим полный ответ в логи Netlify для диагностики
+    console.log("OpenRouter Response:", JSON.stringify(data));
+
+    if (data.error) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ reply: `Ошибка OpenRouter: ${data.error.message || "Неизвестная ошибка"}` })
+      };
+    }
+
+    const aiReply = data.choices?.[0]?.message?.content || "OpenRouter не смог сгенерировать текст. Попробуйте другой запрос.";
 
     return {
       statusCode: 200,
@@ -51,7 +56,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ reply: "Ошибка сервера: " + error.message })
+      body: JSON.stringify({ reply: "Критическая ошибка сервера: " + error.message })
     };
   }
 };
