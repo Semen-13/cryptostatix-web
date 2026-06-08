@@ -1,62 +1,64 @@
-export const handler = async (event) => {
+export default async (request, context) => {
+  // Разрешаем CORS-запросы, чтобы ваш сайт мог общаться с функцией
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Content-Type": "application/json"
   };
 
-  if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "" };
+  // Обработка предзапроса CORS (OPTIONS)
+  if (request.method === "OPTIONS") {
+    return new Response("OK", { headers, status: 200 });
+  }
+
+  if (request.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
+      status: 405,
+      headers: { ...headers, "Content-Type": "application/json" },
+    });
+  }
 
   try {
-    const body = JSON.parse(event.body);
-    const userPrompt = body.prompt || body.message;
+    // Получаем текст вопроса от пользователя из фронтенда
+    const { prompt } = await request.json();
 
-    if (!userPrompt) {
-      return { statusCode: 400, headers, body: JSON.stringify({ reply: "Запрос пуст" }) };
+    if (!prompt) {
+      return new Response(JSON.stringify({ error: "Prompt is required" }), {
+        status: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
     }
 
+    // Запрос к OpenRouter
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        // По правилам OpenRouter рекомендуется указывать эти заголовки для рейтинга приложений
         "HTTP-Referer": "https://cryptostatix.pp.ua", 
         "X-Title": "CryptoStatix AI",
-        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "google/gemma-7b-it:free", // Пробуем другую бесплатную модель
-        "messages": [{ "role": "user", "content": userPrompt }],
-        "temperature": 0.7
-      })
+        model: "openrouter/auto-ish", // Или конкретная бесплатная модель, например: "google/gemini-2.5-flash:free"
+        messages: [
+          { role: "system", content: "Ты — полезный ИИ-ассистент на сайте Cryptostatix.pp.ua, эксперт по криптовалютам." },
+          { role: "user", content: prompt }
+        ],
+      }),
     });
 
     const data = await response.json();
-    
-    // Выводим полный ответ в логи Netlify для диагностики
-    console.log("OpenRouter Response:", JSON.stringify(data));
 
-    if (data.error) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ reply: `Ошибка OpenRouter: ${data.error.message || "Неизвестная ошибка"}` })
-      };
-    }
-
-    const aiReply = data.choices?.[0]?.message?.content || "OpenRouter не смог сгенерировать текст. Попробуйте другой запрос.";
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ reply: aiReply })
-    };
+    return new Response(JSON.stringify({ reply: data.choices[0].message.content }), {
+      status: 200,
+      headers: { ...headers, "Content-Type": "application/json" },
+    });
 
   } catch (error) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ reply: "Критическая ошибка сервера: " + error.message })
-    };
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...headers, "Content-Type": "application/json" },
+    });
   }
 };
