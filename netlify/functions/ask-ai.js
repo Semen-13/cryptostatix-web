@@ -32,12 +32,17 @@ export default async (request, context) => {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "https://cryptostatix.pp.ua", 
-        "X-Title": "CryptoStatix AI",
+        "X-Title": "CryptoStatix AI Agent",
       },
-   body: JSON.stringify({
-        model: "google/gemma-4-31b-it:free", // Подключаем Gemma 4 31B
+      body: JSON.stringify({
+        model: "google/gemma-4-31b-it:free",
+        // Включаем плагин веб-поиска для доступа к актуальным биржевым данным
+        plugins: [{ id: "web-search" }], 
         messages: [
-          { role: "system", content: "Ты — полезный ИИ-ассистент на сайте Cryptostatix.pp.ua, эксперт по криптовалютам." },
+          { 
+            role: "system", 
+            content: "Ты — ведущий криптоаналитик и главный эксперт платформы CryptoStatix. Твоя цель — предоставлять глубокий, профессиональный аналитический разбор рынка. Если запрос требует знания текущих цен или событий, используй веб-поиск. Если запрос аналитический или теоретический — задействуй логику и структурированное мышление. Избегай банальных ответов, общайся как профессиональный трейдер (упоминай паттерны, ликвидность, рыночные настроения). В конце финансовых рекомендаций всегда добавляй краткий дисклеймер о рисках (DYOR)." 
+          },
           { role: "user", content: prompt }
         ],
       }),
@@ -46,7 +51,7 @@ export default async (request, context) => {
     const data = await response.json();
 
     if (!data.choices || data.choices.length === 0) {
-      throw new Error(data.error?.message || "Ошибка ответа от провайдера ИИ");
+      throw new Error(data.error?.message || "Ошибка ответа от OpenRouter");
     }
 
     return new Response(JSON.stringify({ reply: data.choices[0].message.content }), {
