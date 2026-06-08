@@ -34,10 +34,10 @@ export default async (request, context) => {
         "HTTP-Referer": "https://cryptostatix.pp.ua", 
         "X-Title": "CryptoStatix AI",
       },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash:free", // Стабильная бесплатная модель
+   body: JSON.stringify({
+        model: "google/gemma-4-31b-it:free", // Подключаем Gemma 4 31B
         messages: [
-          { role: "system", content: "Ты — ИИ-консультант на сайте Cryptostatix.pp.ua. Отвечай кратко и по делу." },
+          { role: "system", content: "Ты — полезный ИИ-ассистент на сайте Cryptostatix.pp.ua, эксперт по криптовалютам." },
           { role: "user", content: prompt }
         ],
       }),
