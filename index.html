@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="en"> <head>
+<html lang="en">
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <title>CryptoStatix PRO — Premium Analytics Dashboard</title>
-    <meta name="description" content="Professional crypto market monitoring: Fear & Greed Index, RSI, and Volume Anomalies. Real-time trading data for Ukraine and worldwide.">
-    
+    <meta name="description"
+        content="Professional crypto market monitoring: Fear & Greed Index, RSI, and Volume Anomalies. Real-time trading data for Ukraine and worldwide.">
+
     <link rel="alternate" hreflang="x-default" href="https://cryptostatix.pp.ua/" />
     <link rel="alternate" hreflang="en" href="https://cryptostatix.pp.ua/?lang=en" />
     <link rel="alternate" hreflang="ru" href="https://cryptostatix.pp.ua/?lang=ru" />
@@ -18,33 +21,33 @@
     <meta name="twitter:image" content="https://cryptostatix.pp.ua/logo.png">
     <meta name="twitter:title" content="CryptoStati">
     <meta name="twitter:description" content="AI crypto analytics and market insights.">
-<script>
-    (function() {
-        const GA_ID = 'G-FGDBVKGMM5';
-        const isAdmin = window.location.search.includes('admin=true') || localStorage.getItem('skip_analytics') === 'true';
+    <script>
+        (function () {
+            const GA_ID = 'G-FGDBVKGMM5';
+            const isAdmin = window.location.search.includes('admin=true') || localStorage.getItem('skip_analytics') === 'true';
 
-        if (isAdmin) {
-            localStorage.setItem('skip_analytics', 'true');
-            console.log("Analytics blocked: Admin mode");
-            // Принудительно отключаем, если скрипт уже был в кэше
-            window['ga-disable-' + GA_ID] = true;
-        } else {
-            // Загружаем скрипт динамически только для обычных пользователей
-            var script = document.createElement('script');
-            script.async = true;
-            script.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
-            document.head.appendChild(script);
+            if (isAdmin) {
+                localStorage.setItem('skip_analytics', 'true');
+                console.log("Analytics blocked: Admin mode");
+                // Принудительно отключаем, если скрипт уже был в кэше
+                window['ga-disable-' + GA_ID] = true;
+            } else {
+                // Загружаем скрипт динамически только для обычных пользователей
+                var script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+                document.head.appendChild(script);
 
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            window.gtag = gtag;
-            
-            gtag('js', new Date());
-            gtag('config', GA_ID);
-        }
-    })();
-</script>
-    
+                window.dataLayer = window.dataLayer || [];
+                function gtag() { dataLayer.push(arguments); }
+                window.gtag = gtag;
+
+                gtag('js', new Date());
+                gtag('config', GA_ID);
+            }
+        })();
+    </script>
+
 </head>
 
 <body>
@@ -162,7 +165,8 @@
                 <h3 id="about-title"
                     style="color: var(--accent); margin-bottom: 15px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px;">
                     О проекте CryptoStatix</h3>
-                <p id="about-desc" style="font-size: 0.85rem; line-height: 1.5; color: rgba(255,255,255,0.9); margin-bottom: 15px;">
+                <p id="about-desc"
+                    style="font-size: 0.85rem; line-height: 1.5; color: rgba(255,255,255,0.9); margin-bottom: 15px;">
                     <strong>CryptoStatix</strong> — это аналитическая платформа, созданная для трейдеров и инвесторов,
                     которым важна чистота данных и оперативность. Мы не просто показываем графики, мы помогаем увидеть
                     структуру рынка через призму ключевых метрик.
@@ -171,7 +175,8 @@
                 <h4 id="about-what-title"
                     style="color: var(--accent); margin-bottom: 10px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; text-align: left;">
                     Что мы делаем?</h4>
-                <p id="about-what-desc" style="font-size: 0.8rem; color: rgba(255,255,255,0.7); text-align: left; margin-bottom: 15px;">Наш
+                <p id="about-what-desc"
+                    style="font-size: 0.8rem; color: rgba(255,255,255,0.7); text-align: left; margin-bottom: 15px;">Наш
                     сервис агрегирует данные напрямую с Binance и CoinGecko, предоставляя вам инструменты
                     профессионального уровня в один клик:</p>
 
@@ -182,7 +187,8 @@
                         <h4 id="about-card-1-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
                             Real-time Мониторинг</h4>
-                        <p id="about-card-1-desc" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Отслеживание
+                        <p id="about-card-1-desc"
+                            style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Отслеживание
                             волатильности и объемов в реальном времени.</p>
                     </div>
                     <div
@@ -190,7 +196,8 @@
                         <h4 id="about-card-2-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
                             Смарт-аналитика</h4>
-                        <p id="about-card-2-desc" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Быстрый доступ к
+                        <p id="about-card-2-desc"
+                            style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Быстрый доступ к
                             RSI, тепловым картам ликвидности и доминированию активов.</p>
                     </div>
                     <div
@@ -198,7 +205,8 @@
                         <h4 id="about-card-3-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; margin-bottom: 8px; text-transform: uppercase;">
                             Фокус на трендах</h4>
-                        <p id="about-card-3-desc" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Мы подсвечиваем
+                        <p id="about-card-3-desc"
+                            style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Мы подсвечиваем
                             перспективные экосистемы, такие как MemeCore, AI-инфраструктуру и Layer-2 решения.</p>
                     </div>
                 </div>
@@ -208,11 +216,14 @@
                         <h4 id="about-mission-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.8rem; margin-bottom: 8px; text-transform: uppercase;">
                             Наша миссия</h4>
-                        <p id="about-mission-desc" style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Упростить процесс
+                        <p id="about-mission-desc"
+                            style="font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.4;">Упростить
+                            процесс
                             принятия решений. В мире, где информация обновляется каждую секунду, CryptoStatix становится
                             вашим фильтром, отсекая шум и оставляя только факты.</p>
                     </div>
-                    <div id="about-community-section" style="flex: 1; border-left: 1px solid rgba(0, 255, 136, 0.2); padding-left: 20px;">
+                    <div id="about-community-section"
+                        style="flex: 1; border-left: 1px solid rgba(0, 255, 136, 0.2); padding-left: 20px;">
                         <h4 id="about-community-title"
                             style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 0.8rem; margin-bottom: 8px; text-transform: uppercase;">
                             Присоединяйтесь к нашему комьюнити</h4>
@@ -237,7 +248,8 @@
                                     </path>
                                 </svg>
                             </div>
-                            <span id="about-tg-link" style="font-size: 0.8rem; letter-spacing: 0.5px;">CryptoStatix_news/Аналитика и
+                            <span id="about-tg-link"
+                                style="font-size: 0.8rem; letter-spacing: 0.5px;">CryptoStatix_news/Аналитика и
                                 данные</span>
                         </a>
                     </div>
@@ -261,95 +273,174 @@
     </div>
 
     <script type="module" src="/src/main.js"></script>
-<style>
-    #ai-agent-trigger:hover { transform: scale(1.1); }
-    #ai-chat-content::-webkit-scrollbar { width: 5px; }
-    #ai-chat-content::-webkit-scrollbar-track { background: #000d1a; }
-    #ai-chat-content::-webkit-scrollbar-thumb { background: #003366; border-radius: 10px; }
-</style>
-
-<div id="ai-agent-trigger" onclick="toggleAiChat()" style="position: fixed; bottom: 25px; right: 25px; width: 80px; height: 80px; background: transparent; border: none; cursor: pointer; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-    <img src="/ai-robot.png" alt="AI Agent" style="width: 100%; height: 100%; object-fit: cover; border: 3px solid var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow);">
-</div>
-
-<div id="ai-chat-modal" style="display: none; position: fixed; bottom: 100px; right: 25px; width: 360px; height: 480px; background: #001a33; border: 1px solid #004d99; border-radius: 15px; flex-direction: column; z-index: 10000; box-shadow: 0 15px 50px rgba(0,0,0,0.9); overflow: hidden; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-    
-    <div style="background: linear-gradient(90deg, #001a33 0%, #003366 100%); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #004d99;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 8px #00ff00;"></div>
-            <span style="color: #00e6ff; font-weight: bold; letter-spacing: 0.5px; font-size: 14px;">CryptoStatix AI Agent</span>
-        </div>
-        <span onclick="toggleAiChat()" style="color: #fff; cursor: pointer; font-size: 26px; line-height: 20px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</span>
-    </div>
-    
-    <div id="ai-chat-content" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #000d1a; color: #e6f2ff; font-size: 14px; scroll-behavior: smooth;">
-        <div id="ai-welcome-msg" style="background: #002244; padding: 12px; border-radius: 12px; border-bottom-left-radius: 2px; align-self: flex-start; max-width: 85%; border: 1px solid #003366;">
-            Привет! Я твой AI-ассистент в мире CryptoStatix. Анализирую рынок 24/7. Какой актив обсудим сегодня? 📈
-        </div>
-    </div>
-    
-    <div style="padding: 12px; background: #001a33; display: flex; gap: 8px; border-top: 1px solid #003366;">
-        <input type="text" id="ai-user-input" placeholder="Введите ваш запрос..." style="flex: 1; background: #000d1a; border: 1px solid #004d99; color: white; padding: 10px 15px; border-radius: 20px; outline: none; font-size: 13px; transition: 0.3s;" onfocus="this.style.borderColor='#00e6ff'">
-        <button onclick="handleAiSend()" id="ai-send-btn" style="background: #00e6ff; color: #000; border: none; width: 40px; height: 40px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;">
-            <span id="btn-icon">➤</span>
-        </button>
-    </div>
-</div>
-
-<script>
-    function toggleAiChat() {
-        const modal = document.getElementById('ai-chat-modal');
-        const isHidden = modal.style.display === 'none' || modal.style.display === '';
-        modal.style.display = isHidden ? 'flex' : 'none';
-        if(isHidden) document.getElementById('ai-user-input').focus();
-    }
-
-    async function handleAiSend() {
-        const input = document.getElementById('ai-user-input');
-        const content = document.getElementById('ai-chat-content');
-        const btn = document.getElementById('ai-send-btn');
-        const text = input.value.trim();
-
-        if (!text) return;
-
-        // Сообщение пользователя
-        content.innerHTML += `<div style="background: #004d99; padding: 12px; border-radius: 12px; border-bottom-right-radius: 2px; align-self: flex-end; color: white; max-width: 85%; border: 1px solid #0066cc;">${text}</div>`;
-        input.value = '';
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-        document.getElementById('btn-icon').innerText = '...';
-
- try {
-            // 1. Путь должен быть /ai-agent, так как файл называется ai-agent.js
-            const response = await fetch('/.netlify/functions/ask-ai', {
-                method: 'POST',
-                body: JSON.stringify({ prompt: text }), // Отправляем именно prompt
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            const data = await response.json();
-            
-            // 2. Берем текст из reply (как мы настроили в последней версии функции)
-            const reply = data.reply || data.response || "ИИ не прислал текст";
-            
-            // Ответ ИИ
-            content.innerHTML += `<div style="background: #002244; padding: 12px; border-radius: 12px; border-bottom-left-radius: 2px; align-self: flex-start; max-width: 85%; border: 1px solid #003366; color: #00e6ff;"><b>PRO:</b> ${reply}</div>`;
-            
-        } catch (err) {
-            console.error("Ошибка чата:", err);
-            content.innerHTML += `<div style="color: #ff4d4d; font-size: 12px; align-self: center;">Ошибка связи. Проверьте консоль.</div>`;
+    <style>
+        #ai-agent-trigger:hover {
+            transform: scale(1.1);
         }
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        document.getElementById('btn-icon').innerText = '➤';
-        content.scrollTop = content.scrollHeight;
-    }
 
-    // Слушатель Enter
-    document.getElementById('ai-user-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleAiSend();
-    });
-</script>
+        #ai-chat-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #ai-chat-content::-webkit-scrollbar-track {
+            background: #000d1a;
+        }
+
+        #ai-chat-content::-webkit-scrollbar-thumb {
+            background: #003366;
+            border-radius: 10px;
+        }
+
+        .circular-text-svg {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            top: -30px;
+            left: -30px;
+            pointer-events: none;
+        }
+
+        .circular-text {
+            fill: var(--accent, #00ff88);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .ai-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(0, 230, 255, 0.2);
+            border-top: 3px solid #00e6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            align-self: flex-start;
+            margin: 5px 10px;
+        }
+    </style>
+
+    <div id="ai-agent-trigger" onclick="toggleAiChat()"
+        style="position: fixed; bottom: 35px; right: 35px; width: 80px; height: 80px; background: transparent; border: none; cursor: pointer; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <img src="/ai-robot.png" alt="AI Agent"
+            style="width: 100%; height: 100%; object-fit: cover; border: 3px solid var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow); position: relative; z-index: 2;">
+        <svg class="circular-text-svg" viewBox="0 0 100 100">
+            <!-- Full circle for top text (Swappy) - starts at bottom, goes clockwise through left to top -->
+            <path id="curveTop" d="M 50 88 A 38 38 0 0 1 50 12 A 38 38 0 0 1 50 88" fill="transparent" />
+            <!-- Full circle for bottom text - starts at top, goes counter-clockwise through left to bottom -->
+            <path id="curveBottom" d="M 50 12 A 38 38 0 0 0 50 88 A 38 38 0 0 0 50 12" fill="transparent" />
+
+            <text class="circular-text" style="font-family: 'Orbitron', sans-serif; font-size: 13px;">
+                <textPath href="#curveTop" startOffset="50%" text-anchor="middle">Swappy</textPath>
+            </text>
+            <text class="circular-text"
+                style="font-family: 'Inter', sans-serif; font-size: 8px; letter-spacing: 0.5px;">
+                <textPath id="ai-agent-text" href="#curveBottom" startOffset="50%" text-anchor="middle">ваш персональный
+                    ии-агент</textPath>
+            </text>
+        </svg>
+    </div>
+
+    <div id="ai-chat-modal"
+        style="display: none; position: fixed; bottom: 100px; right: 25px; width: 360px; height: 480px; background: #001a33; border: 1px solid #004d99; border-radius: 15px; flex-direction: column; z-index: 10000; box-shadow: 0 15px 50px rgba(0,0,0,0.9); overflow: hidden; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+
+        <div
+            style="background: linear-gradient(90deg, #001a33 0%, #003366 100%); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #004d99;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div
+                    style="width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 8px #00ff00;">
+                </div>
+                <span style="color: #00e6ff; font-weight: bold; letter-spacing: 0.5px; font-size: 14px;">CryptoStatix AI
+                    Agent</span>
+            </div>
+            <span onclick="toggleAiChat()"
+                style="color: #fff; cursor: pointer; font-size: 26px; line-height: 20px; opacity: 0.7; transition: 0.2s;"
+                onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</span>
+        </div>
+
+        <div id="ai-chat-content"
+            style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #000d1a; color: #e6f2ff; font-size: 14px; scroll-behavior: smooth;">
+            <div id="ai-welcome-msg"
+                style="background: #002244; padding: 12px; border-radius: 12px; border-bottom-left-radius: 2px; align-self: flex-start; max-width: 85%; border: 1px solid #003366;">
+                Привет! Я твой AI-ассистент в мире CryptoStatix. Анализирую рынок 24/7. Какой актив обсудим сегодня? 📈
+            </div>
+        </div>
+
+        <div style="padding: 12px; background: #001a33; display: flex; gap: 8px; border-top: 1px solid #003366;">
+            <input type="text" id="ai-user-input" placeholder="Введите ваш запрос..."
+                style="flex: 1; background: #000d1a; border: 1px solid #004d99; color: white; padding: 10px 15px; border-radius: 20px; outline: none; font-size: 13px; transition: 0.3s;"
+                onfocus="this.style.borderColor='#00e6ff'">
+            <button onclick="handleAiSend()" id="ai-send-btn"
+                style="background: #00e6ff; color: #000; border: none; width: 40px; height: 40px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;">
+                <span id="btn-icon">➤</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function toggleAiChat() {
+            const modal = document.getElementById('ai-chat-modal');
+            const isHidden = modal.style.display === 'none' || modal.style.display === '';
+            modal.style.display = isHidden ? 'flex' : 'none';
+            if (isHidden) document.getElementById('ai-user-input').focus();
+        }
+
+        async function handleAiSend() {
+            const input = document.getElementById('ai-user-input');
+            const content = document.getElementById('ai-chat-content');
+            const btn = document.getElementById('ai-send-btn');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            // Сообщение пользователя
+            content.innerHTML += `<div style="background: #004d99; padding: 12px; border-radius: 12px; border-bottom-right-radius: 2px; align-self: flex-end; color: white; max-width: 85%; border: 1px solid #0066cc;">${text}</div>`;
+            
+            // Индикатор загрузки
+            content.innerHTML += `<div id="ai-loading-indicator" class="ai-spinner"></div>`;
+            content.scrollTop = content.scrollHeight;
+
+            input.value = '';
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            document.getElementById('btn-icon').innerText = '...';
+
+            try {
+                // 1. Путь должен быть /ai-agent, так как файл называется ai-agent.js
+                const response = await fetch('/.netlify/functions/ask-ai', {
+                    method: 'POST',
+                    body: JSON.stringify({ prompt: text }), // Отправляем именно prompt
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                // 2. Берем текст из reply (как мы настроили в последней версии функции)
+                const reply = data.reply || data.response || "ИИ не прислал текст";
+
+                // Удаляем индикатор загрузки
+                const indicator = document.getElementById('ai-loading-indicator');
+                if (indicator) indicator.remove();
+
+                // Ответ ИИ
+                content.innerHTML += `<div style="background: #002244; padding: 12px; border-radius: 12px; border-bottom-left-radius: 2px; align-self: flex-start; max-width: 85%; border: 1px solid #003366; color: #00e6ff;"><b>PRO:</b> ${reply}</div>`;
+
+            } catch (err) {
+                console.error("Ошибка чата:", err);
+                const indicator = document.getElementById('ai-loading-indicator');
+                if (indicator) indicator.remove();
+                content.innerHTML += `<div style="color: #ff4d4d; font-size: 12px; align-self: center;">Ошибка связи. Проверьте консоль.</div>`;
+            }
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            document.getElementById('btn-icon').innerText = '➤';
+            content.scrollTop = content.scrollHeight;
+        }
+
+        // Слушатель Enter
+        document.getElementById('ai-user-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAiSend();
+        });
+    </script>
 </body>
 
 </html>

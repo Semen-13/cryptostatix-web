@@ -830,7 +830,8 @@ window.selectLanguage = function (langCode) {
       aboutItem3: 'Feature updates for our web platform.',
       aboutTgLink: '🔗 CryptoStatix_news | Analytics & Data',
       aiWelcome: 'Hello! I am your AI assistant in the world of CryptoStatix. Analyzing the market 24/7. Which asset shall we discuss today? 📈',
-      aiPlaceholder: 'Enter your request...'
+      aiPlaceholder: 'Enter your request...',
+      aiAgentCircular: 'your personal ai-agent'
     },
     'RUS': {
       button: 'Рус.',
@@ -856,7 +857,8 @@ window.selectLanguage = function (langCode) {
       aboutItem3: 'Обновления функционала нашего сайта.',
       aboutTgLink: 'CryptoStatix_news/Аналитика и данные',
       aiWelcome: 'Привет! Я твой AI-ассистент в мире CryptoStatix. Анализирую рынок 24/7. Какой актив обсудим сегодня? 📈',
-      aiPlaceholder: 'Введите ваш запрос...'
+      aiPlaceholder: 'Введите ваш запрос...',
+      aiAgentCircular: 'ваш персональный ии-агент'
     },
     'UKR': {
       button: 'Укр.',
@@ -882,7 +884,8 @@ window.selectLanguage = function (langCode) {
       aboutItem3: 'Оновлення функціоналу нашого сайту.',
       aboutTgLink: '🔗 CryptoStatix_news | Аналітика та дані',
       aiWelcome: 'Привіт! Я твій AI-асистент у світі CryptoStatix. Аналізую ринок 24/7. Який актив обговоримо сьогодні? 📈',
-      aiPlaceholder: 'Введіть ваш запит...'
+      aiPlaceholder: 'Введіть ваш запит...',
+      aiAgentCircular: 'ваш персональний ші-агент'
     }
   };
 
@@ -927,6 +930,12 @@ window.selectLanguage = function (langCode) {
       btn.textContent = langCode === 'RUS' ? 'НА ГЛАВНУЮ' : (langCode === 'UKR' ? 'НА ГОЛОВНУ' : 'TO HOME');
     }
   });
+
+  // Update AI Agent circular text
+  const aiAgentText = document.getElementById('ai-agent-text');
+  if (aiAgentText && current.aiAgentCircular) {
+    aiAgentText.textContent = current.aiAgentCircular;
+  }
 
   // Update About page content
   const ids = {
