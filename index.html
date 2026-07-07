@@ -78,6 +78,7 @@
 
         <div class="nav-buttons">
             <a href="#" class="nav-btn" id="nav-analytics" onclick="showPage('analytics')">Analytics</a>
+            <a href="#" class="nav-btn" id="nav-screeners" onclick="showPage('screeners')">Screeners</a>
             <a href="#" class="nav-btn" id="nav-about" onclick="showPage('about')">About us</a>
         </div>
 
@@ -150,6 +151,30 @@
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 12)">
                 <img src="/ai-forecast.png" alt="Grid Screener PRO" class="grid-img">
                 <span class="grid-caption">Grid Screener PRO</span>
+            </div>
+        </div>
+        <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
+    </div>
+
+    <!-- Screeners Page -->
+    <div id="screeners" class="subpage">
+        <h2>Скринеры</h2>
+        <div class="subpage-content" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr);">
+            <div class="grid-item grid-item--image" onclick="showDetail('screeners', 1)">
+                <img src="/ai-forecast.png" alt="Grid Screener PRO" class="grid-img">
+                <span class="grid-caption">Grid Screener PRO</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('screeners', 2)">
+                <img src="/binance-futures.png" alt="Binance Futures PRO" class="grid-img">
+                <span class="grid-caption">Binance Futures PRO</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('screeners', 3)">
+                <img src="/crypto_trend_screener.png" alt="Скринер тренда" class="grid-img">
+                <span class="grid-caption">Скринер тренда</span>
+            </div>
+            <div class="grid-item grid-item--image" onclick="showDetail('screeners', 4)">
+                <img src="/global_exchange_radar.png" alt="Global Exchange Radar" class="grid-img">
+                <span class="grid-caption">Global Exchange Radar</span>
             </div>
         </div>
         <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
@@ -271,6 +296,204 @@
         </div>
         <button class="back-btn" id="detail-back-btn" onclick="closeDetail()">← НАЗАД</button>
     </div>
+
+    <div id="smc-scan-template" style="display:none;">
+                <div class="smc-scanner-container">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                            <h3 id="smc-title">SMC Смарт-Сканер (Binance Futures)</h3>
+                            <button id="smc-info-btn" class="smc-info-btn" onclick="toggleSMCInfo(true)">Инфо</button>
+                        </div>
+
+            <div class="scanner-grid">
+                <div class="input-group">
+                    <label for="scan-timeframe" id="smc-label-timeframe">Таймфрейм:</label>
+                    <select id="scan-timeframe">
+                        <option value="5m">5 минут</option>
+                        <option value="15m" selected>15 минут</option>
+                        <option value="1h">1 час</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="scan-volume" id="smc-label-volume">Мин. Объем 24ч (USDT):</label>
+                    <input type="number" id="scan-volume" value="50000000" step="10000000">
+                </div>
+
+                <div class="input-group">
+                    <label for="scan-change" id="smc-label-change">Мин. Изменение цены (%):</label>
+                    <input type="number" id="scan-change" value="2.0" step="0.1">
+                </div>
+
+                <div class="input-group">
+                    <label for="scan-window" id="smc-label-window">Фильтр шума (свечей):</label>
+                    <input type="number" id="scan-window" value="10" step="1">
+                </div>
+            </div>
+
+            <button id="btn-run-scan" onclick="requestSMCAnalysis()">ЗАПУСТИТЬ АНАЛИЗ</button>
+
+            <div id="scan-status" class="scan-status-text" style="display: none;"></div>
+
+            <div class="scan-results">
+                <div class="result-box long-box">
+                    <h4 id="smc-long-heading">🟢 МАКРО-ТРЕНД LONG</h4>
+                    <div id="smc-longs-list" class="coins-list">Ожидание запуска анализа...</div>
+                </div>
+                <div class="result-box short-box">
+                    <h4 id="smc-short-heading">🔴 МАКРО-ТРЕНД SHORT</h4>
+                    <div id="smc-shorts-list" class="coins-list">Ожидание запуска анализа...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+        <!-- SMC Info Modal -->
+        <div id="smc-info-modal" class="modal-overlay" onclick="if(event.target === this) toggleSMCInfo(false)">
+            <div class="modal-container" style="max-width:850px; width:90%;">
+                <div class="modal-body" style="padding:20px; position:relative;">
+                    <button class="smc-info-close-top" onclick="toggleSMCInfo(false)">×</button>
+                    <h3 id="smc-info-title">SMC Смарт-Сканер</h3>
+                    <div class="modal-scroll" style="margin-top:12px;">
+                        <div id="smc-info-body" style="line-height:1.45; color: rgba(255,255,255,0.95);">
+                            <!-- Filled by selectLanguage -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <script>
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        // Shared SMC scanner handler is defined in src/main.js.
+    </script>
+
+    <style>
+        .smc-scanner-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 22px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.95));
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            color: #f8fafc;
+            height: 100%;
+            overflow: auto;
+            box-sizing: border-box;
+        }
+
+        .smc-scanner-container h3 {
+            margin: 0 0 16px;
+            color: #00ff88;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .scanner-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+
+        .input-group label {
+            color: #cbd5e1;
+        }
+
+        .input-group select,
+        .input-group input {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(2, 6, 23, 0.8);
+            color: #fff;
+        }
+
+        #btn-run-scan {
+            background: linear-gradient(135deg, #00ff88, #22c55e);
+            color: #04120a;
+            border: none;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .scan-status-text {
+            margin-bottom: 12px;
+            color: #86efac;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .scan-results {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .result-box {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            min-height: 180px;
+        }
+
+        .result-box h4 {
+            margin: 0 0 10px;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .coins-list, .smc-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #e2e8f0;
+            font-size: 0.82rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .smc-list li {
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .smc-empty {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 900px) {
+            .scanner-grid, .scan-results {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 
     <script type="module" src="/src/main.js"></script>
     <style>
