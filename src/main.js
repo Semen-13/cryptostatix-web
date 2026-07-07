@@ -71,6 +71,17 @@ const detailConfig = {
       { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
       { title: 'Grid Screener PRO', titleRus: 'Сеточный Скринер PRO', titleUkr: 'Сітковий Скринер PRO', desc: 'Real-time 3x3 multi-chart terminal' }
     ]
+  },
+  screeners: {
+    label: 'СКРИНЕРЫ',
+    labelEng: 'SCREENERS',
+    labelUkr: 'СКРІНЕРИ',
+    items: [
+      { title: 'Grid Screener PRO', titleRus: 'Сеточный Скринер PRO', titleUkr: 'Сітковий Скринер PRO', desc: 'Real-time 3x3 multi-chart terminal' },
+      { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
+      { title: 'Скринер тренда', titleEng: 'Trend Screener', titleRus: 'Скринер тренда', titleUkr: 'Скрінер тренда', desc: 'Market cap heatmap of top 25 assets.' },
+      { title: 'Global Exchange Radar', titleRus: 'Глобальный Радар Бирж', titleUkr: 'Глобальний Радар Бірж', desc: 'Market trends and macro signals.' }
+    ]
   }
 };
 
@@ -96,6 +107,9 @@ window.showPage = function (pageId) {
 };
 
 window.showDetail = function (section, itemIndex) {
+  window.currentDetailSection = section;
+  window.detailOrigin = section;
+  window.currentDetailIndex = itemIndex;
   const config = detailConfig[section];
   if (!config) return;
 
@@ -115,6 +129,8 @@ window.showDetail = function (section, itemIndex) {
 
   document.getElementById('detail-title').textContent = `${label} — ${itemTitle}`;
   document.getElementById('detail-body').innerHTML = buildDetailBody(section, itemIndex, item, lang);
+  // Ensure newly inserted detail content is localized (covers templates/iframes inserted dynamically)
+  try { window.selectLanguage(localStorage.getItem('selectedLanguage') || lang); } catch (e) { /* ignore */ }
 
   document.getElementById(section).classList.remove('active');
   const detailPage = document.getElementById('detail-page');
@@ -126,13 +142,74 @@ window.showDetail = function (section, itemIndex) {
 };
 
 window.closeDetail = function () {
-    window.showPage('analytics'); // Упрощенный возврат в аналитику
+    window.showPage(window.currentDetailSection || 'analytics'); // Возврат в нужную секцию
     document.getElementById('detail-page').classList.remove('active');
     setTimeout(() => {
         document.getElementById('detail-page').style.display = 'none';
     }, 300);
 };
 
+window.requestSMCAnalysis = async function requestSMCAnalysis() {
+    // 1. Получаем элементы интерфейса
+    const btnScan = document.getElementById('btn-run-scan');
+    const statusText = document.getElementById('scan-status');
+    const longsList = document.getElementById('smc-longs-list');
+    const shortsList = document.getElementById('smc-shorts-list');
+
+    // 2. Собираем актуальные значения фильтров, введенные пользователем
+    const scanSettings = {
+        timeframe: document.getElementById('scan-timeframe').value,
+        min_volume: parseFloat(document.getElementById('scan-volume').value) || 50000000,
+        min_change: parseFloat(document.getElementById('scan-change').value) || 2.0,
+        structure_window: parseInt(document.getElementById('scan-window').value) || 10
+    };
+
+    // 3. Визуализируем загрузку
+    btnScan.disabled = true;
+    btnScan.innerText = "АНАЛИЗИРУЮ...";
+    statusText.style.display = "block";
+    statusText.innerText = `Подключаюсь к Binance, сканирую таймфрейм ${scanSettings.timeframe}...`;
+    
+    longsList.innerText = "Сканирование...";
+    shortsList.innerText = "Сканирование...";
+
+    try {
+        // 4. Отправляем запрос в нашу Python Netlify Function
+        const response = await fetch('/.netlify/functions/smc-scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(scanSettings)
+        });
+
+        if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
+
+        const data = await response.json();
+
+        if (data.success) {
+            statusText.innerText = `Анализ завершен успешно!`;
+            
+            // Выводим списки монет (если они пустые — пишем "Нет монет")
+            longsList.innerHTML = data.longs.length > 0 
+                ? data.longs.map(coin => `<span class="coin-tag tag-long">${coin}</span>`).join(' ')
+                : "Монеты не найдены";
+
+            shortsList.innerHTML = data.shorts.length > 0 
+                ? data.shorts.map(coin => `<span class="coin-tag tag-short">${coin}</span>`).join(' ')
+                : "Монеты не найдены";
+        } else {
+            statusText.innerText = `Ошибка анализа: ${data.error}`;
+        }
+    } catch (error) {
+        console.error("SMC Scanner Error:", error);
+        statusText.innerText = `Не удалось получить данные. Проверьте консоль.`;
+        longsList.innerText = "Ошибка";
+        shortsList.innerText = "Ошибка";
+    } finally {
+        // 5. Возвращаем кнопку в исходное состояние
+        btnScan.disabled = false;
+        btnScan.innerText = "ЗАПУСТИТЬ АНАЛИЗ";
+    }
+};
 
 // Build detail page body content
 function buildDetailBody(section, index, item, lang = 'ENG') {
@@ -151,7 +228,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     `;
   }
 
-  if (section === 'analytics' && index === 2) {
+  if ((section === 'analytics' && index === 2) || (section === 'screeners' && index === 4)) {
     const title = lang === 'ENG' ? '🛰️ CryptoStatix PRO: Social Signal Terminal v10.0' : '🛰️ CryptoStatix PRO: Social Signal Terminal v10.0'; // Same for both
     const intro = lang === 'ENG' 
       ? 'CryptoStatix PRO is an interactive analytical tool designed to visualize market dominance and short-term momentum of cryptocurrency assets. The terminal combines market share data from major exchanges with real-time volatility metrics and a simulated social interest index.'
@@ -342,6 +419,19 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
       <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%;">
         <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; height: 100%;">
           <iframe src="/heatmap-terminal.html" width="100%" style="height: 100%; min-height: 100%; display: block; border-radius: 14px;" frameborder="0"></iframe>
+        </div>
+      </div>
+    `;
+  }
+
+  if (section === 'screeners' && index === 3) {
+    const scanTemplate = document.getElementById('smc-scan-template');
+    const scanMarkup = scanTemplate ? scanTemplate.innerHTML : '<div class="smc-scanner-container"><h3>SMC Смарт-Сканер</h3><p>Контент временно недоступен.</p></div>';
+
+    return `
+      <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%; overflow: auto;">
+        <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; min-height: 100%;">
+          ${scanMarkup}
         </div>
       </div>
     `;
@@ -711,7 +801,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     `;
   }
 
-  if (section === 'analytics' && index === 11) {
+  if ((section === 'analytics' && index === 11) || (section === 'screeners' && index === 2)) {
     return `
       <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%;">
         <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; height: 100%;">
@@ -721,7 +811,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     `;
   }
 
-  if (section === 'analytics' && index === 12) {
+  if ((section === 'analytics' && index === 12) || (section === 'screeners' && index === 1)) {
     return `
       <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%;">
         <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; height: 100%;">
@@ -800,6 +890,19 @@ window.toggleModal = function (show) {
   }
 }
 
+// SMC Info modal toggle
+window.toggleSMCInfo = function (show) {
+  const modal = document.getElementById('smc-info-modal');
+  if (!modal) return;
+  if (show) {
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+  } else {
+    modal.classList.remove('active');
+    setTimeout(() => modal.style.display = 'none', 300);
+  }
+}
+
 // Language Selection Logic
 window.selectLanguage = function (langCode) {
   const langDisplay = document.getElementById('current-lang');
@@ -810,6 +913,7 @@ window.selectLanguage = function (langCode) {
       button: 'Eng.',
       options: ['Eng.', 'Rus.', 'Ukr.'],
       navAnalytics: 'Analytics',
+      navScreeners: 'Screeners',
       navAbout: 'About us',
       aboutTitle: 'About CryptoStatix',
       aboutDesc: '<strong>CryptoStatix</strong> is an analytical platform built for traders and investors who prioritize data integrity and speed. We don’t just display charts—we help you visualize market structure through the lens of key metrics.',
@@ -831,12 +935,42 @@ window.selectLanguage = function (langCode) {
       aboutTgLink: '🔗 CryptoStatix_news | Analytics & Data',
       aiWelcome: 'Hello! I am your AI assistant in the world of CryptoStatix. Analyzing the market 24/7. Which asset shall we discuss today? 📈',
       aiPlaceholder: 'Enter your request...',
-      aiAgentCircular: 'your personal ai-agent'
+      aiAgentCircular: 'your personal ai-agent',
+      smcTitle: 'SMC Smart Scanner (Binance Futures)',
+      smcTimeframe: 'Timeframe:',
+      smcVolume: 'Min 24h Volume (USDT):',
+      smcChange: 'Min Price Change (%):',
+      smcWindow: 'Noise Filter (candles):',
+      smcButton: 'RUN ANALYSIS',
+      smcLong: '🟢 MACRO TREND LONG',
+      smcShort: '🔴 MACRO TREND SHORT',
+      smcWaiting: 'Waiting for scan...'
+        ,
+        smcInfoBtn: 'Info',
+        smcInfoTitle: 'What is SMC Smart Scanner?',
+        smcInfoBody: `<p><strong>SMC Smart Scanner</strong> is an automated analytical tool designed for traders and investors. It is intended for instant evaluation of the market structure of crypto futures on Binance using the Smart Money (SMC) concept. Instead of manually opening dozens of charts and searching for trends, the scanner iterates hundreds of active trading pairs with one click, filters out market noise using a mathematical algorithm, and produces ready lists of coins that are in strong macro trends.</p>
+          <h4>How it works (For the website user)</h4>
+          <p>Using the scanner on the site is simple — the whole process is divided into 3 steps:</p>
+          <h5>1. Filter settings (select parameters):</h5>
+          <ul>
+            <li><strong>Timeframe:</strong> Choose the time scale for the analysis. Smaller timeframes (5 minutes) suit fast intraday trades (scalping), while larger ones (1 hour) are better for more reliable swing positions.</li>
+            <li><strong>Min 24h Volume (USDT):</strong> Liquidity filter. It automatically removes illiquid and low-traded coins. The default value ($50,000,000) keeps only assets where large players are active.</li>
+            <li><strong>Min Price Change (%):</strong> Filters out coins stuck in a tight range, selecting only volatile, moving assets.</li>
+            <li><strong>Noise Filter (candles):</strong> Sets the strictness of market structure detection. The higher the number, the larger and more global highs/lows the algorithm will consider.</li>
+          </ul>
+          <h5>2. Run analysis:</h5>
+          <p>Press the big green "RUN ANALYSIS" button. A loading status appears while the site sends a command to the cloud, connects to Binance, downloads candle history for each coin, and performs computations.</p>
+          <h5>3. Receiving signals:</h5>
+          <p>After a few seconds the scanner outputs results as two lists:</p>
+          <p>🟢 <strong>MACRO TREND LONG:</strong> Coins with a consistently rising structure — ideal for finding long entry points.</p>
+          <p>🔴 <strong>MACRO TREND SHORT:</strong> Coins with a stable downtrend — ideal for short opportunities.</p>
+          <p>All calculations run in the cloud, so the tool is fast and does not burden the user's computer.</p>`
     },
     'RUS': {
       button: 'Рус.',
       options: ['Анг.', 'Рус.', 'Укр.'],
       navAnalytics: 'Аналитика',
+      navScreeners: 'Скринеры',
       navAbout: 'О проекте',
       aboutTitle: 'О проекте CryptoStatix',
       aboutDesc: '<strong>CryptoStatix</strong> — это аналитическая платформа, созданная для трейдеров и инвесторов, которым важна чистота данных и оперативность. Мы не просто показываем графики, мы помогаем увидеть структуру рынка через призму ключевых метрик.',
@@ -858,12 +992,41 @@ window.selectLanguage = function (langCode) {
       aboutTgLink: 'CryptoStatix_news/Аналитика и данные',
       aiWelcome: 'Привет! Я твой AI-ассистент в мире CryptoStatix. Анализирую рынок 24/7. Какой актив обсудим сегодня? 📈',
       aiPlaceholder: 'Введите ваш запрос...',
-      aiAgentCircular: 'ваш персональный ии-агент'
+      aiAgentCircular: 'ваш персональный ии-агент',
+      smcTitle: 'SMC Смарт-Сканер (Binance Futures)',
+      smcTimeframe: 'Таймфрейм:',
+      smcVolume: 'Мин. Объем 24ч (USDT):',
+      smcChange: 'Мин. Изменение цены (%):',
+      smcWindow: 'Фильтр шума (свечей):',
+      smcButton: 'ЗАПУСТИТЬ АНАЛИЗ',
+      smcLong: '🟢 МАКРО-ТРЕНД LONG',
+      smcShort: '🔴 МАКРО-ТРЕНД SHORT',
+      smcWaiting: 'Ожидание запуска анализа...',
+      smcInfoBtn: 'Инфо',
+      smcInfoTitle: 'Что такое SMC Смарт-Сканер?',
+      smcInfoBody: `<p><strong>SMC Смарт-Сканер</strong> — это автоматический аналитический инструмент, разработанный для трейдеров и инвесторов. Он предназначен для мгновенной оценки структуры рынка криптовалютных фьючерсов на бирже Binance по концепции Smart Money (SMC). Вместо того чтобы вручную открывать десятки графиков и искать тренды, сканер за один клик перебирает сотни активных торговых пар, очищает их от рыночного шума с помощью математического алгоритма и выдает готовые списки монет, находящихся в сильных макро-трендах.</p>
+        <h4>Как это работает (Для пользователя сайта)</h4>
+        <p>Пользоваться сканером на сайте очень просто — весь процесс разбит на 3 шага:</p>
+        <h5>1. Настройка фильтров (выбор параметров):</h5>
+        <ul>
+          <li><strong>Таймфрейм:</strong> Выберите временной масштаб для анализа. Меньшие таймфреймы (5 минут) подходят для быстрых сделок внутри дня (скальпинг), а старшие (1 час) — для более надежных и затяжных позиций (свинг-трейдинг).</li>
+          <li><strong>Мин. Объем 24ч (USDT):</strong> Фильтр ликвидности. Он автоматически отсекает «мертвые» и малоторгуемые монеты. Значение по умолчанию ($50,000,000) оставляет только те активы, где есть крупные игроки.</li>
+          <li><strong>Мин. Изменение цены (%):</strong> Отсеивает монеты, которые стоят в жестком флэте (боковике), собирая только волатильные, двигающиеся активы.</li>
+          <li><strong>Фильтр шума (свечей):</strong> Задает строгость определения рыночной структуры. Чем выше цифра, тем более крупные и глобальные ценовые максимумы и минимумы берет в расчет алгоритм.</li>
+        </ul>
+        <h5>2. Запуск анализа:</h5>
+        <p>Нажмите большую зеленую кнопку «ЗАПУСТИТЬ АНАЛИЗ». На экране появится статус загрузки. В этот момент сайт отправляет команду в облако, подключается напрямую к бирже Binance, скачивает историю свечей по каждой монете и производит расчеты.</p>
+        <h5>3. Получение сигналов:</h5>
+        <p>Через несколько секунд сканер выведет результат в виде двух списков:</p>
+        <p>🟢 <strong>МАКРО-ТРЕНД LONG:</strong> Список монет, у которых структура графика стабильно повышается (крупные покупатели толкают цену вверх). Идеально для поиска точек входа в покупки.</p>
+        <p>🔴 <strong>МАКРО-ТРЕНД SHORT:</strong> Список монет с устойчивым нисходящим трендом, где доминируют продавцы. Идеально для поиска сделок на понижение.</p>
+        <p>Все расчеты происходят изолированно в облаке, поэтому инструмент работает быстро и не нагружает компьютер пользователя.</p>`
     },
     'UKR': {
       button: 'Укр.',
       options: ['Анг.', 'Рос.', 'Укр.'],
       navAnalytics: 'Аналітика',
+      navScreeners: 'Скрінери',
       navAbout: 'Про проект',
       aboutTitle: 'Про проект CryptoStatix',
       aboutDesc: '<strong>CryptoStatix</strong> — це аналітична платформа, створена для трейдерів та інвесторів, яким важлива чистота даних та оперативність. Ми не просто показуємо графіки, ми допомагаємо побачити структуру ринку через призму ключових метрик.',
@@ -885,9 +1048,38 @@ window.selectLanguage = function (langCode) {
       aboutTgLink: '🔗 CryptoStatix_news | Аналітика та дані',
       aiWelcome: 'Привіт! Я твій AI-асистент у світі CryptoStatix. Аналізую ринок 24/7. Який актив обговоримо сьогодні? 📈',
       aiPlaceholder: 'Введіть ваш запит...',
-      aiAgentCircular: 'ваш персональний ші-агент'
+      aiAgentCircular: 'ваш персональний ші-агент',
+      smcTitle: 'SMC Смарт-Сканер (Binance Futures)',
+      smcTimeframe: 'Таймфрейм:',
+      smcVolume: 'Мін. Обсяг 24г (USDT):',
+      smcChange: 'Мін. Зміна ціни (%):',
+      smcWindow: 'Фільтр шуму (свічок):',
+      smcButton: 'ЗАПУСТИТИ АНАЛІЗ',
+      smcLong: '🟢 МАКРО-ТРЕНД LONG',
+      smcShort: '🔴 МАКРО-ТРЕНД SHORT',
+      smcWaiting: 'Очікування запуску аналізу...',
+      smcInfoBtn: 'Інфо',
+      smcInfoTitle: 'Що таке SMC Смарт-Сканер?',
+      smcInfoBody: `<p><strong>SMC Смарт-Сканер</strong> — це автоматичний аналітичний інструмент, розроблений для трейдерів та інвесторів. Він призначений для миттєвої оцінки структури ринку криптовалютних ф'ючерсів на біржі Binance за концепцією Smart Money (SMC). Замість того, щоб вручну відкривати десятки графіків і шукати тренди, сканер одним кліком перебирає сотні активних торгових пар, очищує їх від ринкового шуму за допомогою математичного алгоритму і видає готові списки монет, що знаходяться у сильних макро-трендах.</p>
+        <h4>Як це працює (для користувача сайту)</h4>
+        <p>Користуватися сканером на сайті дуже просто — увесь процес розбитий на 3 кроки:</p>
+        <h5>1. Налаштування фільтрів (вибір параметрів):</h5>
+        <ul>
+          <li><strong>Таймфрейм:</strong> Оберіть часовий масштаб для аналізу. Менші таймфрейми (5 хвилин) підходять для швидких угод всередині дня (скальпінг), а старші (1 година) — для більш надійних свінг-позицій.</li>
+          <li><strong>Мін. Обсяг 24г (USDT):</strong> Фільтр ліквідності. Він автоматично відсікає «мертві» та малоторгові монети. Значення за замовчуванням ($50,000,000) залишає лише ті активи, де присутні великі гравці.</li>
+          <li><strong>Мін. Зміна ціни (%):</strong> Відсіює монети, що перебувають у вузькому флеті, вибираючи лише волатильні активи, що рухаються.</li>
+          <li><strong>Фільтр шуму (свічок):</strong> Встановлює суворість визначення ринкової структури. Чим вища цифра, тим більші та глобальніші максимуми/мінімуми бере до уваги алгоритм.</li>
+        </ul>
+        <h5>2. Запуск аналізу:</h5>
+        <p>Натисніть велику зелену кнопку «ЗАПУСТИТИ АНАЛІЗ». На екрані з'явиться статус завантаження. У цей момент сайт надсилає команду в хмару, підключається до Binance, завантажує історію свічок по кожній монеті та виконує розрахунки.</p>
+        <h5>3. Отримання сигналів:</h5>
+        <p>Через кілька секунд сканер виведе результат у вигляді двох списків:</p>
+        <p>🟢 <strong>МАКРО-ТРЕНД LONG:</strong> Список монет зі стабільно зростаючою структурою — ідеально для пошуку точок входу в покупки.</p>
+        <p>🔴 <strong>МАКРО-ТРЕНД SHORT:</strong> Список монет зі стійким низхідним трендом — ідеально для пошуку шорт-можливостей.</p>
+        <p>Всі розрахунки виконуються в хмарі, тож інструмент працює швидко і не навантажує комп'ютер користувача.</p>`
     }
   };
+
 
   const current = translations[langCode];
   if (!current) return;
@@ -898,24 +1090,40 @@ window.selectLanguage = function (langCode) {
 
   // Update navigation buttons
   const navAnalytics = document.getElementById('nav-analytics');
+  const navScreeners = document.getElementById('nav-screeners');
   const navAbout = document.getElementById('nav-about');
   if (navAnalytics) navAnalytics.textContent = current.navAnalytics;
+  if (navScreeners) navScreeners.textContent = current.navScreeners;
   if (navAbout) navAbout.textContent = current.navAbout;
 
   // Update Subpage Titles & Back Buttons
   const analyticsTitle = document.querySelector('#analytics h2');
   if (analyticsTitle) analyticsTitle.textContent = current.navAnalytics;
+  const screenersTitle = document.querySelector('#screeners h2');
+  if (screenersTitle) screenersTitle.textContent = current.navScreeners;
 
-  // Update Analytics Grid Captions
+  // Update Grid Captions
   const analyticsItems = detailConfig.analytics.items;
-  const gridCaptions = document.querySelectorAll('#analytics .grid-caption');
+  const analyticsCaptions = document.querySelectorAll('#analytics .grid-caption');
   analyticsItems.forEach((item, idx) => {
-    if (gridCaptions[idx]) {
+    if (analyticsCaptions[idx]) {
       let title = item.title;
       if (langCode === 'ENG' && item.titleEng) title = item.titleEng;
       if (langCode === 'UKR' && item.titleUkr) title = item.titleUkr;
       if (langCode === 'RUS' && item.titleRus) title = item.titleRus;
-      gridCaptions[idx].innerText = title;
+      analyticsCaptions[idx].innerText = title;
+    }
+  });
+
+  const screenersItems = detailConfig.screeners.items;
+  const screenersCaptions = document.querySelectorAll('#screeners .grid-caption');
+  screenersItems.forEach((item, idx) => {
+    if (screenersCaptions[idx]) {
+      let title = item.title;
+      if (langCode === 'ENG' && item.titleEng) title = item.titleEng;
+      if (langCode === 'UKR' && item.titleUkr) title = item.titleUkr;
+      if (langCode === 'RUS' && item.titleRus) title = item.titleRus;
+      screenersCaptions[idx].innerText = title;
     }
   });
 
@@ -935,6 +1143,35 @@ window.selectLanguage = function (langCode) {
   const aiAgentText = document.getElementById('ai-agent-text');
   if (aiAgentText && current.aiAgentCircular) {
     aiAgentText.textContent = current.aiAgentCircular;
+  }
+
+  // Update hidden SMC scanner template
+  const smcTitleEl = document.getElementById('smc-title');
+  const smcTimeframeLabel = document.getElementById('smc-label-timeframe');
+  const smcVolumeLabel = document.getElementById('smc-label-volume');
+  const smcChangeLabel = document.getElementById('smc-label-change');
+  const smcWindowLabel = document.getElementById('smc-label-window');
+  const smcButton = document.getElementById('btn-run-scan');
+  const smcLongHeading = document.getElementById('smc-long-heading');
+  const smcShortHeading = document.getElementById('smc-short-heading');
+  const smcLongsList = document.getElementById('smc-longs-list');
+  const smcShortsList = document.getElementById('smc-shorts-list');
+
+  if (smcTitleEl) smcTitleEl.textContent = current.smcTitle;
+  if (smcTimeframeLabel) smcTimeframeLabel.textContent = current.smcTimeframe;
+  if (smcVolumeLabel) smcVolumeLabel.textContent = current.smcVolume;
+  if (smcChangeLabel) smcChangeLabel.textContent = current.smcChange;
+  if (smcWindowLabel) smcWindowLabel.textContent = current.smcWindow;
+  if (smcButton) smcButton.textContent = current.smcButton;
+  if (smcLongHeading) smcLongHeading.textContent = current.smcLong;
+  if (smcShortHeading) smcShortHeading.textContent = current.smcShort;
+
+  const placeholderTexts = ['Ожидание запуска анализа...', 'Waiting for scan...', 'Очікування запуску аналізу...'];
+  if (smcLongsList && placeholderTexts.includes(smcLongsList.textContent.trim())) {
+    smcLongsList.textContent = current.smcWaiting;
+  }
+  if (smcShortsList && placeholderTexts.includes(smcShortsList.textContent.trim())) {
+    smcShortsList.textContent = current.smcWaiting;
   }
 
   // Update About page content
@@ -959,10 +1196,15 @@ window.selectLanguage = function (langCode) {
     'about-tg-link': 'aboutTgLink'
   };
 
+  // Add SMC info modal/button mapping
+  ids['smc-info-btn'] = 'smcInfoBtn';
+  ids['smc-info-title'] = 'smcInfoTitle';
+  ids['smc-info-body'] = 'smcInfoBody';
+
   for (const [id, key] of Object.entries(ids)) {
     const el = document.getElementById(id);
     if (el) {
-      if (key === 'aboutDesc') el.innerHTML = current[key];
+      if (key === 'aboutDesc' || key === 'smcInfoBody') el.innerHTML = current[key];
       else el.textContent = current[key];
     }
   }
@@ -1001,6 +1243,19 @@ window.selectLanguage = function (langCode) {
   // Save to localStorage so iframes can pick it up
   localStorage.setItem('selectedLanguage', langCode);
 
+  // Notify any embedded iframes (same-origin pages) about language change
+  try {
+    const iframes = document.querySelectorAll('iframe');
+    iframes.forEach(frame => {
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type: 'lang_change', lang: langCode }, '*');
+      }
+    });
+  } catch (e) {
+    // silently ignore cross-origin or other issues
+    console.warn('iframe language notify failed', e);
+  }
+
   // Refresh detail body if open
   const detailPage = document.getElementById('detail-page');
   if (detailPage && detailPage.classList.contains('active') && detailOrigin && currentDetailIndex) {
@@ -1009,12 +1264,15 @@ window.selectLanguage = function (langCode) {
     
     // Refresh title
     let label = config.label;
-    if (langCode === 'ENG') {
-      if (detailOrigin === 'analytics') label = 'ANALYTICS';
-    } else if (langCode === 'UKR') {
-      if (detailOrigin === 'analytics') label = 'АНАЛІТИКА';
-    }
-    document.getElementById('detail-title').textContent = `${label} — ${item.title}`;
+    if (langCode === 'ENG') label = config.labelEng || label;
+    if (langCode === 'UKR') label = config.labelUkr || label;
+
+    let itemTitle = item.title;
+    if (langCode === 'ENG' && item.titleEng) itemTitle = item.titleEng;
+    if (langCode === 'UKR' && item.titleUkr) itemTitle = item.titleUkr;
+    if (langCode === 'RUS' && item.titleRus) itemTitle = item.titleRus;
+
+    document.getElementById('detail-title').textContent = `${label} — ${itemTitle}`;
     
     // Refresh body
     document.getElementById('detail-body').innerHTML = buildDetailBody(detailOrigin, currentDetailIndex, item, langCode);
