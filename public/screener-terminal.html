@@ -14,7 +14,15 @@
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            document.body.innerHTML = '<div style="color:red; background:black; padding:20px; z-index:9999; position:absolute; top:0; left:0; width:100%; height:100%; font-family:monospace;"><h3>CRITICAL ERROR:</h3><p>' + message + '</p><p>Line: ' + lineno + '</p><p>Please take a screenshot of this error.</p></div>';
+            return true;
+        };
+    </script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -71,7 +79,10 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script type="text/babel" data-plugins="transform-react-jsx">
+        /** @jsxRuntime classic */
+        /** @jsx React.createElement */
+        /** @jsxFrag React.Fragment */
         const { useState, useEffect, useRef, useMemo } = React;
 
         const BINANCE_REST_BASE = 'https://api.binance.com/api/v3';
@@ -143,7 +154,7 @@
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
                 <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin shadow-[0_0_15px_var(--accent-glow)]"></div>
                 <div className="text-accent font-mono text-[10px] tracking-widest animate-pulse-slow">
-                    {TRANSLATIONS[lang]?.init || TRANSLATIONS.ENG.init}
+                    {TRANSLATIONS[lang] ? TRANSLATIONS[lang].init : TRANSLATIONS.ENG.init}
                 </div>
             </div>
         );
@@ -291,16 +302,16 @@
                                 {pairData && (
                                     <div className={`flex items-center ${isExpanded ? 'gap-3 ml-3 text-[10px]' : 'gap-1.5 ml-1.5 text-[7px] opacity-80'} font-mono whitespace-nowrap overflow-hidden`}>
                                         <span className="text-slate-400">
-                                            {isExpanded ? (t?.volume || 'Vol') + ':' : 'V:'} <span className="text-slate-200">{volume}</span>
+                                            {isExpanded ? (t.volume || 'Vol') + ':' : 'V:'} <span className="text-slate-200">{volume}</span>
                                         </span>
                                         <span className="text-slate-400">
                                             {isExpanded ? 'Chg:' : 'Δ:'} <span className={isUp ? 'text-up' : 'text-down'}>{isUp?'+':''}{priceChange}%</span>
                                         </span>
                                         <span className="text-slate-400">
-                                            {isExpanded ? (t?.volatility || 'Volat') + ':' : 'Vl:'} <span className="text-slate-200">{vol}%</span>
+                                            {isExpanded ? (t.volatility || 'Volat') + ':' : 'Vl:'} <span className="text-slate-200">{vol}%</span>
                                         </span>
                                         <span className="text-slate-400">
-                                            {isExpanded ? (t?.trades || 'Trades') + ':' : 'T:'} <span className="text-slate-200">{trades}</span>
+                                            {isExpanded ? (t.trades || 'Trades') + ':' : 'T:'} <span className="text-slate-200">{trades}</span>
                                         </span>
                                     </div>
                                 )}
@@ -329,11 +340,11 @@
                             <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-800/50 shrink-0">
                                 <div className="flex gap-2">
                                     {[
-                                        { id: '1m', label: t?.tf_1m || '1m' },
-                                        { id: '5m', label: t?.tf_5m || '5m' },
-                                        { id: '15m', label: t?.tf_15m || '15m' },
-                                        { id: '1h', label: t?.tf_1h || '1h' },
-                                        { id: '1d', label: t?.tf_1d || '1d' }
+                                        { id: '1m', label: t.tf_1m || '1m' },
+                                        { id: '5m', label: t.tf_5m || '5m' },
+                                        { id: '15m', label: t.tf_15m || '15m' },
+                                        { id: '1h', label: t.tf_1h || '1h' },
+                                        { id: '1d', label: t.tf_1d || '1d' }
                                     ].map(tf => (
                                         <button
                                             key={tf.id}
@@ -363,7 +374,24 @@
             const [sortMode, setSortMode] = useState('volume');
             const [timeframe, setTimeframe] = useState('1m');
             const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
             const [lang, setLang] = useState(localStorage.getItem('selectedLanguage') || 'ENG');
+
+            // Listen for language change messages from parent window for instant updates
+            useEffect(() => {
+                const onMessage = (e) => {
+                    try {
+                        if (!e.data) return;
+                        if (e.data.type === 'lang_change' && e.data.lang) {
+                            setLang(e.data.lang);
+                        }
+                    } catch (err) {
+                        // ignore malformed messages
+                    }
+                };
+                window.addEventListener('message', onMessage);
+                return () => window.removeEventListener('message', onMessage);
+            }, []);
             const [expandedSymbol, setExpandedSymbol] = useState(null);
             const [showInfo, setShowInfo] = useState(false);
 
@@ -392,8 +420,11 @@
                     );
                     setAllTickers(usdtPairs);
                     setLoading(false);
+                    setError(null);
                 } catch (err) {
                     console.error("Error fetching tickers:", err);
+                    setError(err.message);
+                    setLoading(false);
                 }
             };
 
@@ -422,6 +453,7 @@
             const t = TRANSLATIONS[lang] || TRANSLATIONS.ENG;
 
             if (loading) return <LoadingSpinner lang={lang} />;
+            if (error) return <div className="flex flex-col items-center justify-center h-screen text-red-400 font-mono text-xs">Error loading data: {error}<br/>Please check your internet connection or disable adblock.</div>;
 
             return (
                 <div className="h-screen flex flex-col p-3 gap-3">
