@@ -1,7 +1,25 @@
 // netlify/functions/smc-scan.js
 import fetch from 'node-fetch';
 
+// Helper: Fetch with timeout
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        return response;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 export const handler = async (event, context) => {
+    // Set Netlify timeout to 25 seconds (function max is 26s)
+    context.callbackWaitsForEmptyEventLoop = false;
+    
     const headers = {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
@@ -30,9 +48,12 @@ export const handler = async (event, context) => {
         const min_change = parseFloat(body.min_change) || 2.0;
         const structure_window = parseInt(body.structure_window) || 10;
 
-        const tickerRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr', {
+        console.log(`[SMC] Starting scan: TF=${timeframe}, Vol=${min_volume}, Change=${min_change}%`);
+
+        const tickerRes = await fetchWithTimeout('https://fapi.binance.com/fapi/v1/ticker/24hr', {
             headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
+        }, 8000);
+        
         const tickers = await tickerRes.json();
 
         if (!Array.isArray(tickers)) {
@@ -65,14 +86,23 @@ export const handler = async (event, context) => {
         const long_trend_coins = [];
         const short_trend_coins = [];
         
-        const BATCH_SIZE = 20; // Fetch in batches to avoid overwhelming the API
+        // Limit symbols to prevent timeout
+        const MAX_SYMBOLS = 30;
+        const filtered_symbols_limited = filtered_symbols.slice(0, MAX_SYMBOLS);
+        console.log(`[SMC] Processing ${filtered_symbols_limited.length} symbols (max: ${MAX_SYMBOLS})`);
         
-        for (let i = 0; i < filtered_symbols.length; i += BATCH_SIZE) {
-            const batch = filtered_symbols.slice(i, i + BATCH_SIZE);
+        const BATCH_SIZE = 10; // Smaller batches for reliability
+        
+        for (let i = 0; i < filtered_symbols_limited.length; i += BATCH_SIZE) {
+            const batch = filtered_symbols_limited.slice(i, i + BATCH_SIZE);
             
             const promises = batch.map(async (symbol) => {
                 try {
-                    const klineRes = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${timeframe}&limit=100`);
+                    const klineRes = await fetchWithTimeout(
+                        `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${timeframe}&limit=100`,
+                        { headers: { 'User-Agent': 'Mozilla/5.0' } },
+                        5000
+                    );
                     if (!klineRes.ok) return;
                     const klines = await klineRes.json();
                     
@@ -119,7 +149,10 @@ export const handler = async (event, context) => {
             });
             
             await Promise.all(promises);
+            console.log(`[SMC] Batch ${Math.floor(i / BATCH_SIZE) + 1} complete. LONG: ${long_trend_coins.length}, SHORT: ${short_trend_coins.length}`);
         }
+
+        console.log(`[SMC] Scan complete! LONG: ${long_trend_coins.length}, SHORT: ${short_trend_coins.length}`);
 
         return {
             statusCode: 200,
@@ -133,7 +166,7 @@ export const handler = async (event, context) => {
         };
 
     } catch (e) {
-        console.error("Function error:", e);
+        console.error("[SMC] Function error:", e);
         return {
             statusCode: 500,
             headers,
