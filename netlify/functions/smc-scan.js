@@ -30,7 +30,6 @@ export const handler = async (event, context) => {
         const min_change = parseFloat(body.min_change) || 2.0;
         const structure_window = parseInt(body.structure_window) || 10;
 
-<<<<<<< HEAD
         const tickerRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr', {
             headers: { 'User-Agent': 'Mozilla/5.0' }
         });
@@ -45,12 +44,6 @@ export const handler = async (event, context) => {
             };
         }
 
-=======
-        // 1. Fetch 24h ticker data for all symbols
-        const tickerRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr');
-        const tickers = await tickerRes.json();
-
->>>>>>> 117440b480e53cbcbe9880c3e882ce5692edea9f
         const filtered_symbols = [];
         const seed_keywords = ["SEED", "INNOVATION", "UP", "DOWN", "BEAR", "BULL"];
 
