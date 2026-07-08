@@ -1,22 +1,19 @@
 // netlify/functions/smc-scan.js
 import fetch from 'node-fetch';
 
-// Helper: Fetch with timeout
-async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+// Helper: Simple fetch wrapper
+async function fetchData(url, options = {}) {
     try {
         const response = await fetch(url, {
             ...options,
-            signal: controller.signal
+            timeout: 8000
         });
-        clearTimeout(timeout);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         return response;
     } catch (error) {
-        clearTimeout(timeout);
-        if (error.name === 'AbortError') {
-            throw new Error(`Timeout after ${timeoutMs}ms fetching ${url}`);
-        }
+        console.error(`Fetch error for ${url}:`, error.message);
         throw error;
     }
 }
@@ -52,13 +49,9 @@ export const handler = async (event, context) => {
 
         console.log(`[SMC] Starting scan: TF=${timeframe}, Vol=${min_volume}, Change=${min_change}%`);
 
-        const tickerRes = await fetchWithTimeout('https://fapi.binance.com/fapi/v1/ticker/24hr', {
+        const tickerRes = await fetchData('https://fapi.binance.com/fapi/v1/ticker/24hr', {
             headers: { 'User-Agent': 'Mozilla/5.0' }
-        }, 8000);
-        
-        if (!tickerRes) {
-            throw new Error("Timeout fetching Binance tickers");
-        }
+        });
         
         const tickers = await tickerRes.json();
 
@@ -104,12 +97,10 @@ export const handler = async (event, context) => {
             
             const promises = batch.map(async (symbol) => {
                 try {
-                    const klineRes = await fetchWithTimeout(
+                    const klineRes = await fetchData(
                         `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${timeframe}&limit=100`,
-                        { headers: { 'User-Agent': 'Mozilla/5.0' } },
-                        5000
+                        { headers: { 'User-Agent': 'Mozilla/5.0' } }
                     );
-                    if (!klineRes.ok) return;
                     const klines = await klineRes.json();
                     
                     if (klines.length < 40) return;
