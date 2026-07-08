@@ -10,16 +10,18 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
             ...options,
             signal: controller.signal
         });
-        return response;
-    } finally {
         clearTimeout(timeout);
+        return response;
+    } catch (error) {
+        clearTimeout(timeout);
+        if (error.name === 'AbortError') {
+            throw new Error(`Timeout after ${timeoutMs}ms fetching ${url}`);
+        }
+        throw error;
     }
 }
 
 export const handler = async (event, context) => {
-    // Set Netlify timeout to 25 seconds (function max is 26s)
-    context.callbackWaitsForEmptyEventLoop = false;
-    
     const headers = {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
@@ -53,6 +55,10 @@ export const handler = async (event, context) => {
         const tickerRes = await fetchWithTimeout('https://fapi.binance.com/fapi/v1/ticker/24hr', {
             headers: { 'User-Agent': 'Mozilla/5.0' }
         }, 8000);
+        
+        if (!tickerRes) {
+            throw new Error("Timeout fetching Binance tickers");
+        }
         
         const tickers = await tickerRes.json();
 
