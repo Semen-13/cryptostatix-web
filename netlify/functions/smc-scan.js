@@ -125,57 +125,64 @@ export const handler = async (event, context) => {
             
             const promises = batch.map(async (symbol) => {
                 try {
-                    const klineRes = await fetchData(
-                        `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${timeframe}&limit=100`,
-                        { headers: { 'User-Agent': 'Mozilla/5.0' } }
-                    );
-                    let klines = await klineRes.json();
-                    
-                    if (!Array.isArray(klines) || klines.length < 40) {
-                        // Use simple trend based on ticker data
-                        const ticker = tickers.find(t => t.symbol === symbol);
-                        if (ticker && ticker.priceChangePercent > 0) {
-                            long_trend_coins.push(symbol.replace("USDT", ""));
-                        } else if (ticker) {
-                            short_trend_coins.push(symbol.replace("USDT", ""));
-                        }
-                        return;
+                    let klines = null;
+                    try {
+                        const klineRes = await fetchData(
+                            `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${timeframe}&limit=100`,
+                            { headers: { 'User-Agent': 'Mozilla/5.0' } }
+                        );
+                        klines = await klineRes.json();
+                    } catch (e) {
+                        console.log(`[SMC] Could not fetch klines for ${symbol}, using ticker fallback`);
                     }
-
-                    // Format: [Open time, Open, High, Low, Close, Volume, ...]
-                    const highs = klines.map(k => parseFloat(k[2]));
-                    const lows = klines.map(k => parseFloat(k[3]));
-
-                    const w = structure_window;
-                    const macro_highs = [];
-                    const macro_lows = [];
-
-                    for (let j = w; j < highs.length - w; j++) {
-                        const windowHighs = highs.slice(j - w, j + w + 1);
-                        if (highs[j] === Math.max(...windowHighs)) {
-                            macro_highs.push(highs[j]);
-                        }
-                        
-                        const windowLows = lows.slice(j - w, j + w + 1);
-                        if (lows[j] === Math.min(...windowLows)) {
-                            macro_lows.push(lows[j]);
-                        }
-                    }
-
-                    if (macro_highs.length < 2 || macro_lows.length < 2) return;
-
-                    const last_macro_high = macro_highs[macro_highs.length - 1];
-                    const prev_macro_high = macro_highs[macro_highs.length - 2];
                     
-                    const last_macro_low = macro_lows[macro_lows.length - 1];
-                    const prev_macro_low = macro_lows[macro_lows.length - 2];
-
+                    const ticker = tickers.find(t => t.symbol === symbol);
                     const clean_name = symbol.replace("USDT", "");
+                    
+                    // Use klines if available and valid, otherwise use ticker change
+                    if (Array.isArray(klines) && klines.length >= 40) {
+                        const highs = klines.map(k => parseFloat(k[2]));
+                        const lows = klines.map(k => parseFloat(k[3]));
 
-                    if (last_macro_high > prev_macro_high && last_macro_low > prev_macro_low) {
-                        long_trend_coins.push(clean_name);
-                    } else if (last_macro_high < prev_macro_high && last_macro_low < prev_macro_low) {
-                        short_trend_coins.push(clean_name);
+                        const w = structure_window;
+                        const macro_highs = [];
+                        const macro_lows = [];
+
+                        for (let j = w; j < highs.length - w; j++) {
+                            const windowHighs = highs.slice(j - w, j + w + 1);
+                            if (highs[j] === Math.max(...windowHighs)) {
+                                macro_highs.push(highs[j]);
+                            }
+                            
+                            const windowLows = lows.slice(j - w, j + w + 1);
+                            if (lows[j] === Math.min(...windowLows)) {
+                                macro_lows.push(lows[j]);
+                            }
+                        }
+
+                        if (macro_highs.length >= 2 && macro_lows.length >= 2) {
+                            const last_macro_high = macro_highs[macro_highs.length - 1];
+                            const prev_macro_high = macro_highs[macro_highs.length - 2];
+                            const last_macro_low = macro_lows[macro_lows.length - 1];
+                            const prev_macro_low = macro_lows[macro_lows.length - 2];
+
+                            if (last_macro_high > prev_macro_high && last_macro_low > prev_macro_low) {
+                                long_trend_coins.push(clean_name);
+                                return;
+                            } else if (last_macro_high < prev_macro_high && last_macro_low < prev_macro_low) {
+                                short_trend_coins.push(clean_name);
+                                return;
+                            }
+                        }
+                    }
+                    
+                    // Fallback: use ticker price change to determine trend
+                    if (ticker) {
+                        if (ticker.priceChangePercent > 1) {
+                            long_trend_coins.push(clean_name);
+                        } else if (ticker.priceChangePercent < -1) {
+                            short_trend_coins.push(clean_name);
+                        }
                     }
                 } catch (e) {
                     console.warn(`[SMC] Warning processing ${symbol}:`, e.message ? e.message.substring(0, 50) : String(e));
