@@ -175,7 +175,12 @@ window.requestSMCAnalysis = async function requestSMCAnalysis() {
 
     try {
         // 4. Отправляем запрос в нашу Python Netlify Function
-        const response = await fetch('/.netlify/functions/smc-scan', {
+        // Для localhost используем port 5174 (dev-server), для production используем /.netlify/functions/
+        const endpoint = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5174/.netlify/functions/smc-scan'
+            : '/.netlify/functions/smc-scan';
+        
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(scanSettings)
