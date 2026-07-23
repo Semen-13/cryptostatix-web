@@ -4,6 +4,7 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { handler as rsiHandler } from './netlify/functions/rsi-scan.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -134,6 +135,23 @@ app.post('/.netlify/functions/smc-scan', async (req, res) => {
     } catch (error) {
         console.error("❌ SMC Scan Error:", error.message);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// RSI Scan route using the Netlify function handler we added
+app.post('/.netlify/functions/rsi-scan', async (req, res) => {
+    try {
+        const event = {
+            httpMethod: 'POST',
+            body: JSON.stringify(req.body)
+        };
+        const result = await rsiHandler(event, {});
+        const headers = result.headers || { 'Content-Type': 'application/json' };
+        res.set(headers);
+        res.status(result.statusCode || 200).send(result.body);
+    } catch (e) {
+        console.error('RSI route error', e);
+        res.status(500).json({ error: String(e) });
     }
 });
 

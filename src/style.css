@@ -721,7 +721,7 @@ h1 {
     border-color: #3b82f6;
 }
 
-#btn-run-scan {
+#btn-run-scan, #btn-run-rsi {
     width: 100%;
     background-color: #10b981;
     color: white;
@@ -733,11 +733,11 @@ h1 {
     transition: background 0.2s;
 }
 
-#btn-run-scan:hover:not(:disabled) {
+#btn-run-scan:hover:not(:disabled), #btn-run-rsi:hover:not(:disabled) {
     background-color: #059669;
 }
 
-#btn-run-scan:disabled {
+#btn-run-scan:disabled, #btn-run-rsi:disabled {
     background-color: #4b5563;
     cursor: not-allowed;
 }

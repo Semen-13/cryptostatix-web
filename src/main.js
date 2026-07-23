@@ -80,7 +80,7 @@ const detailConfig = {
       { title: 'Grid Screener PRO', titleRus: 'Сеточный Скринер PRO', titleUkr: 'Сітковий Скринер PRO', desc: 'Real-time 3x3 multi-chart terminal' },
       { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
       { title: 'Скринер тренда', titleEng: 'Trend Screener', titleRus: 'Скринер тренда', titleUkr: 'Скрінер тренда', desc: 'Market cap heatmap of top 25 assets.' },
-      { title: 'Global Exchange Radar', titleRus: 'Глобальный Радар Бирж', titleUkr: 'Глобальний Радар Бірж', desc: 'Market trends and macro signals.' }
+      { title: 'Скринер RSI', titleEng: 'RSI Screener', titleRus: 'Скринер RSI', titleUkr: 'Скрінер RSI', desc: 'RSI screener for Binance Futures (USDT pairs).' }
     ]
   }
 };
@@ -164,18 +164,26 @@ window.requestSMCAnalysis = async function requestSMCAnalysis() {
         structure_window: parseInt(document.getElementById('scan-window').value) || 10
     };
 
+    // Translations setup
+    const langCode = localStorage.getItem('selectedLanguage') || 'ENG';
+    const langData = {
+        'ENG': { analyzing: 'ANALYZING...', analyzingTf: 'Connecting to Binance, scanning timeframe', scanWait: 'Scanning...', complete: 'Analysis completed successfully!', noCoins: 'No coins', errServer: 'Server Error', errAnalysis: 'Analysis Error:', errFetch: 'Failed to fetch data. See console.', err: 'Error', runBtn: 'RUN ANALYSIS' },
+        'RUS': { analyzing: 'АНАЛИЗИРУЮ...', analyzingTf: 'Подключаюсь к Binance, сканирую таймфрейм', scanWait: 'Сканирование...', complete: 'Анализ завершен успешно!', noCoins: 'Монеты не найдены', errServer: 'Ошибка сервера:', errAnalysis: 'Ошибка анализа:', errFetch: 'Не удалось получить данные. Проверьте консоль.', err: 'Ошибка', runBtn: 'ЗАПУСТИТЬ АНАЛИЗ' },
+        'UKR': { analyzing: 'АНАЛІЗУЮ...', analyzingTf: 'Підключаюся до Binance, сканую таймфрейм', scanWait: 'Сканування...', complete: 'Аналіз успішно завершено!', noCoins: 'Монети не знайдено', errServer: 'Помилка сервера:', errAnalysis: 'Помилка аналізу:', errFetch: 'Не вдалося отримати дані. Перевірте консоль.', err: 'Помилка', runBtn: 'ЗАПУСТИТИ АНАЛІЗ' }
+    };
+    const t = langData[langCode] || langData['ENG'];
+
     // 3. Визуализируем загрузку
     btnScan.disabled = true;
-    btnScan.innerText = "АНАЛИЗИРУЮ...";
+    btnScan.innerText = t.analyzing;
     statusText.style.display = "block";
-    statusText.innerText = `Подключаюсь к Binance, сканирую таймфрейм ${scanSettings.timeframe}...`;
+    statusText.innerText = `${t.analyzingTf} ${scanSettings.timeframe}...`;
     
-    longsList.innerText = "Сканирование...";
-    shortsList.innerText = "Сканирование...";
+    longsList.innerText = t.scanWait;
+    shortsList.innerText = t.scanWait;
 
     try {
         // 4. Отправляем запрос в нашу Python Netlify Function
-        // Для localhost используем port 5174 (dev-server), для production используем /.netlify/functions/
         const endpoint = window.location.hostname === 'localhost' 
             ? 'http://localhost:5174/.netlify/functions/smc-scan'
             : '/.netlify/functions/smc-scan';
@@ -186,33 +194,33 @@ window.requestSMCAnalysis = async function requestSMCAnalysis() {
             body: JSON.stringify(scanSettings)
         });
 
-        if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
+        if (!response.ok) throw new Error(`${t.errServer} ${response.status}`);
 
         const data = await response.json();
 
         if (data.success) {
-            statusText.innerText = `Анализ завершен успешно!`;
+            statusText.innerText = t.complete;
             
             // Выводим списки монет (если они пустые — пишем "Нет монет")
             longsList.innerHTML = data.longs.length > 0 
                 ? data.longs.map(coin => `<span class="coin-tag tag-long">${coin}</span>`).join(' ')
-                : "Монеты не найдены";
+                : t.noCoins;
 
             shortsList.innerHTML = data.shorts.length > 0 
                 ? data.shorts.map(coin => `<span class="coin-tag tag-short">${coin}</span>`).join(' ')
-                : "Монеты не найдены";
+                : t.noCoins;
         } else {
-            statusText.innerText = `Ошибка анализа: ${data.error}`;
+            statusText.innerText = `${t.errAnalysis} ${data.error}`;
         }
     } catch (error) {
         console.error("SMC Scanner Error:", error);
-        statusText.innerText = `Не удалось получить данные. Проверьте консоль.`;
-        longsList.innerText = "Ошибка";
-        shortsList.innerText = "Ошибка";
+        statusText.innerText = t.errFetch;
+        longsList.innerText = t.err;
+        shortsList.innerText = t.err;
     } finally {
         // 5. Возвращаем кнопку в исходное состояние
         btnScan.disabled = false;
-        btnScan.innerText = "ЗАПУСТИТЬ АНАЛИЗ";
+        btnScan.innerText = document.getElementById('btn-run-scan')?.getAttribute('data-default') || t.runBtn;
     }
 };
 
@@ -233,7 +241,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     `;
   }
 
-  if ((section === 'analytics' && index === 2) || (section === 'screeners' && index === 4)) {
+  if (section === 'analytics' && index === 2) {
     const title = lang === 'ENG' ? '🛰️ CryptoStatix PRO: Social Signal Terminal v10.0' : '🛰️ CryptoStatix PRO: Social Signal Terminal v10.0'; // Same for both
     const intro = lang === 'ENG' 
       ? 'CryptoStatix PRO is an interactive analytical tool designed to visualize market dominance and short-term momentum of cryptocurrency assets. The terminal combines market share data from major exchanges with real-time volatility metrics and a simulated social interest index.'
@@ -270,7 +278,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
            <li><strong>Ось X (Hype Index):</strong> Социальная активность вокруг монеты (от 50 до 90).</li>
            <li><strong>Размер пузырька:</strong> Отражает реальный объем торгов в долларах. Крупные пузырьки — это «киты» рынка с высокой ликвидностью.</li>
            <li><strong>Детализация:</strong> Наведите курсор на любой пузырек, чтобы увидеть Cyber-Tooltip с точными цифрами и оценкой рыночного веса (Market Weight).</li>`);
-    const tipTitle = lang === 'ENG' ? '💡 Pro Tip from Gemini' : (lang === 'UKR' ? '💡 Порада від Gemini' : '💡 Совет от Gemini');
+    const tipTitle = lang === 'ENG' ? '💡 Pro Tip from Swappy' : (lang === 'UKR' ? '💡 Порада від Swappy' : '💡 Совет от Swappy');
     const tipQuote = lang === 'ENG' ? '"Keep an eye on the \'outliers\' in the upper-right quadrant."' : (lang === 'UKR' ? '«Слідкуйте за "вискочками" у правому верхньому квадранті».' : '«Следите за "выскочками" в правом верхнем квадранте».»');
     const tipBody = lang === 'ENG'
       ? 'In trading, the most profitable yet dangerous sector consists of coins with high Hype Index and high Velocity. If you see a large bubble (high liquidity) surging upward while hype remains moderate, it’s often a sign of organic accumulation by "smart money."'
@@ -313,6 +321,19 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
             <p>${tipBody}</p>
             <p style="margin-top: 10px; font-weight: 600; color: ${color};">${techTip}</p>
           </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (section === 'screeners' && index === 4) {
+    const scanTemplate = document.getElementById('rsi-scan-template');
+    const scanMarkup = scanTemplate ? scanTemplate.innerHTML : '<div class="rsi-scanner-container"><h3>RSI Screener</h3><p>Content unavailable.</p></div>';
+
+    return `
+      <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%; overflow: auto;">
+        <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; min-height: 100%;">
+          ${scanMarkup}
         </div>
       </div>
     `;
@@ -474,7 +495,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
         ? '<strong>Таблиця альткоїнів:</strong> Показує ТОП-10 монет за обсягом торгів за останні 24 години (виключаючи BTC). Це ваш індикатор того, куди перетікає ліквідність прямо зараз.'
         : '<strong>Таблица альткоинов:</strong> Показывает ТОП-10 монет по объему торгов за последние 24 часа (исключая BTC). Это ваш индикатор того, куда перетекает ликвидность прямо сейчас.');
 
-    const tipTitle = lang === 'ENG' ? '💡 Tip from Gemini' : (lang === 'UKR' ? '💡 Порада від Gemini' : '💡 Совет от Gemini');
+    const tipTitle = lang === 'ENG' ? '💡 Tip from Swappy' : (lang === 'UKR' ? '💡 Порада від Swappy' : '💡 Совет от Swappy');
     const tipIntro = lang === 'ENG' 
       ? 'Use this widget to spot divergences. This is one of the most reliable signals in crypto trading:'
       : (lang === 'UKR'
@@ -589,7 +610,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
         ? '<strong>4. Фільтрація:</strong> Віджет автоматично приховує «ринковий шум» (нейтральні монети), залишаючи тільки активні сигнали.'
         : '<strong>4. Фильтрация:</strong> Виджет автоматически скрывает «рыночный шум» (нейтральные монеты), оставляя только активные сигналы.');
 
-    const tipTitle = lang === 'ENG' ? '💡 Tip from Gemini' : (lang === 'UKR' ? '💡 Порада від Gemini' : '💡 Совет от Gemini');
+    const tipTitle = lang === 'ENG' ? '💡 Tip from Swappy' : (lang === 'UKR' ? '💡 Порада від Swappy' : '💡 Совет от Swappy');
     const tipQuote = lang === 'ENG' ? '«Remember, RSI is not a command to act, but context.»' : (lang === 'UKR' ? '«Пам\'ятай, що RSI — це не наказ до дії, а контекст.»' : '«Помни, что RSI — это не приказ к действию, а контекст.»');
     
     const tipText = lang === 'ENG'
@@ -908,6 +929,70 @@ window.toggleSMCInfo = function (show) {
   }
 }
 
+// RSI Scan request
+window.requestRSIAnalysis = async function requestRSIAnalysis() {
+    const btn = document.getElementById('btn-run-rsi');
+    const statusText = document.getElementById('rsi-scan-status');
+    const oversoldList = document.getElementById('rsi-oversold-list');
+    const overboughtList = document.getElementById('rsi-overbought-list');
+
+    const settings = {
+        timeframe: document.getElementById('rsi-timeframe').value,
+        min_volume: parseFloat(document.getElementById('rsi-volume').value) || 50000000,
+        min_change: parseFloat(document.getElementById('rsi-change').value) || 2.0,
+        oversold: parseFloat(document.getElementById('rsi-oversold').value) || 30,
+        overbought: parseFloat(document.getElementById('rsi-overbought').value) || 70
+    };
+
+    const langCode = localStorage.getItem('selectedLanguage') || 'ENG';
+    const rsiLang = {
+        'ENG': { scanning: 'SCANNING...', scanningTf: 'Scanning', scanningWait: 'Scanning...', noCoins: 'No coins', complete: 'Scan complete.', errorPref: 'Error:', fetchFail: 'Failed to fetch data. See console.', error: 'Error', runBtn: 'RUN RSI SCAN', unknown: 'unknown' },
+        'RUS': { scanning: 'СКАНИРОВАНИЕ...', scanningTf: 'Сканирование', scanningWait: 'Сканирование...', noCoins: 'Монеты не найдены', complete: 'Сканирование завершено.', errorPref: 'Ошибка:', fetchFail: 'Не удалось получить данные. Проверьте консоль.', error: 'Ошибка', runBtn: 'ЗАПУСТИТЬ RSI СКАН', unknown: 'неизвестно' },
+        'UKR': { scanning: 'СКАНУВАННЯ...', scanningTf: 'Сканування', scanningWait: 'Сканування...', noCoins: 'Монети не знайдено', complete: 'Сканування завершено.', errorPref: 'Помилка:', fetchFail: 'Не вдалося отримати дані. Перевірте консоль.', error: 'Помилка', runBtn: 'ЗАПУСТИТИ RSI СКАН', unknown: 'невідомо' }
+    };
+    const t = rsiLang[langCode] || rsiLang['ENG'];
+
+    btn.disabled = true;
+    btn.innerText = t.scanning;
+    if (statusText) { statusText.style.display = 'block'; statusText.innerText = `${t.scanningTf} ${settings.timeframe}...`; }
+    if (oversoldList) oversoldList.innerText = t.scanningWait;
+    if (overboughtList) overboughtList.innerText = t.scanningWait;
+
+    try {
+        const endpoint = window.location.hostname === 'localhost' ? 'http://localhost:5174/.netlify/functions/rsi-scan' : '/.netlify/functions/rsi-scan';
+        const resp = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        });
+        if (!resp.ok) throw new Error(`Server ${resp.status}`);
+        const data = await resp.json();
+        if (data.success) {
+            if (oversoldList) oversoldList.innerHTML = data.oversold.length ? data.oversold.map(c => `<span class="coin-tag tag-long">${c}</span>`).join(' ') : t.noCoins;
+            if (overboughtList) overboughtList.innerHTML = data.overbought.length ? data.overbought.map(c => `<span class="coin-tag tag-short">${c}</span>`).join(' ') : t.noCoins;
+            if (statusText) statusText.innerText = t.complete;
+        } else {
+            if (statusText) statusText.innerText = `${t.errorPref} ${data.error || t.unknown}`;
+        }
+    } catch (e) {
+        console.error('RSI Scan Error:', e);
+        if (statusText) statusText.innerText = t.fetchFail;
+        if (oversoldList) oversoldList.innerText = t.error;
+        if (overboughtList) overboughtList.innerText = t.error;
+    } finally {
+        btn.disabled = false;
+        btn.innerText = document.getElementById('btn-run-rsi')?.getAttribute('data-default') || t.runBtn;
+    }
+}
+
+// RSI Info modal toggle
+window.toggleRSIInfo = function (show) {
+  const modal = document.getElementById('rsi-info-modal');
+  if (!modal) return;
+  if (show) { modal.style.display = 'flex'; requestAnimationFrame(() => modal.classList.add('active')); }
+  else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 300); }
+}
+
 // Language Selection Logic
 window.selectLanguage = function (langCode) {
   const langDisplay = document.getElementById('current-lang');
@@ -954,22 +1039,37 @@ window.selectLanguage = function (langCode) {
         smcInfoBtn: 'Info',
         smcInfoTitle: 'What is SMC Smart Scanner?',
         smcInfoBody: `<p><strong>SMC Smart Scanner</strong> is an automated analytical tool designed for traders and investors. It is intended for instant evaluation of the market structure of crypto futures on Binance using the Smart Money (SMC) concept. Instead of manually opening dozens of charts and searching for trends, the scanner iterates hundreds of active trading pairs with one click, filters out market noise using a mathematical algorithm, and produces ready lists of coins that are in strong macro trends.</p>
-          <h4>How it works (For the website user)</h4>
-          <p>Using the scanner on the site is simple — the whole process is divided into 3 steps:</p>
-          <h5>1. Filter settings (select parameters):</h5>
-          <ul>
-            <li><strong>Timeframe:</strong> Choose the time scale for the analysis. Smaller timeframes (5 minutes) suit fast intraday trades (scalping), while larger ones (1 hour) are better for more reliable swing positions.</li>
-            <li><strong>Min 24h Volume (USDT):</strong> Liquidity filter. It automatically removes illiquid and low-traded coins. The default value ($50,000,000) keeps only assets where large players are active.</li>
-            <li><strong>Min Price Change (%):</strong> Filters out coins stuck in a tight range, selecting only volatile, moving assets.</li>
-            <li><strong>Noise Filter (candles):</strong> Sets the strictness of market structure detection. The higher the number, the larger and more global highs/lows the algorithm will consider.</li>
-          </ul>
-          <h5>2. Run analysis:</h5>
-          <p>Press the big green "RUN ANALYSIS" button. A loading status appears while the site sends a command to the cloud, connects to Binance, downloads candle history for each coin, and performs computations.</p>
-          <h5>3. Receiving signals:</h5>
-          <p>After a few seconds the scanner outputs results as two lists:</p>
-          <p>🟢 <strong>MACRO TREND LONG:</strong> Coins with a consistently rising structure — ideal for finding long entry points.</p>
-          <p>🔴 <strong>MACRO TREND SHORT:</strong> Coins with a stable downtrend — ideal for short opportunities.</p>
-          <p>All calculations run in the cloud, so the tool is fast and does not burden the user's computer.</p>`
+            <h4>How it works (For the website user)</h4>
+            <p>Using the scanner on the site is simple — the whole process is divided into 3 steps:</p>
+            <h5>1. Filter settings (select parameters):</h5>
+            <ul>
+              <li><strong>Timeframe:</strong> Choose the time scale for the analysis. Smaller timeframes (5 minutes) suit fast intraday trades (scalping), while larger ones (1 hour) are better for more reliable swing positions.</li>
+              <li><strong>Min 24h Volume (USDT):</strong> Liquidity filter. It automatically removes illiquid and low-traded coins. The default value ($50,000,000) keeps only assets where large players are active.</li>
+              <li><strong>Min Price Change (%):</strong> Filters out coins stuck in a tight range, selecting only volatile, moving assets.</li>
+              <li><strong>Noise Filter (candles):</strong> Sets the strictness of market structure detection. The higher the number, the larger and more global highs/lows the algorithm will consider.</li>
+            </ul>
+            <h5>2. Run analysis:</h5>
+            <p>Press the big green "RUN ANALYSIS" button. A loading status appears while the site sends a command to the cloud, connects to Binance, downloads candle history for each coin, and performs computations.</p>
+            <h5>3. Receiving signals:</h5>
+            <p>After a few seconds the scanner outputs results as two lists:</p>
+            <p>🟢 <strong>MACRO TREND LONG:</strong> Coins with a consistently rising structure — ideal for finding long entry points.</p>
+            <p>🔴 <strong>MACRO TREND SHORT:</strong> Coins with a stable downtrend — ideal for short opportunities.</p>
+            <p>All calculations run in the cloud, so the tool is fast and does not burden the user's computer.</p>`
+        ,
+        // RSI Screener labels
+        rsiTitle: 'RSI Screener (Binance Futures USDT)',
+        rsiTimeframe: 'Timeframe:',
+        rsiVolume: 'Min 24h Volume (USDT):',
+        rsiChange: 'Min Price Change (%):',
+        rsiOversold: 'Oversold threshold:',
+        rsiOverbought: 'Overbought threshold:',
+        rsiButton: 'RUN RSI SCAN',
+        rsiOversoldHeading: '🟢 OVERSOLD',
+        rsiOverboughtHeading: '🔴 OVERBOUGHT',
+        rsiInfoBtn: 'Info',
+        rsiInfoTitle: 'How to use RSI Screener',
+        rsiInfoBody: `<p>The RSI Screener scans Binance Futures USDT pairs and flags coins that are currently oversold or overbought according to your thresholds. Use volume and price-change filters to limit the universe to liquid and moving assets. Adjust timeframe for different strategies (5m for scalping, 1h for swings, 1d for macro).</p>`,
+        rsiWaiting: 'Waiting for scan...'
     },
     'RUS': {
       button: 'Рус.',
@@ -1026,6 +1126,20 @@ window.selectLanguage = function (langCode) {
         <p>🟢 <strong>МАКРО-ТРЕНД LONG:</strong> Список монет, у которых структура графика стабильно повышается (крупные покупатели толкают цену вверх). Идеально для поиска точек входа в покупки.</p>
         <p>🔴 <strong>МАКРО-ТРЕНД SHORT:</strong> Список монет с устойчивым нисходящим трендом, где доминируют продавцы. Идеально для поиска сделок на понижение.</p>
         <p>Все расчеты происходят изолированно в облаке, поэтому инструмент работает быстро и не нагружает компьютер пользователя.</p>`
+      ,
+      // RSI labels (RUS)
+      rsiTitle: 'Скринер RSI (Binance Futures USDT)',
+      rsiTimeframe: 'Таймфрейм:',
+      rsiVolume: 'Мин. Объем 24ч (USDT):',
+      rsiChange: 'Мин. Изменение цены (%):',
+      rsiOversold: 'Порог перепроданности:',
+      rsiOverbought: 'Порог перекупленности:',
+      rsiButton: 'ЗАПУСТИТЬ RSI СКАН',
+      rsiOversoldHeading: '🟢 ПЕРЕПРОДАННОСТЬ',
+      rsiOverboughtHeading: '🔴 ПЕРЕКУПЛЕННОСТЬ',
+      rsiInfoBtn: 'Инфо',
+      rsiInfoTitle: 'Как пользоваться Скринером RSI',
+      rsiInfoBody: `<p>Скринер RSI проверяет пары Binance Futures (USDT) и помечает монеты, находящиеся в зоне перепроданности или перекупленности по заданным порогам. Используйте фильтры по объему и изменению цены, чтобы сузить выбор до ликвидных и активных активов. Выбирайте таймфрейм в зависимости от стратегии (5m — скальпинг, 1h — свинг, 1d — макро).</p>`
     },
     'UKR': {
       button: 'Укр.',
@@ -1082,6 +1196,20 @@ window.selectLanguage = function (langCode) {
         <p>🟢 <strong>МАКРО-ТРЕНД LONG:</strong> Список монет зі стабільно зростаючою структурою — ідеально для пошуку точок входу в покупки.</p>
         <p>🔴 <strong>МАКРО-ТРЕНД SHORT:</strong> Список монет зі стійким низхідним трендом — ідеально для пошуку шорт-можливостей.</p>
         <p>Всі розрахунки виконуються в хмарі, тож інструмент працює швидко і не навантажує комп'ютер користувача.</p>`
+      ,
+      // RSI labels (UKR)
+      rsiTitle: 'Скрінер RSI (Binance Futures USDT)',
+      rsiTimeframe: 'Таймфрейм:',
+      rsiVolume: 'Мін. Обсяг 24г (USDT):',
+      rsiChange: 'Мін. Зміна ціни (%):',
+      rsiOversold: 'Поріг перепроданості:',
+      rsiOverbought: 'Поріг перекупленості:',
+      rsiButton: 'ЗАПУСТИТИ RSI СКАН',
+      rsiOversoldHeading: '🟢 ПЕРЕПРОДАНІСТЬ',
+      rsiOverboughtHeading: '🔴 ПЕРЕКУПЛЕНІСТЬ',
+      rsiInfoBtn: 'Інфо',
+      rsiInfoTitle: 'Як користуватись Скрінером RSI',
+      rsiInfoBody: `<p>Скрінер RSI перевіряє пари Binance Futures (USDT) і позначає монети, що знаходяться в зоні перепроданості або перекупленості за заданими порогами. Використовуйте фільтри по обсягу та зміні ціни, щоб звузити вибір до ліквідних і активних активів. Обирайте таймфрейм залежно від стратегії (5m — скальпінг, 1h — свінг, 1d — макро).</p>`
     }
   };
 
@@ -1171,12 +1299,45 @@ window.selectLanguage = function (langCode) {
   if (smcLongHeading) smcLongHeading.textContent = current.smcLong;
   if (smcShortHeading) smcShortHeading.textContent = current.smcShort;
 
+  // Update hidden RSI scanner template
+  const rsiTitleEl = document.getElementById('rsi-title');
+  const rsiTimeframeLabel = document.getElementById('rsi-label-timeframe');
+  const rsiVolumeLabel = document.getElementById('rsi-label-volume');
+  const rsiChangeLabel = document.getElementById('rsi-label-change');
+  const rsiOversoldLabel = document.getElementById('rsi-label-oversold');
+  const rsiOverboughtLabel = document.getElementById('rsi-label-overbought');
+  const rsiButton = document.getElementById('btn-run-rsi');
+  const rsiOversoldHeading = document.getElementById('rsi-oversold-heading');
+  const rsiOverboughtHeading = document.getElementById('rsi-overbought-heading');
+
+  if (rsiTitleEl) rsiTitleEl.textContent = current.rsiTitle;
+  if (rsiTimeframeLabel) rsiTimeframeLabel.textContent = current.rsiTimeframe;
+  if (rsiVolumeLabel) rsiVolumeLabel.textContent = current.rsiVolume;
+  if (rsiChangeLabel) rsiChangeLabel.textContent = current.rsiChange;
+  if (rsiOversoldLabel) rsiOversoldLabel.textContent = current.rsiOversold;
+  if (rsiOverboughtLabel) rsiOverboughtLabel.textContent = current.rsiOverbought;
+  if (rsiButton) rsiButton.textContent = current.rsiButton;
+  if (rsiButton) rsiButton.setAttribute('data-default', current.rsiButton);
+  if (rsiOversoldHeading) rsiOversoldHeading.textContent = current.rsiOversoldHeading;
+  if (rsiOverboughtHeading) rsiOverboughtHeading.textContent = current.rsiOverboughtHeading;
+
   const placeholderTexts = ['Ожидание запуска анализа...', 'Waiting for scan...', 'Очікування запуску аналізу...'];
   if (smcLongsList && placeholderTexts.includes(smcLongsList.textContent.trim())) {
     smcLongsList.textContent = current.smcWaiting;
   }
   if (smcShortsList && placeholderTexts.includes(smcShortsList.textContent.trim())) {
     smcShortsList.textContent = current.smcWaiting;
+  }
+
+  const rsiPlaceholderTexts = ['Ожидание сканирования...', 'Waiting for scan...', 'Очікування сканування...'];
+  const rsiOversoldListEl = document.getElementById('rsi-oversold-list');
+  const rsiOverboughtListEl = document.getElementById('rsi-overbought-list');
+
+  if (rsiOversoldListEl && rsiPlaceholderTexts.includes(rsiOversoldListEl.textContent.trim())) {
+    rsiOversoldListEl.textContent = current.rsiWaiting;
+  }
+  if (rsiOverboughtListEl && rsiPlaceholderTexts.includes(rsiOverboughtListEl.textContent.trim())) {
+    rsiOverboughtListEl.textContent = current.rsiWaiting;
   }
 
   // Update About page content
@@ -1206,10 +1367,15 @@ window.selectLanguage = function (langCode) {
   ids['smc-info-title'] = 'smcInfoTitle';
   ids['smc-info-body'] = 'smcInfoBody';
 
+  // Add RSI info modal/button mapping
+  ids['rsi-info-btn'] = 'rsiInfoBtn';
+  ids['rsi-info-title'] = 'rsiInfoTitle';
+  ids['rsi-info-body'] = 'rsiInfoBody';
+
   for (const [id, key] of Object.entries(ids)) {
     const el = document.getElementById(id);
     if (el) {
-      if (key === 'aboutDesc' || key === 'smcInfoBody') el.innerHTML = current[key];
+      if (key === 'aboutDesc' || key === 'smcInfoBody' || key === 'rsiInfoBody') el.innerHTML = current[key];
       else el.textContent = current[key];
     }
   }

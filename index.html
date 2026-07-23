@@ -76,6 +76,65 @@
             </div>
         </div>
 
+    <!-- RSI Screener Template -->
+    <template id="rsi-scan-template">
+        <div class="smc-scanner-container">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <h3 id="rsi-title">Скринер RSI (Binance Futures USDT)</h3>
+                <button id="rsi-info-btn" class="smc-info-btn" onclick="toggleRSIInfo(true)">Инфо</button>
+            </div>
+
+            <div class="scanner-grid">
+                <div class="input-group">
+                    <label for="rsi-timeframe" id="rsi-label-timeframe">Таймфрейм:</label>
+                    <select id="rsi-timeframe">
+                        <option value="5m">5m</option>
+                        <option value="15m" selected>15m</option>
+                        <option value="1h">1h</option>
+                        <option value="1d">1d</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="rsi-volume" id="rsi-label-volume">Мин. Объем 24ч (USDT):</label>
+                    <input type="number" id="rsi-volume" value="50000000" step="10000000">
+                </div>
+
+                <div class="input-group">
+                    <label for="rsi-change" id="rsi-label-change">Мин. Изменение цены (%):</label>
+                    <input type="number" id="rsi-change" value="2.0" step="0.1">
+                </div>
+
+                <div class="input-group">
+                    <label for="rsi-oversold" id="rsi-label-oversold">Порог перепроданности:</label>
+                    <input type="number" id="rsi-oversold" value="30" step="1">
+                </div>
+
+                <div class="input-group">
+                    <label for="rsi-overbought" id="rsi-label-overbought">Порог перекупленности:</label>
+                    <input type="number" id="rsi-overbought" value="70" step="1">
+                </div>
+            </div>
+
+            <button id="btn-run-rsi" data-default="ЗАПУСТИТЬ RSI СКАН" onclick="requestRSIAnalysis()">ЗАПУСТИТЬ RSI СКАН</button>
+
+            <div id="rsi-scan-status" class="scan-status-text" style="display: none;"></div>
+
+            <div class="scan-results">
+                <div class="result-box long-box">
+                    <h4 id="rsi-oversold-heading">🟢 ПЕРЕПРОДАННОСТЬ</h4>
+                    <div id="rsi-oversold-list" class="coins-list">Ожидание сканирования...</div>
+                </div>
+                <div class="result-box short-box">
+                    <h4 id="rsi-overbought-heading">🔴 ПЕРЕКУПЛЕННОСТЬ</h4>
+                    <div id="rsi-overbought-list" class="coins-list">Ожидание сканирования...</div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+
         <div class="nav-buttons">
             <a href="#" class="nav-btn" id="nav-analytics" onclick="showPage('analytics')">Analytics</a>
             <a href="#" class="nav-btn" id="nav-screeners" onclick="showPage('screeners')">Screeners</a>
@@ -297,7 +356,7 @@
         <button class="back-btn" id="detail-back-btn" onclick="closeDetail()">← НАЗАД</button>
     </div>
 
-    <div id="smc-scan-template" style="display:none;">
+    <template id="smc-scan-template">
                 <div class="smc-scanner-container">
                         <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
                             <h3 id="smc-title">SMC Смарт-Сканер (Binance Futures)</h3>
@@ -308,9 +367,9 @@
                 <div class="input-group">
                     <label for="scan-timeframe" id="smc-label-timeframe">Таймфрейм:</label>
                     <select id="scan-timeframe">
-                        <option value="5m">5 минут</option>
-                        <option value="15m" selected>15 минут</option>
-                        <option value="1h">1 час</option>
+                        <option value="5m">5m</option>
+                        <option value="15m" selected>15m</option>
+                        <option value="1h">1h</option>
                     </select>
                 </div>
 
@@ -345,7 +404,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </template>
     
         <!-- SMC Info Modal -->
         <div id="smc-info-modal" class="modal-overlay" onclick="if(event.target === this) toggleSMCInfo(false)">
@@ -355,6 +414,21 @@
                     <h3 id="smc-info-title">SMC Смарт-Сканер</h3>
                     <div class="modal-scroll" style="margin-top:12px;">
                         <div id="smc-info-body" style="line-height:1.45; color: rgba(255,255,255,0.95);">
+                            <!-- Filled by selectLanguage -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RSI Info Modal -->
+        <div id="rsi-info-modal" class="modal-overlay" onclick="if(event.target === this) toggleRSIInfo(false)">
+            <div class="modal-container" style="max-width:850px; width:90%;">
+                <div class="modal-body" style="padding:20px; position:relative;">
+                    <button class="smc-info-close-top" onclick="toggleRSIInfo(false)">×</button>
+                    <h3 id="rsi-info-title">RSI Screener</h3>
+                    <div class="modal-scroll" style="margin-top:12px;">
+                        <div id="rsi-info-body" style="line-height:1.45; color: rgba(255,255,255,0.95);">
                             <!-- Filled by selectLanguage -->
                         </div>
                     </div>
@@ -426,7 +500,7 @@
             color: #fff;
         }
 
-        #btn-run-scan {
+        #btn-run-scan, #btn-run-rsi {
             background: linear-gradient(135deg, #00ff88, #22c55e);
             color: #04120a;
             border: none;
@@ -436,6 +510,7 @@
             letter-spacing: 1px;
             cursor: pointer;
             margin-bottom: 12px;
+            width: 100%;
         }
 
         .scan-status-text {
