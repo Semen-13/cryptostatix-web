@@ -78,7 +78,7 @@ const detailConfig = {
     labelUkr: 'СКРІНЕРИ',
     items: [
       { title: 'Grid Screener PRO', titleRus: 'Сеточный Скринер PRO', titleUkr: 'Сітковий Скринер PRO', desc: 'Real-time 3x3 multi-chart terminal' },
-      { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
+      { title: 'Скринер Топ-15', titleEng: 'Top-15 Screener', titleRus: 'Скринер Топ-15', titleUkr: 'Скрінер Топ-15', desc: 'Top-15 Binance Futures USDT screener.' },
       { title: 'Скринер тренда', titleEng: 'Trend Screener', titleRus: 'Скринер тренда', titleUkr: 'Скрінер тренда', desc: 'Market cap heatmap of top 25 assets.' },
       { title: 'Скринер RSI', titleEng: 'RSI Screener', titleRus: 'Скринер RSI', titleUkr: 'Скрінер RSI', desc: 'RSI screener for Binance Futures (USDT pairs).' }
     ]
@@ -221,6 +221,136 @@ window.requestSMCAnalysis = async function requestSMCAnalysis() {
         // 5. Возвращаем кнопку в исходное состояние
         btnScan.disabled = false;
         btnScan.innerText = document.getElementById('btn-run-scan')?.getAttribute('data-default') || t.runBtn;
+    }
+};
+
+window.requestTop15Screener = async function requestTop15Screener() {
+    const btnScan = document.getElementById('btn-run-top15');
+    const statusText = document.getElementById('top15-status');
+    const resultsBody = document.getElementById('top15-results-body');
+
+    if (!btnScan || !statusText || !resultsBody) return;
+
+    const langCode = localStorage.getItem('selectedLanguage') || 'ENG';
+    const top15Lang = {
+        ENG: {
+            scanning: 'SCANNING...',
+            loading: 'Loading data...',
+            collecting: 'Collecting Binance Futures data...',
+            empty: 'No pairs match the current filters.',
+            error: 'Binance Futures data loading error.',
+            done: (count) => `Found ${count} pairs. Ranked by combined score.`
+        },
+        RUS: {
+            scanning: 'СКАНИРУЮ...',
+            loading: 'Загрузка данных...',
+            collecting: 'Собираю данные Binance Futures...',
+            empty: 'По текущим фильтрам подходящих пар нет.',
+            error: 'Ошибка загрузки данных Binance Futures.',
+            done: (count) => `Найдено ${count} пар. Отображены по суммарному рангу.`
+        },
+        UKR: {
+            scanning: 'СКАНУЮ...',
+            loading: 'Завантаження даних...',
+            collecting: 'Збираю дані Binance Futures...',
+            empty: 'За поточними фільтрами підходящих пар немає.',
+            error: 'Помилка завантаження даних Binance Futures.',
+            done: (count) => `Знайдено ${count} пар. Відображено за сумарним рангом.`
+        }
+    };
+    const t = top15Lang[langCode] || top15Lang.ENG;
+
+    const minVolume = parseFloat(document.getElementById('top15-volume').value) || 50000000;
+    const minChange = parseFloat(document.getElementById('top15-change').value) || 2;
+    const minTrades = parseFloat(document.getElementById('top15-trades').value) || 500000;
+
+    btnScan.disabled = true;
+    btnScan.innerText = t.scanning;
+    statusText.style.display = 'block';
+    statusText.innerText = t.collecting;
+    resultsBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:18px; color:#94a3b8;">${t.loading}</td></tr>`;
+
+    try {
+        const response = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr', {
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('Invalid Binance response');
+
+        const filtered = data.filter((item) => {
+            if (!item?.symbol || !String(item.symbol).endsWith('USDT')) return false;
+            const volume = parseFloat(item.quoteVolume || 0);
+            const change = Math.abs(parseFloat(item.priceChangePercent || 0));
+            const trades = parseFloat(item.count || 0);
+            return volume >= minVolume && change >= minChange && trades >= minTrades;
+        });
+
+        const volumeRankMap = new Map();
+        [...filtered].sort((a, b) => parseFloat(b.quoteVolume || 0) - parseFloat(a.quoteVolume || 0))
+            .forEach((item, index) => volumeRankMap.set(item.symbol, index + 1));
+
+        const tradesRankMap = new Map();
+        [...filtered].sort((a, b) => parseFloat(b.count || 0) - parseFloat(a.count || 0))
+            .forEach((item, index) => tradesRankMap.set(item.symbol, index + 1));
+
+        const changeRankMap = new Map();
+        [...filtered].sort((a, b) => Math.abs(parseFloat(b.priceChangePercent || 0)) - Math.abs(parseFloat(a.priceChangePercent || 0)))
+            .forEach((item, index) => changeRankMap.set(item.symbol, index + 1));
+
+        const scored = filtered.map((item) => {
+            const symbol = String(item.symbol);
+            const volume = parseFloat(item.quoteVolume || 0);
+            const change = parseFloat(item.priceChangePercent || 0);
+            const trades = parseFloat(item.count || 0);
+            return {
+                symbol,
+                volume,
+                trades,
+                change,
+                volumeRank: volumeRankMap.get(symbol) || 0,
+                tradesRank: tradesRankMap.get(symbol) || 0,
+                changeRank: changeRankMap.get(symbol) || 0,
+                totalRank: (volumeRankMap.get(symbol) || 0) + (tradesRankMap.get(symbol) || 0) + (changeRankMap.get(symbol) || 0)
+            };
+        });
+
+        const sorted = scored.sort((a, b) => a.totalRank - b.totalRank || a.volumeRank - b.volumeRank || a.tradesRank - b.tradesRank || a.changeRank - b.changeRank);
+        const top15 = sorted.slice(0, 15);
+
+        if (top15.length === 0) {
+            resultsBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:18px; color:#94a3b8;">${t.empty}</td></tr>`;
+            statusText.innerText = t.empty;
+            return;
+        }
+
+        const rows = top15.map((row, index) => {
+            const volumeDisplay = row.volume.toLocaleString('ru-RU');
+            const tradesDisplay = row.trades.toLocaleString('ru-RU');
+            const changeDisplay = `${row.change >= 0 ? '+' : ''}${row.change.toFixed(2)}%`;
+            return `
+                <tr style="border-top: 1px solid rgba(148,163,184,0.16);">
+                    <td style="padding: 10px 8px; text-align: center; color: #f8fafc;">${index + 1}</td>
+                    <td style="padding: 10px 8px; color: #00ff88; font-weight: 700;">${row.symbol}</td>
+                    <td style="padding: 10px 8px; color: #f8fafc;">${volumeDisplay}</td>
+                    <td style="padding: 10px 8px; text-align: center; color: #f8fafc;">${row.volumeRank}</td>
+                    <td style="padding: 10px 8px; color: #f8fafc;">${tradesDisplay}</td>
+                    <td style="padding: 10px 8px; text-align: center; color: #f8fafc;">${row.tradesRank}</td>
+                    <td style="padding: 10px 8px; color: ${row.change >= 0 ? '#22c55e' : '#ef4444'};">${changeDisplay}</td>
+                    <td style="padding: 10px 8px; text-align: center; color: #f8fafc;">${row.changeRank}</td>
+                    <td style="padding: 10px 8px; text-align: center; color: #00ff88; font-weight: 700;">${row.totalRank}</td>
+                </tr>`;
+        }).join('');
+
+        resultsBody.innerHTML = rows;
+        statusText.innerText = t.done(top15.length);
+    } catch (error) {
+        console.error('Top-15 screener error:', error);
+        statusText.innerText = t.error;
+        resultsBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:18px; color:#ef4444;">${t.error}</td></tr>`;
+    } finally {
+        btnScan.disabled = false;
+        btnScan.innerText = btnScan.getAttribute('data-default') || 'START';
     }
 };
 
@@ -827,7 +957,76 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     `;
   }
 
-  if ((section === 'analytics' && index === 11) || (section === 'screeners' && index === 2)) {
+  if (section === 'screeners' && index === 2) {
+    const top15Text = lang === 'ENG'
+      ? { title: 'Top-15 Screener (Binance Futures USDT)', volume: 'Min 24h Volume (USDT):', change: 'Min 24h Price Change (%):', trades: 'Min 24h Trades:', button: 'START', placeholder: 'Waiting for scan...', number: '№', ticker: 'Ticker', volumeCol: 'Volume', rank: 'Rank', tradesCol: 'Trades', changeCol: 'Price Change', totalRank: 'Total Rank', infoBtn: 'Info', infoTitle: 'How the Top-15 screener works', infoBody: '<ul><li><strong>Pairs used:</strong> Binance Futures USDT pairs from the 24h ticker feed.</li><li><strong>Filters:</strong> volume, price change, and trade count must all meet your thresholds.</li><li><strong>Ranking:</strong> each pair gets separate ranks for volume, trades, and price change, then the three ranks are summed into the final total rank.</li><li><strong>Output:</strong> the table shows the top 15 pairs starting from the lowest total rank.</li></ul>' }
+      : (lang === 'UKR'
+        ? { title: 'Скрінер Топ-15 (Binance Futures USDT)', volume: 'Мін. обсяг 24г (USDT):', change: 'Мін. змінa ціни 24г (%):', trades: 'Мін. к-ть угод 24г:', button: 'СТАРТ', placeholder: 'Очікування запуску...', number: '№', ticker: 'Тікер', volumeCol: 'Обсяг', rank: 'Ранг', tradesCol: 'Угоди', changeCol: 'Зміна ціни', totalRank: 'Сумарний ранг', infoBtn: 'Інфо', infoTitle: 'Як працює скрінер Топ-15', infoBody: '<ul><li><strong>Пари:</strong> використовуються пари Binance Futures USDT з 24-годинного ticker-фід.</li><li><strong>Фільтри:</strong> обсяг, зміна ціни та кількість угод мають відповідати вашим порогам.</li><li><strong>Ранжування:</strong> кожна пара отримує окремі ранги за обсягом, угодами та зміною ціни, після чого їх сума дає фінальний сумарний ранг.</li><li><strong>Результат:</strong> у таблиці показано 15 пар, починаючи з найменшого сумарного рангу.</li></ul>' }
+        : { title: 'Скринер Топ-15 (Binance Futures USDT)', volume: 'Мин. объем 24ч (USDT):', change: 'Мин. изм. цены 24ч (%):', trades: 'Мин. кол-во сделок 24ч:', button: 'СТАРТ', placeholder: 'Ожидание запуска...', number: '№', ticker: 'Тикер', volumeCol: 'Объем', rank: 'Ранг', tradesCol: 'Сделки', changeCol: 'Изм. цены', totalRank: 'Суммарный ранг', infoBtn: 'Инфо', infoTitle: 'Как работает скринер Топ-15', infoBody: '<ul><li><strong>Пары:</strong> используются пары Binance Futures USDT из 24-часового ticker-фида.</li><li><strong>Фильтры:</strong> объем, изменение цены и количество сделок должны соответствовать вашим порогам.</li><li><strong>Ранжирование:</strong> каждая пара получает отдельные ранги по объему, сделкам и изменению цены, после чего их сумма дает итоговый суммарный ранг.</li><li><strong>Результат:</strong> в таблице отображаются 15 пар, начиная с наименьшего суммарного ранга.</li></ul>' });
+
+    return `
+      <div class="smc-scanner-container" style="width: 100%; max-width: 1400px; margin: 0 auto; padding: 22px; border-radius: 18px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.95)); border: 1px solid rgba(0, 255, 136, 0.2); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); color: #f8fafc; height: 100%; overflow: auto; box-sizing: border-box;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 14px;">
+          <h3 id="top15-title" style="margin: 0; color: #00ff88; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${top15Text.title}</h3>
+          <button id="top15-info-btn" onclick="window.toggleTop15Info(true)" style="background: rgba(0,255,136,0.12); border: 1px solid rgba(0,255,136,0.25); color: #00ff88; border-radius: 999px; padding: 7px 12px; cursor: pointer; font-weight: 700; letter-spacing: 0.5px;">${top15Text.infoBtn}</button>
+        </div>
+
+        <div class="scanner-grid" style="grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px;">
+          <div class="input-group">
+            <label id="top15-label-volume" for="top15-volume">${top15Text.volume}</label>
+            <input type="number" id="top15-volume" value="50000000" step="10000000">
+          </div>
+          <div class="input-group">
+            <label id="top15-label-change" for="top15-change">${top15Text.change}</label>
+            <input type="number" id="top15-change" value="2" step="0.1">
+          </div>
+          <div class="input-group">
+            <label id="top15-label-trades" for="top15-trades">${top15Text.trades}</label>
+            <input type="number" id="top15-trades" value="500000" step="100000">
+          </div>
+        </div>
+
+        <button id="btn-run-top15" data-default="${top15Text.button}" onclick="requestTop15Screener()" style="background: linear-gradient(135deg, #00ff88, #22c55e); color: #04120a; border: none; border-radius: 999px; padding: 10px 16px; font-weight: 800; letter-spacing: 1px; cursor: pointer; margin-bottom: 12px; width: 100%;">${top15Text.button}</button>
+
+        <div id="top15-status" class="scan-status-text" style="display: none; margin-bottom: 12px; color: #86efac; font-size: 0.85rem; font-weight: 600;"></div>
+
+        <div style="overflow: auto; border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 12px; background: rgba(15, 23, 42, 0.7);">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 900px;">
+            <thead>
+              <tr style="background: rgba(2, 6, 23, 0.9); color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px;">
+                <th id="top15-header-number" style="padding: 10px 8px; text-align: center;">${top15Text.number}</th>
+                <th id="top15-header-ticker" style="padding: 10px 8px; text-align: left;">${top15Text.ticker}</th>
+                <th id="top15-header-volume" style="padding: 10px 8px; text-align: left;">${top15Text.volumeCol}</th>
+                <th id="top15-header-volume-rank" style="padding: 10px 8px; text-align: center;">${top15Text.rank}</th>
+                <th id="top15-header-trades" style="padding: 10px 8px; text-align: left;">${top15Text.tradesCol}</th>
+                <th id="top15-header-trades-rank" style="padding: 10px 8px; text-align: center;">${top15Text.rank}</th>
+                <th id="top15-header-change" style="padding: 10px 8px; text-align: left;">${top15Text.changeCol}</th>
+                <th id="top15-header-change-rank" style="padding: 10px 8px; text-align: center;">${top15Text.rank}</th>
+                <th id="top15-header-total-rank" style="padding: 10px 8px; text-align: center;">${top15Text.totalRank}</th>
+              </tr>
+            </thead>
+            <tbody id="top15-results-body">
+              <tr>
+                <td colspan="9" style="padding: 18px; text-align: center; color: #94a3b8;">${top15Text.placeholder}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="top15-info-modal" style="display:none; position:fixed; inset:0; background:rgba(2,6,23,0.88); z-index:3000; align-items:center; justify-content:center; padding:20px;">
+          <div style="max-width:760px; width:100%; max-height:80vh; overflow:auto; border-radius:16px; border:1px solid rgba(0,255,136,0.24); background:linear-gradient(135deg, rgba(15,23,42,0.98), rgba(17,24,39,0.98)); box-shadow:0 15px 40px rgba(0,0,0,0.45); padding:24px; color:#f8fafc;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+              <h4 id="top15-info-title" style="margin:0; color:#00ff88; font-family:'Orbitron',sans-serif; text-transform:uppercase; letter-spacing:1px;">${top15Text.infoTitle}</h4>
+              <button onclick="window.toggleTop15Info(false)" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">×</button>
+            </div>
+            <div id="top15-info-body" style="line-height:1.6; font-size:0.9rem; color:#cbd5e1;">${top15Text.infoBody}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (section === 'analytics' && index === 11) {
     return `
       <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%;">
         <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; height: 100%;">
@@ -928,6 +1127,12 @@ window.toggleSMCInfo = function (show) {
     setTimeout(() => modal.style.display = 'none', 300);
   }
 }
+
+window.toggleTop15Info = function (show) {
+  const modal = document.getElementById('top15-info-modal');
+  if (!modal) return;
+  modal.style.display = show ? 'flex' : 'none';
+};
 
 // RSI Scan request
 window.requestRSIAnalysis = async function requestRSIAnalysis() {
@@ -1056,6 +1261,23 @@ window.selectLanguage = function (langCode) {
             <p>🔴 <strong>MACRO TREND SHORT:</strong> Coins with a stable downtrend — ideal for short opportunities.</p>
             <p>All calculations run in the cloud, so the tool is fast and does not burden the user's computer.</p>`
         ,
+        // Top-15 Screener labels
+        top15Title: 'Top-15 Screener (Binance Futures USDT)',
+        top15Volume: 'Min 24h Volume (USDT):',
+        top15Change: 'Min 24h Price Change (%):',
+        top15Trades: 'Min 24h Trades:',
+        top15Button: 'START',
+        top15Waiting: 'Waiting for scan...',
+        top15Number: '№',
+        top15Ticker: 'Ticker',
+        top15VolumeCol: 'Volume',
+        top15Rank: 'Rank',
+        top15TradesCol: 'Trades',
+        top15ChangeCol: 'Price Change',
+        top15TotalRank: 'Total Rank',
+        top15InfoBtn: 'Info',
+        top15InfoTitle: 'How the Top-15 screener works',
+        top15InfoBody: '<ul><li><strong>Pairs used:</strong> Binance Futures USDT pairs from the 24h ticker feed.</li><li><strong>Filters:</strong> volume, price change, and trade count must all meet your thresholds.</li><li><strong>Ranking:</strong> each pair gets separate ranks for volume, trades, and price change, then the three ranks are summed into the final total rank.</li><li><strong>Output:</strong> the table shows the top 15 pairs starting from the lowest total rank.</li></ul>',
         // RSI Screener labels
         rsiTitle: 'RSI Screener (Binance Futures USDT)',
         rsiTimeframe: 'Timeframe:',
@@ -1127,6 +1349,23 @@ window.selectLanguage = function (langCode) {
         <p>🔴 <strong>МАКРО-ТРЕНД SHORT:</strong> Список монет с устойчивым нисходящим трендом, где доминируют продавцы. Идеально для поиска сделок на понижение.</p>
         <p>Все расчеты происходят изолированно в облаке, поэтому инструмент работает быстро и не нагружает компьютер пользователя.</p>`
       ,
+      // Top-15 labels (RUS)
+      top15Title: 'Скринер Топ-15 (Binance Futures USDT)',
+      top15Volume: 'Мин. объем 24ч (USDT):',
+      top15Change: 'Мин. изм. цены 24ч (%):',
+      top15Trades: 'Мин. кол-во сделок 24ч:',
+      top15Button: 'СТАРТ',
+      top15Waiting: 'Ожидание запуска...',
+      top15Number: '№',
+      top15Ticker: 'Тикер',
+      top15VolumeCol: 'Объем',
+      top15Rank: 'Ранг',
+      top15TradesCol: 'Сделки',
+      top15ChangeCol: 'Изм. цены',
+      top15TotalRank: 'Суммарный ранг',
+      top15InfoBtn: 'Инфо',
+      top15InfoTitle: 'Как работает скринер Топ-15',
+      top15InfoBody: '<ul><li><strong>Пары:</strong> используются пары Binance Futures USDT из 24-часового ticker-фида.</li><li><strong>Фильтры:</strong> объем, изменение цены и количество сделок должны соответствовать вашим порогам.</li><li><strong>Ранжирование:</strong> каждая пара получает отдельные ранги по объему, сделкам и изменению цены, после чего их сумма дает итоговый суммарный ранг.</li><li><strong>Результат:</strong> в таблице отображаются 15 пар, начиная с наименьшего суммарного ранга.</li></ul>',
       // RSI labels (RUS)
       rsiTitle: 'Скринер RSI (Binance Futures USDT)',
       rsiTimeframe: 'Таймфрейм:',
@@ -1197,6 +1436,23 @@ window.selectLanguage = function (langCode) {
         <p>🔴 <strong>МАКРО-ТРЕНД SHORT:</strong> Список монет зі стійким низхідним трендом — ідеально для пошуку шорт-можливостей.</p>
         <p>Всі розрахунки виконуються в хмарі, тож інструмент працює швидко і не навантажує комп'ютер користувача.</p>`
       ,
+      // Top-15 labels (UKR)
+      top15Title: 'Скрінер Топ-15 (Binance Futures USDT)',
+      top15Volume: 'Мін. обсяг 24г (USDT):',
+      top15Change: 'Мін. змінa ціни 24г (%):',
+      top15Trades: 'Мін. к-ть угод 24г:',
+      top15Button: 'СТАРТ',
+      top15Waiting: 'Очікування запуску...',
+      top15Number: '№',
+      top15Ticker: 'Тікер',
+      top15VolumeCol: 'Обсяг',
+      top15Rank: 'Ранг',
+      top15TradesCol: 'Угоди',
+      top15ChangeCol: 'Зміна ціни',
+      top15TotalRank: 'Сумарний ранг',
+      top15InfoBtn: 'Інфо',
+      top15InfoTitle: 'Як працює скрінер Топ-15',
+      top15InfoBody: '<ul><li><strong>Пари:</strong> використовуються пари Binance Futures USDT з 24-годинного ticker-фіду.</li><li><strong>Фільтри:</strong> обсяг, зміна ціни та кількість угод мають відповідати вашим порогам.</li><li><strong>Ранжування:</strong> кожна пара отримує окремі ранги за обсягом, угодами та зміною ціни, після чого їх сума дає фінальний сумарний ранг.</li><li><strong>Результат:</strong> у таблиці показано 15 пар, починаючи з найменшого сумарного рангу.</li></ul>',
       // RSI labels (UKR)
       rsiTitle: 'Скрінер RSI (Binance Futures USDT)',
       rsiTimeframe: 'Таймфрейм:',
@@ -1299,6 +1555,47 @@ window.selectLanguage = function (langCode) {
   if (smcLongHeading) smcLongHeading.textContent = current.smcLong;
   if (smcShortHeading) smcShortHeading.textContent = current.smcShort;
 
+  // Update Top-15 screener template
+  const top15TitleEl = document.getElementById('top15-title');
+  const top15VolumeLabel = document.getElementById('top15-label-volume');
+  const top15ChangeLabel = document.getElementById('top15-label-change');
+  const top15TradesLabel = document.getElementById('top15-label-trades');
+  const top15Button = document.getElementById('btn-run-top15');
+  const top15InfoBtn = document.getElementById('top15-info-btn');
+  const top15InfoTitle = document.getElementById('top15-info-title');
+  const top15InfoBody = document.getElementById('top15-info-body');
+  const top15HeaderNumber = document.getElementById('top15-header-number');
+  const top15HeaderTicker = document.getElementById('top15-header-ticker');
+  const top15HeaderVolume = document.getElementById('top15-header-volume');
+  const top15HeaderVolumeRank = document.getElementById('top15-header-volume-rank');
+  const top15HeaderTrades = document.getElementById('top15-header-trades');
+  const top15HeaderTradesRank = document.getElementById('top15-header-trades-rank');
+  const top15HeaderChange = document.getElementById('top15-header-change');
+  const top15HeaderChangeRank = document.getElementById('top15-header-change-rank');
+  const top15HeaderTotalRank = document.getElementById('top15-header-total-rank');
+  const top15ResultsBody = document.getElementById('top15-results-body');
+
+  if (top15TitleEl) top15TitleEl.textContent = current.top15Title;
+  if (top15VolumeLabel) top15VolumeLabel.textContent = current.top15Volume;
+  if (top15ChangeLabel) top15ChangeLabel.textContent = current.top15Change;
+  if (top15TradesLabel) top15TradesLabel.textContent = current.top15Trades;
+  if (top15Button) { top15Button.textContent = current.top15Button; top15Button.setAttribute('data-default', current.top15Button); }
+  if (top15InfoBtn) top15InfoBtn.textContent = current.top15InfoBtn;
+  if (top15InfoTitle) top15InfoTitle.textContent = current.top15InfoTitle;
+  if (top15InfoBody) top15InfoBody.innerHTML = current.top15InfoBody;
+  if (top15HeaderNumber) top15HeaderNumber.textContent = current.top15Number;
+  if (top15HeaderTicker) top15HeaderTicker.textContent = current.top15Ticker;
+  if (top15HeaderVolume) top15HeaderVolume.textContent = current.top15VolumeCol;
+  if (top15HeaderVolumeRank) top15HeaderVolumeRank.textContent = current.top15Rank;
+  if (top15HeaderTrades) top15HeaderTrades.textContent = current.top15TradesCol;
+  if (top15HeaderTradesRank) top15HeaderTradesRank.textContent = current.top15Rank;
+  if (top15HeaderChange) top15HeaderChange.textContent = current.top15ChangeCol;
+  if (top15HeaderChangeRank) top15HeaderChangeRank.textContent = current.top15Rank;
+  if (top15HeaderTotalRank) top15HeaderTotalRank.textContent = current.top15TotalRank;
+  if (top15ResultsBody && (top15ResultsBody.textContent.includes('Ожидание запуска...') || top15ResultsBody.textContent.includes('Waiting for scan...') || top15ResultsBody.textContent.includes('Очікування запуску...'))) {
+    top15ResultsBody.innerHTML = `<tr><td colspan="9" style="padding: 18px; text-align: center; color: #94a3b8;">${current.top15Waiting}</td></tr>`;
+  }
+
   // Update hidden RSI scanner template
   const rsiTitleEl = document.getElementById('rsi-title');
   const rsiTimeframeLabel = document.getElementById('rsi-label-timeframe');
@@ -1367,6 +1664,11 @@ window.selectLanguage = function (langCode) {
   ids['smc-info-title'] = 'smcInfoTitle';
   ids['smc-info-body'] = 'smcInfoBody';
 
+  // Add Top-15 info modal/button mapping
+  ids['top15-info-btn'] = 'top15InfoBtn';
+  ids['top15-info-title'] = 'top15InfoTitle';
+  ids['top15-info-body'] = 'top15InfoBody';
+
   // Add RSI info modal/button mapping
   ids['rsi-info-btn'] = 'rsiInfoBtn';
   ids['rsi-info-title'] = 'rsiInfoTitle';
@@ -1375,7 +1677,7 @@ window.selectLanguage = function (langCode) {
   for (const [id, key] of Object.entries(ids)) {
     const el = document.getElementById(id);
     if (el) {
-      if (key === 'aboutDesc' || key === 'smcInfoBody' || key === 'rsiInfoBody') el.innerHTML = current[key];
+      if (key === 'aboutDesc' || key === 'smcInfoBody' || key === 'top15InfoBody' || key === 'rsiInfoBody') el.innerHTML = current[key];
       else el.textContent = current[key];
     }
   }
