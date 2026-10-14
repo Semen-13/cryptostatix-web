@@ -53,7 +53,7 @@ export default async (request, context) => {
         "X-Title": "CryptoStatix AI Agent",
       },
       body: JSON.stringify({
-        model: "nvidia/nemotron-3-ultra-550b-a55b:free",
+        model: "nvidia/nemotron-3.5-lightning:free",
         messages: [
           { 
             role: "system", 
