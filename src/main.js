@@ -69,7 +69,7 @@ const detailConfig = {
       { title: 'Smart Suite Intelligence', desc: 'Exchange flows and liquidation heatmaps.' },
       { title: 'Market Intelligence', titleRus: 'Календарь событий', titleEng: 'Economic Calendar', titleUkr: 'Календар подій', desc: 'Economic events and volatility analysis.' },
       { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
-      { title: 'Grid Screener PRO', titleRus: 'Сеточный Скринер PRO', titleUkr: 'Сітковий Скринер PRO', desc: 'Real-time 3x3 multi-chart terminal' }
+      { title: 'Daily Market Review', titleRus: 'Ежедневный обзор рынка', titleUkr: 'Щоденний огляд ринку', desc: 'Crypto news, daily insights and market overview.' }
     ]
   },
   screeners: {
@@ -1036,11 +1036,22 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     `;
   }
 
-  if ((section === 'analytics' && index === 12) || (section === 'screeners' && index === 1)) {
+  if (section === 'screeners' && index === 1) {
     return `
       <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%;">
         <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; height: 100%;">
           <iframe src="/screener-terminal.html" width="100%" style="height: 100%; min-height: 100%; display: block; border-radius: 14px;" frameborder="0"></iframe>
+        </div>
+      </div>
+    `;
+  }
+
+  if (section === 'analytics' && index === 12) {
+    // Блок временно очищен, готов к переработке
+    return `
+      <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%; display: flex; align-items: center; justify-content: center;">
+        <div style="text-align: center; color: rgba(255,255,255,0.3); font-family: 'Orbitron', sans-serif; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;">
+          — В разработке —
         </div>
       </div>
     `;
