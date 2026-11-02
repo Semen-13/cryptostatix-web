@@ -85,6 +85,13 @@ const detailConfig = {
   }
 };
 
+function sanitizeArticleHtml(html, fallbackHtml = '') {
+  if (!html || typeof html !== 'string') return fallbackHtml;
+
+  const cleaned = html.replace(/^\s*<h[1-2][^>]*>.*?<\/h[1-2]>\s*/is, '').trim();
+  return cleaned || fallbackHtml;
+}
+
 /** * 4. ЛОГИКА СТРАНИЦ (NAVIGATION)
  */
 window.showPage = function (pageId) {
@@ -128,7 +135,42 @@ window.showDetail = function (section, itemIndex) {
   if (lang === 'RUS' && item.titleRus) itemTitle = item.titleRus;
 
   document.getElementById('detail-title').textContent = `${label} — ${itemTitle}`;
-  document.getElementById('detail-body').innerHTML = buildDetailBody(section, itemIndex, item, lang);
+const detailBodyEl = document.getElementById('detail-body');
+
+// Проверяем: если это секция analytics и 12-й блок, загружаем ИИ-статью
+if (section === 'analytics' && itemIndex === 12) {
+    detailBodyEl.innerHTML = '<p style="color: #38bdf8; text-align: center; padding: 40px;">Загрузка свежего обзора рынка...</p>';
+    
+    // Асинхронно подтягиваем данные из нашей Netlify-функции
+    // Просто используйте относительный путь для всех окружений
+const endpoint = '/.netlify/functions/generate-seo';
+
+    fetch(endpoint)
+        .then(res => res.json())
+        .then(result => {
+            if (result.success && result.data) {
+                let currentLang = 'ru';
+                if (lang === 'ENG') currentLang = 'en';
+                if (lang === 'UKR') currentLang = 'ua';
+
+                const articleHtml = sanitizeArticleHtml(
+                    result.data[currentLang] || result.data.en || '',
+                    '<p style="color: #ff4d4d;">Статья пока недоступна.</p>'
+                );
+                
+                detailBodyEl.innerHTML = articleHtml;
+            } else {
+                detailBodyEl.innerHTML = '<p style="color: #ff4d4d;">Статья пока недоступна.</p>';
+            }
+        })
+        .catch(err => {
+            console.error('Ошибка загрузки SEO-статьи:', err);
+            detailBodyEl.innerHTML = '<p style="color: #ff4d4d;">Ошибка соединения с сервером.</p>';
+        });
+} else {
+    // Для всех остальных блоков оставляем стандартное поведение
+    detailBodyEl.innerHTML = buildDetailBody(section, itemIndex, item, lang);
+}
   // Ensure newly inserted detail content is localized (covers templates/iframes inserted dynamically)
   try { window.selectLanguage(localStorage.getItem('selectedLanguage') || lang); } catch (e) { /* ignore */ }
 
@@ -1792,7 +1834,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function askAI(userPrompt) {
   try {
-    const response = await fetch('/.netlify/functions/ask-ai', {
+    const endpoint = window.location.hostname === 'localhost' ? 'http://localhost:5174/.netlify/functions/ask-ai' : '/.netlify/functions/ask-ai';
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: userPrompt }),

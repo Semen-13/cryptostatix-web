@@ -4,6 +4,8 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import generateSeoHandler from './netlify/functions/generate-seo.js';
+import askAiHandler from './netlify/functions/ask-ai.js';
 import { handler as rsiHandler } from './netlify/functions/rsi-scan.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -139,6 +141,51 @@ app.post('/.netlify/functions/smc-scan', async (req, res) => {
 });
 
 // RSI Scan route using the Netlify function handler we added
+app.get('/.netlify/functions/generate-seo', async (req, res) => {
+    try {
+        const url = new URL(req.originalUrl, `http://localhost:${PORT}`);
+        const request = new Request(url, {
+            method: 'GET',
+            headers: req.headers
+        });
+        const response = await generateSeoHandler(request, {});
+        const body = await response.text();
+        res.status(response.status);
+        response.headers.forEach((value, key) => {
+            if (key.toLowerCase() !== 'content-length') {
+                res.setHeader(key, value);
+            }
+        });
+        res.send(body);
+    } catch (e) {
+        console.error('generate-seo route error', e);
+        res.status(500).json({ success: false, error: String(e) });
+    }
+});
+
+app.post('/.netlify/functions/ask-ai', async (req, res) => {
+    try {
+        const url = new URL(req.originalUrl, `http://localhost:${PORT}`);
+        const request = new Request(url, {
+            method: 'POST',
+            headers: req.headers,
+            body: JSON.stringify(req.body)
+        });
+        const response = await askAiHandler(request, {});
+        const body = await response.text();
+        res.status(response.status);
+        response.headers.forEach((value, key) => {
+            if (key.toLowerCase() !== 'content-length') {
+                res.setHeader(key, value);
+            }
+        });
+        res.send(body);
+    } catch (e) {
+        console.error('ask-ai route error', e);
+        res.status(500).json({ error: String(e) });
+    }
+});
+
 app.post('/.netlify/functions/rsi-scan', async (req, res) => {
     try {
         const event = {

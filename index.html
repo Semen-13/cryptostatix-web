@@ -739,6 +739,42 @@
             if (e.key === 'Enter') handleAiSend();
         });
     </script>
+// Функция загрузки ежедневного обзора рынка
+async function loadDailyMarketReview() {
+    const container = document.getElementById('seo-article-container');
+    if (!container) return;
+
+    container.innerHTML = '<p>Загрузка свежего обзора рынка...</p>';
+
+    try {
+        const response = await fetch('/.netlify/functions/generate-seo');
+        const result = await response.json();
+
+        if (result.success && result.data) {
+            let lang = localStorage.getItem('siteLang') || 'ru';
+            if (!result.data[lang]) lang = 'en';
+
+            container.innerHTML = result.data[lang];
+        } else {
+            container.innerHTML = '<p>Статья пока недоступна.</p>';
+        }
+    } catch (err) {
+        console.error('Ошибка загрузки статьи:', err);
+        container.innerHTML = '<p>Ошибка соединения с сервером.</p>';
+    }
+}
+
+// Привязываем клик к 12-му блоку аналитики
+document.addEventListener('DOMContentLoaded', () => {
+    const dailyReviewCard = document.querySelector('.analytics-grid > *:nth-child(12), .cards-container > *:nth-child(12), .grid > *:nth-child(12)');
+    
+    if (dailyReviewCard) {
+        dailyReviewCard.addEventListener('click', () => {
+            console.log('Клик по 12-му блоку! Загружаем обзор...');
+            loadDailyMarketReview();
+        });
+    }
+});
 </body>
 
 </html>

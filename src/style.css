@@ -422,7 +422,12 @@ h1 {
   gap: 20px;
   width: 100%;
   flex: 1;
+  padding-top: 68px;
   padding-bottom: 25px;
+}
+
+.detail-content > h2:first-child {
+  margin-top: 0;
 }
 
 .detail-subpage h2 {
