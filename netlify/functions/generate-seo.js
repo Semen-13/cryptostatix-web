@@ -3,8 +3,14 @@ import axios from "axios";
 
 export default async (req, context) => {
   const url = new URL(req.url);
-  const secret = url.searchParams.get("secret");
+  const secretParam = url.searchParams.get("secret");
   
+  // Проверяем секрет либо из URL (для отладки), либо из заголовка от GitHub Actions
+  const headerSecret = req.headers.get("x-cron-secret");
+  const expectedSecret = process.env.CRON_SECRET || "12345"; // запасной дефолт на случай отсутствия переменной
+
+  const isAuthorized = secretParam === "12345" || headerSecret === expectedSecret;
+
   const store = getStore("seo-articles");
   const cacheKey = "latest_market_review";
 
@@ -14,7 +20,9 @@ export default async (req, context) => {
     const todayStr = new Date().toISOString().split('T')[0];
     const isNewDay = articlesData && articlesData.date ? !articlesData.date.startsWith(todayStr) : true;
 
-    if (secret === "12345" || !articlesData || isNewDay) {
+    // Генерация запускается принудительно по секрету ИЛИ если наступил новый день, 
+    // ИЛИ если кэш пустой. Обычным пользователям без секрета отдается готовый кэш!
+    if (isAuthorized || !articlesData || isNewDay) {
       console.log("Генерация обзора через openrouter/free...");
 
       const openRouterApiKey = process.env.OPENROUTER_API_KEY;
@@ -66,7 +74,6 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
       let resultJson = {};
       
       if (rawContent) {
-        // Безопасная очистка, если контент существует
         const cleanedContent = rawContent.replace(/```json/g, "").replace(/```/g, "").trim();
         try {
           resultJson = JSON.parse(cleanedContent);
@@ -80,7 +87,6 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
         }
       }
 
-      // Сохраняем результат с надежными фоллбеками на случай пустого ответа модели
       articlesData = {
         date: new Date().toISOString(),
         en: resultJson.en || "<h2>Daily Market Review</h2><p>Market review is temporarily being updated. Please check back in a moment.</p>",

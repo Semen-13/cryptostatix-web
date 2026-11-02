@@ -1,0 +1,15 @@
+name: Trigger Daily Market Review
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Каждый день в 00:00 UTC
+  workflow_dispatch: # Позволяет запускать вручную для теста
+
+jobs:
+  run-cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send secure HTTP request to Netlify function
+        run: |
+          curl -X GET "https://cryptostatix.pp.ua/.netlify/functions/generate-seo" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
