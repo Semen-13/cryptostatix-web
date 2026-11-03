@@ -23,17 +23,19 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
 
   let rawContent = "";
   try {
-  const response = await axios.post(
+ const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
         messages: [
-          { role: "system", content: "You are a professional crypto journalist and translator. Return ONLY valid JSON with keys en, ru, ua. Do not include extra text or markdown wrap." },
+          { 
+            role: "system", 
+            content: "You are a crypto API endpoint. Output ONLY raw valid JSON containing keys 'en', 'ru', 'ua'. Do not write any thoughts, reasoning, explanation, or markdown formatting blocks like ```json." 
+          },
           { role: "user", content: prompt }
         ],
-        temperature: 0.5,
-        max_tokens: 4000,
-        reasoning: { max_tokens: 1000 } // Отключаем трату токенов на рассуждения
+        temperature: 0.3,
+        max_tokens: 3500
       },
       {
         headers: {
@@ -46,10 +48,12 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
     );
 
     const message = response.data?.choices?.[0]?.message;
-    // Если content пустой, берем reasoning или reasoning_details
-    rawContent = message?.content || message?.reasoning || "";
     
-    console.log("Полученный текст статьи:", rawContent ? rawContent.substring(0, 100) + "..." : "ПУСТО");
+    // Если в content вернулись markdown-кавычки ```json ... ```, очищаем их перед парсингом:
+    let rawContent = message?.content || "";
+    rawContent = rawContent.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    console.log("Чистый текст ответа:", rawContent.substring(0, 150));
  } catch (apiError) {
     console.error("Ошибка API OpenRouter:", apiError.response?.data || apiError.message);
     throw apiError;
