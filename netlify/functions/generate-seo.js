@@ -34,7 +34,7 @@ Return ONLY the HTML content as a raw string without markdown code blocks.
         model: "openrouter/free",
         messages: [
           { role: "system", content: "You are a professional crypto journalist. Output ONLY raw HTML content." },
-          { role: { type: "text", text: englishPrompt } }
+          { role: "user", content: englishPrompt }
         ],
         temperature: 0.4,
         max_tokens: 3000
