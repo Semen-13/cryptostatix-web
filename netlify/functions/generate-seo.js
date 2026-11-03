@@ -12,13 +12,13 @@ async function runGeneration() {
     throw new Error("OpenRouter API key is missing");
   }
 
-  const prompt = `
-Write a professional daily cryptocurrency market review focused on the opening of the new trading day. Analyze current Bitcoin trends, Fear & Greed Index, and RSI signals. 
+const prompt = `
+Write a short, concise daily cryptocurrency market review focused on the opening of the new trading day. Analyze Bitcoin trends, Fear & Greed Index, and RSI signals. 
 Return the result strictly as a valid JSON object with keys "en", "ru", and "ua":
 - "en": article in English.
 - "ru": direct translation/adaptation of the article in Russian.
 - "ua": direct translation/adaptation of the article in Ukrainian.
-Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concise.
+Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it very concise and compact.
   `;
 
   let rawContent = "";
