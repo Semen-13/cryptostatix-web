@@ -12,7 +12,6 @@ async function runGeneration() {
     throw new Error("OpenRouter API key is missing");
   }
 
-  // Промпт для глубокой и детальной английской статьи
   const englishPrompt = `
 Write a detailed, analytical daily cryptocurrency market review for the opening of the new trading day. 
 Include:
@@ -25,7 +24,7 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
 
   let englishContent = "";
   try {
-const responseEn = await axios.post(
+    const responseEn = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
@@ -46,24 +45,27 @@ const responseEn = await axios.post(
       }
     );
 
-    // Логируем весь ответ, чтобы увидеть структуру
-    console.log("RAW API Response:", JSON.stringify(responseEn.data).substring(0, 300));
+    console.log("RAW API Response (En):", JSON.stringify(responseEn.data).substring(0, 300));
 
     const messageEn = responseEn.data?.choices?.[0]?.message;
     englishContent = messageEn?.content || responseEn.data?.choices?.[0]?.text || "";
     englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
-    
+
     if (!englishContent) {
       throw new Error("Получен пустой контент от OpenRouter на первом шаге.");
     }
-    
+
     console.log("Английская версия успешно сгенерирована. Длина:", englishContent.length);
 
-  // Пауза 5 секунд между запросами
+  } catch (apiError) {
+    console.error("Ошибка при генерации английской версии:", apiError.response?.data || apiError.message);
+    throw apiError;
+  }
+
+  // Пауза перед переводом на русский
   console.log("Ожидание перед переводом на русский...");
   await sleep(5000);
 
-  // Шаг 2: Перевод на русский
   let russianContent = englishContent;
   try {
     const responseRu = await axios.post(
@@ -93,11 +95,10 @@ const responseEn = await axios.post(
     console.error("Ошибка перевода на русский:", err.message);
   }
 
-  // Пауза 5 секунд перед следующим переводом
+  // Пауза перед переводом на украинский
   console.log("Ожидание перед переводом на украинский...");
   await sleep(5000);
 
-  // Шаг 3: Перевод на украинский (основываясь на качественном русском тексте для идеальной грамматики)
   let ukrainianContent = englishContent;
   try {
     const responseUa = await axios.post(
