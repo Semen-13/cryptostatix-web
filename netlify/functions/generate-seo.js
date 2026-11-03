@@ -95,19 +95,19 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
     console.error("Ошибка перевода на русский:", err.message);
   }
 
-  // Пауза перед переводом на украинский
+// Пауза перед переводом на украинский
   console.log("Ожидание перед переводом на украинский...");
   await sleep(5000);
 
-  let ukrainianContent = englishContent;
+  let ukrainianContent = russianContent; // В качестве базы берем русский текст
   try {
     const responseUa = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
         messages: [
-          { role: "system", content: "You are a professional translator. Translate the given review into professional Ukrainian. Keep all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. Output ONLY raw HTML." },
-          { role: "user", content: russianContent }
+          { role: "system", content: "You are a professional translator. Translate the given Russian crypto review into professional Ukrainian. Keep all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. Output ONLY raw HTML." },
+          { role: "user", content: russianContent } // Переводим с русского текста
         ],
         temperature: 0.3,
         max_tokens: 3000
@@ -121,9 +121,13 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
         }
       }
     );
-    ukrainianContent = responseUa.data?.choices?.[0]?.message?.content || englishContent;
-    ukrainianContent = ukrainianContent.replace(/```html/g, "").replace(/```/g, "").trim();
-    console.log("Украинская версия успешно переведена!");
+    const uaRes = responseUa.data?.choices?.[0]?.message?.content || "";
+    if (uaRes.trim().length > 50) {
+      ukrainianContent = uaRes.replace(/```html/g, "").replace(/```/g, "").trim();
+      console.log("Украинская версия успешно переведена!");
+    } else {
+      console.warn("Ответ переводчика на украинский пуст, используем русский текст как базу.");
+    }
   } catch (err) {
     console.error("Ошибка перевода на украинский:", err.message);
   }
