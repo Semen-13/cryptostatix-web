@@ -25,7 +25,7 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
 
   let englishContent = "";
   try {
-    const responseEn = await axios.post(
+const responseEn = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
@@ -46,15 +46,18 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
       }
     );
 
-    const messageEn = responseEn.data?.choices?.[0]?.message;
-    englishContent = messageEn?.content || "";
-    englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
-    console.log("Английская версия успешно сгенерирована. Длина:", englishContent.length);
+    // Логируем весь ответ, чтобы увидеть структуру
+    console.log("RAW API Response:", JSON.stringify(responseEn.data).substring(0, 300));
 
-  } catch (apiError) {
-    console.error("Ошибка при генерации английской версии:", apiError.response?.data || apiError.message);
-    throw apiError;
-  }
+    const messageEn = responseEn.data?.choices?.[0]?.message;
+    englishContent = messageEn?.content || responseEn.data?.choices?.[0]?.text || "";
+    englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
+    
+    if (!englishContent) {
+      throw new Error("Получен пустой контент от OpenRouter на первом шаге.");
+    }
+    
+    console.log("Английская версия успешно сгенерирована. Длина:", englishContent.length);
 
   // Пауза 5 секунд между запросами
   console.log("Ожидание перед переводом на русский...");
