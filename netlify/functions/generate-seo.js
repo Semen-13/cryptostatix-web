@@ -45,6 +45,8 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
     );
 
     rawContent = response.data?.choices?.[0]?.message?.content || "";
+    // ДОБАВЬТЕ ЭТУ СТРОЧКУ ДЛЯ ОТЛАДКИ:
+    console.log("Сырой ответ от OpenRouter:", rawContent);
  } catch (apiError) {
     console.error("Ошибка API OpenRouter:", apiError.response?.data || apiError.message);
     throw apiError;
