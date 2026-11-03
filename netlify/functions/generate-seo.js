@@ -1,7 +1,7 @@
-import { getStore } from "@netlify/blobs";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
+
 // Основная функция генерации и сохранения
 async function runGeneration() {
   console.log("Генерация обзора через openrouter/free...");
@@ -23,7 +23,7 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
 
   let rawContent = "";
   try {
- const response = await axios.post(
+    const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
@@ -49,12 +49,12 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
 
     const message = response.data?.choices?.[0]?.message;
     
-    // Если в content вернулись markdown-кавычки ```json ... ```, очищаем их перед парсингом:
-    let rawContent = message?.content || "";
+    // Присваиваем значение во внешнюю переменную (убрали let)
+    rawContent = message?.content || "";
     rawContent = rawContent.replace(/```json/g, "").replace(/```/g, "").trim();
 
     console.log("Чистый текст ответа:", rawContent.substring(0, 150));
- } catch (apiError) {
+  } catch (apiError) {
     console.error("Ошибка API OpenRouter:", apiError.response?.data || apiError.message);
     throw apiError;
   }
@@ -81,13 +81,13 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
     ua: resultJson.ua || resultJson.en || "<h2>Щоденний огляд ринку</h2><p>Огляд ринку тимчасово оновлюється. Будь ласка, зайдіть трохи згодом.</p>"
   };
 
-const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
+  const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
   fs.writeFileSync(filePath, JSON.stringify(articlesData, null, 2), 'utf8');
   console.log("Статья успешно сохранена в data/latest_market_review.json!");
   return articlesData;
 }
 
-// Экспорт для Netlify Function (когда сайт запрашивает через браузер)
+// Экспорт для Netlify Function (чтение из локального файла репозитория)
 export default async (req, context) => {
   const url = new URL(req.url);
   const secretParam = url.searchParams.get("secret");
@@ -96,15 +96,19 @@ export default async (req, context) => {
 
   const isAuthorized = secretParam === "12345" || headerSecret === expectedSecret;
 
-  const store = getStore("seo-articles");
-  const cacheKey = "latest_market_review";
-
   try {
-    let articlesData = await store.get(cacheKey, { type: "json" });
+    const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
+    let articlesData = {};
+    
+    if (fs.existsSync(filePath)) {
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      articlesData = JSON.parse(fileContent);
+    }
+
     const todayStr = new Date().toISOString().split('T')[0];
     const isNewDay = articlesData && articlesData.date ? !articlesData.date.startsWith(todayStr) : true;
 
-    if (isAuthorized || !articlesData || isNewDay) {
+    if (isAuthorized && isNewDay) {
       articlesData = await runGeneration();
     }
 
