@@ -2,10 +2,8 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 
-// Функция паузы для разделения запросов
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Основная функция генерации и сохранения
 async function runGeneration() {
   console.log("Шаг 1: Генерация развернутого обзора на английском языке...");
 
@@ -14,14 +12,13 @@ async function runGeneration() {
     throw new Error("OpenRouter API key is missing");
   }
 
-  // Промпт для полноценной статьи на английском
   const englishPrompt = `
 Write a detailed, professional daily cryptocurrency market review focused on the opening of the new trading day. 
 Include:
 - Comprehensive analysis of current Bitcoin trends and price action.
 - Detailed breakdown of the Fear & Greed Index and market sentiment.
 - RSI signals (daily and 4-hour timeframes).
-- Key support and resistance levels, plus potential market drivers (like macroeconomic data).
+- Key support and resistance levels, plus potential market drivers.
 Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Make it rich, analytical, and detailed.
 Return ONLY the HTML content as a raw string without markdown code blocks.
   `;
@@ -59,37 +56,23 @@ Return ONLY the HTML content as a raw string without markdown code blocks.
     throw apiError;
   }
 
-  // Небольшая пауза между запросами (можно настроить, например, 5000 мс = 5 сек или больше)
-  console.log("Ожидание перед переводом...");
-  await sleep(5000);
+  // Пауза перед переводом
+  console.log("Ожидание перед переводом на русский...");
+  await sleep(4000);
 
-  console.log("Шаг 2: Перевод и адаптация на русский и украинский языки...");
-
-  const translationPrompt = `
-Translate and adapt the following English cryptocurrency market review into Russian ("ru") and Ukrainian ("ua").
-Maintain all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. 
-Return the result strictly as a valid JSON object with keys "ru" and "ua":
-- "ru": Professional adaptation in Russian.
-- "ua": Professional adaptation in Ukrainian.
-
-English source text:
-${englishContent}
-  `;
-
-  let russianContent = "";
-  let ukrainianContent = "";
-
+  // Шаг 2А: Перевод на русский
+  let russianContent = englishContent;
   try {
-    const responseRuUa = await axios.post(
+    const responseRu = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
         messages: [
-          { role: "system", content: "You are a professional translator. Output ONLY a raw valid JSON object containing keys 'ru', 'ua'. No markdown formatting blocks." },
-          { role: "user", content: translationPrompt }
+          { role: "system", content: "You are a professional translator. Translate the given English crypto review into professional Russian. Keep all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. Output ONLY raw HTML." },
+          { role: "user", content: englishContent }
         ],
         temperature: 0.3,
-        max_tokens: 4000
+        max_tokens: 3000
       },
       {
         headers: {
@@ -100,37 +83,51 @@ ${englishContent}
         }
       }
     );
+    russianContent = responseRu.data?.choices?.[0]?.message?.content || englishContent;
+    russianContent = russianContent.replace(/```html/g, "").replace(/```/g, "").trim();
+    console.log("Русская версия успешно переведена!");
+  } catch (err) {
+    console.error("Ошибка перевода на русский, используем английский:", err.message);
+  }
 
-    const messageRuUa = responseRuUa.data?.choices?.[0]?.message;
-    let rawTranslation = messageRuUa?.content || "";
-    rawTranslation = rawTranslation.replace(/```json/g, "").replace(/```/g, "").trim();
+  // Пауза перед следующим переводом
+  console.log("Ожидание перед переводом на украинский...");
+  await sleep(4000);
 
-    // Безопасный парсинг JSON с переводом
-    let parsedTranslation = {};
-    try {
-      parsedTranslation = JSON.parse(rawTranslation);
-    } catch (parseErr) {
-      const firstBrace = rawTranslation.indexOf('{');
-      const lastBrace = rawTranslation.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace !== -1) {
-        parsedTranslation = JSON.parse(rawTranslation.substring(firstBrace, lastBrace + 1));
+  // Шаг 2Б: Перевод на украинский
+  let ukrainianContent = englishContent;
+  try {
+    const responseUa = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "openrouter/free",
+        messages: [
+          { role: "system", content: "You are a professional translator. Translate the given English crypto review into professional Ukrainian. Keep all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. Output ONLY raw HTML." },
+          { role: "user", content: englishContent }
+        ],
+        temperature: 0.3,
+        max_tokens: 3000
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${openRouterApiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "http://localhost:8888",
+          "X-Title": "CryptoStatix PRO"
+        }
       }
-    }
-
-    russianContent = parsedTranslation.ru || englishContent;
-    ukrainianContent = parsedTranslation.ua || englishContent;
-    console.log("Перевод успешно завершен!");
-
-  } catch (translationError) {
-    console.error("Ошибка при переводе, используем английский текст как фоллбэк:", translationError.message);
-    russianContent = englishContent;
-    ukrainianContent = englishContent;
+    );
+    ukrainianContent = responseUa.data?.choices?.[0]?.message?.content || englishContent;
+    ukrainianContent = ukrainianContent.replace(/```html/g, "").replace(/```/g, "").trim();
+    console.log("Украинская версия успешно переведена!");
+  } catch (err) {
+    console.error("Ошибка перевода на украинский, используем английский:", err.message);
   }
 
   // Финальная сборка данных
   const articlesData = {
     date: new Date().toISOString(),
-    en: englishContent || "<p>Content temporarily unavailable.</p>",
+    en: englishContent,
     ru: russianContent,
     ua: ukrainianContent
   };
@@ -139,7 +136,7 @@ ${englishContent}
   fs.writeFileSync(filePath, JSON.stringify(articlesData, null, 2), 'utf8');
   console.log("Полный многоязычный обзор успешно сохранен в data/latest_market_review.json!");
   return articlesData;
-}
+};
 
 // Экспорт для Netlify Function
 export default async (req, context) => {
