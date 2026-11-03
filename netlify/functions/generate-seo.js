@@ -72,13 +72,9 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
     ua: resultJson.ua || resultJson.en || "<h2>Щоденний огляд ринку</h2><p>Огляд ринку тимчасово оновлюється. Будь ласка, зайдіть трохи згодом.</p>"
   };
 
- const store = getStore({
-  name: "seo-articles",
-  siteID: process.env.NETLIFY_SITE_ID,
-  token: process.env.NETLIFY_AUTH_TOKEN
-});
-  await store.setJSON("latest_market_review", articlesData);
-  console.log("Обзор успешно сгенерирован и сохранен в Netlify Blobs!");
+const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
+  fs.writeFileSync(filePath, JSON.stringify(articlesData, null, 2), 'utf8');
+  console.log("Статья успешно сохранена в data/latest_market_review.json!");
   return articlesData;
 }
 
