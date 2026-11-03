@@ -86,7 +86,7 @@ ${englishContent}
         model: "openrouter/free",
         messages: [
           { role: "system", content: "You are a professional translator. Output ONLY a raw valid JSON object containing keys 'ru', 'ua'. No markdown formatting blocks." },
-          { role: { type: "text", text: translationPrompt } }
+          { role: "user", content: translationPrompt }
         ],
         temperature: 0.3,
         max_tokens: 4000
