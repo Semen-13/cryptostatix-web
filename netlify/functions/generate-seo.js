@@ -1,6 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import axios from "axios";
-
+import fs from "fs";
+import path from "path";
 // Основная функция генерации и сохранения
 async function runGeneration() {
   console.log("Генерация обзора через openrouter/free...");
