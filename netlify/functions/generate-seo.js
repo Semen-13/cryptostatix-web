@@ -23,7 +23,7 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
 
   let rawContent = "";
   try {
-    const response = await axios.post(
+const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
@@ -35,7 +35,7 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
           { role: "user", content: prompt }
         ],
         temperature: 0.3,
-        max_tokens: 3500
+        max_tokens: 4000 // Увеличиваем лимит токенов, чтобы текст не обрывался
       },
       {
         headers: {
