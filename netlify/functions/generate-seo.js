@@ -59,21 +59,32 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
     throw apiError;
   }
 
-  let resultJson = {};
+let resultJson = {};
   if (rawContent) {
-    const cleanedContent = rawContent.replace(/```json/g, "").replace(/```/g, "").trim();
     try {
-      resultJson = JSON.parse(cleanedContent);
+      // Пытаемся распарсить как есть
+      resultJson = JSON.parse(rawContent);
     } catch (parseError) {
-      console.warn("Не удалось распарсить JSON, используем текст как есть.");
-      resultJson = {
-        en: cleanedContent,
-        ru: cleanedContent,
-        ua: cleanedContent
-      };
+      try {
+        // Пытаемся вырезать всё, что находится между первой '{' и последней '}'
+        const firstBrace = rawContent.indexOf('{');
+        const lastBrace = rawContent.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          const jsonSubstring = rawContent.substring(firstBrace, lastBrace + 1);
+          resultJson = JSON.parse(jsonSubstring);
+        } else {
+          throw new Error("JSON braces not found");
+        }
+      } catch (innerError) {
+        console.warn("Не удалось распарсить JSON, используем безопасный шаблон.");
+        resultJson = {
+          en: "<h2>Daily Market Review</h2><p>Market review is temporarily being updated. Please check back in a moment.</p>",
+          ru: "<h2>Ежедневный обзор рынка</h2><p>Обзор рынка временно обновляется. Пожалуйста, зайдите чуть позже.</p>",
+          ua: "<h2>Щоденний огляд ринку</h2><p>Огляд ринку тимчасово оновлюється. Будь ласка, зайдіть трохи згодом.</p>"
+        };
+      }
     }
   }
-
   const articlesData = {
     date: new Date().toISOString(),
     en: resultJson.en || "<h2>Daily Market Review</h2><p>Market review is temporarily being updated. Please check back in a moment.</p>",
