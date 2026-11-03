@@ -2,40 +2,42 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 
+// Функция паузы для разделения запросов
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Основная функция генерации и сохранения
 async function runGeneration() {
-  console.log("Генерация обзора через openrouter/free...");
+  console.log("Шаг 1: Генерация развернутого обзора на английском языке...");
 
   const openRouterApiKey = process.env.OPENROUTER_API_KEY;
-  
   if (!openRouterApiKey) {
     throw new Error("OpenRouter API key is missing");
   }
 
-const prompt = `
-Write a short, concise daily cryptocurrency market review focused on the opening of the new trading day. Analyze Bitcoin trends, Fear & Greed Index, and RSI signals. 
-Return the result strictly as a valid JSON object with keys "en", "ru", and "ua":
-- "en": article in English.
-- "ru": direct translation/adaptation of the article in Russian.
-- "ua": direct translation/adaptation of the article in Ukrainian.
-Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it very concise and compact.
+  // Промпт для полноценной статьи на английском
+  const englishPrompt = `
+Write a detailed, professional daily cryptocurrency market review focused on the opening of the new trading day. 
+Include:
+- Comprehensive analysis of current Bitcoin trends and price action.
+- Detailed breakdown of the Fear & Greed Index and market sentiment.
+- RSI signals (daily and 4-hour timeframes).
+- Key support and resistance levels, plus potential market drivers (like macroeconomic data).
+Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Make it rich, analytical, and detailed.
+Return ONLY the HTML content as a raw string without markdown code blocks.
   `;
 
-  let rawContent = "";
+  let englishContent = "";
   try {
-const response = await axios.post(
+    const responseEn = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
         messages: [
-          { 
-            role: "system", 
-            content: "You are a crypto API endpoint. Output ONLY raw valid JSON containing keys 'en', 'ru', 'ua'. Do not write any thoughts, reasoning, explanation, or markdown formatting blocks like ```json." 
-          },
-          { role: "user", content: prompt }
+          { role: "system", content: "You are a professional crypto journalist. Output ONLY raw HTML content." },
+          { role: { type: "text", text: englishPrompt } }
         ],
-        temperature: 0.3,
-        max_tokens: 4000 // Увеличиваем лимит токенов, чтобы текст не обрывался
+        temperature: 0.4,
+        max_tokens: 3000
       },
       {
         headers: {
@@ -47,58 +49,99 @@ const response = await axios.post(
       }
     );
 
-    const message = response.data?.choices?.[0]?.message;
-    
-    // Присваиваем значение во внешнюю переменную (убрали let)
-    rawContent = message?.content || "";
-    rawContent = rawContent.replace(/```json/g, "").replace(/```/g, "").trim();
+    const messageEn = responseEn.data?.choices?.[0]?.message;
+    englishContent = messageEn?.content || "";
+    englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
+    console.log("Английская версия успешно сгенерирована. Длина:", englishContent.length);
 
-    console.log("Чистый текст ответа:", rawContent.substring(0, 150));
   } catch (apiError) {
-    console.error("Ошибка API OpenRouter:", apiError.response?.data || apiError.message);
+    console.error("Ошибка при генерации английской версии:", apiError.response?.data || apiError.message);
     throw apiError;
   }
 
-let resultJson = {};
-  if (rawContent) {
-    try {
-      // Пытаемся распарсить как есть
-      resultJson = JSON.parse(rawContent);
-    } catch (parseError) {
-      try {
-        // Пытаемся вырезать всё, что находится между первой '{' и последней '}'
-        const firstBrace = rawContent.indexOf('{');
-        const lastBrace = rawContent.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1) {
-          const jsonSubstring = rawContent.substring(firstBrace, lastBrace + 1);
-          resultJson = JSON.parse(jsonSubstring);
-        } else {
-          throw new Error("JSON braces not found");
+  // Небольшая пауза между запросами (можно настроить, например, 5000 мс = 5 сек или больше)
+  console.log("Ожидание перед переводом...");
+  await sleep(5000);
+
+  console.log("Шаг 2: Перевод и адаптация на русский и украинский языки...");
+
+  const translationPrompt = `
+Translate and adapt the following English cryptocurrency market review into Russian ("ru") and Ukrainian ("ua").
+Maintain all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. 
+Return the result strictly as a valid JSON object with keys "ru" and "ua":
+- "ru": Professional adaptation in Russian.
+- "ua": Professional adaptation in Ukrainian.
+
+English source text:
+${englishContent}
+  `;
+
+  let russianContent = "";
+  let ukrainianContent = "";
+
+  try {
+    const responseRuUa = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "openrouter/free",
+        messages: [
+          { role: "system", content: "You are a professional translator. Output ONLY a raw valid JSON object containing keys 'ru', 'ua'. No markdown formatting blocks." },
+          { role: { type: "text", text: translationPrompt } }
+        ],
+        temperature: 0.3,
+        max_tokens: 4000
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${openRouterApiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "http://localhost:8888",
+          "X-Title": "CryptoStatix PRO"
         }
-      } catch (innerError) {
-        console.warn("Не удалось распарсить JSON, используем безопасный шаблон.");
-        resultJson = {
-          en: "<h2>Daily Market Review</h2><p>Market review is temporarily being updated. Please check back in a moment.</p>",
-          ru: "<h2>Ежедневный обзор рынка</h2><p>Обзор рынка временно обновляется. Пожалуйста, зайдите чуть позже.</p>",
-          ua: "<h2>Щоденний огляд ринку</h2><p>Огляд ринку тимчасово оновлюється. Будь ласка, зайдіть трохи згодом.</p>"
-        };
+      }
+    );
+
+    const messageRuUa = responseRuUa.data?.choices?.[0]?.message;
+    let rawTranslation = messageRuUa?.content || "";
+    rawTranslation = rawTranslation.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    // Безопасный парсинг JSON с переводом
+    let parsedTranslation = {};
+    try {
+      parsedTranslation = JSON.parse(rawTranslation);
+    } catch (parseErr) {
+      const firstBrace = rawTranslation.indexOf('{');
+      const lastBrace = rawTranslation.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        parsedTranslation = JSON.parse(rawTranslation.substring(firstBrace, lastBrace + 1));
       }
     }
+
+    russianContent = parsedTranslation.ru || englishContent;
+    ukrainianContent = parsedTranslation.ua || englishContent;
+    console.log("Перевод успешно завершен!");
+
+  } catch (translationError) {
+    console.error("Ошибка при переводе, используем английский текст как фоллбэк:", translationError.message);
+    russianContent = englishContent;
+    ukrainianContent = englishContent;
   }
+
+  // Финальная сборка данных
   const articlesData = {
     date: new Date().toISOString(),
-    en: resultJson.en || "<h2>Daily Market Review</h2><p>Market review is temporarily being updated. Please check back in a moment.</p>",
-    ru: resultJson.ru || resultJson.en || "<h2>Ежедневный обзор рынка</h2><p>Обзор рынка временно обновляется. Пожалуйста, зайдите чуть позже.</p>",
-    ua: resultJson.ua || resultJson.en || "<h2>Щоденний огляд ринку</h2><p>Огляд ринку тимчасово оновлюється. Будь ласка, зайдіть трохи згодом.</p>"
+    en: englishContent || "<p>Content temporarily unavailable.</p>",
+    ru: russianContent,
+    ua: ukrainianContent
   };
 
   const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
   fs.writeFileSync(filePath, JSON.stringify(articlesData, null, 2), 'utf8');
-  console.log("Статья успешно сохранена в data/latest_market_review.json!");
+  console.log("Полный многоязычный обзор успешно сохранен в data/latest_market_review.json!");
   return articlesData;
 }
 
-// Экспорт для Netlify Function (чтение из локального файла репозитория)
+// Экспорт для Netlify Function
 export default async (req, context) => {
   const url = new URL(req.url);
   const secretParam = url.searchParams.get("secret");
