@@ -26,3 +26,11 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: node netlify/functions/generate-seo.js
+
+      - name: Commit and push generated review
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "action@github.com"
+          git add data/latest_market_review.json
+          git commit -m "chore: update daily market review [skip ci]" || echo "No changes to commit"
+          git push
