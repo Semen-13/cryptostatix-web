@@ -32,8 +32,8 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
           { role: "user", content: prompt }
         ],
         temperature: 0.5,
-        max_tokens: 3000,
-        reasoning: { max_tokens: 0 } // Отключаем трату токенов на рассуждения
+        max_tokens: 4000,
+        reasoning: { max_tokens: 1000 } // Отключаем трату токенов на рассуждения
       },
       {
         headers: {
