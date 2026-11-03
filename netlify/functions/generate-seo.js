@@ -44,8 +44,9 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
     );
 
     rawContent = response.data?.choices?.[0]?.message?.content || "";
-  } catch (apiError) {
-    console.warn("Ошибка при запросе к OpenRouter API:", apiError.message);
+ } catch (apiError) {
+    console.error("Ошибка API OpenRouter:", apiError.response?.data || apiError.message);
+    throw apiError;
   }
 
   let resultJson = {};
