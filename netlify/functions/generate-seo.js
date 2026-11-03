@@ -23,16 +23,17 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
 
   let rawContent = "";
   try {
-    const response = await axios.post(
+  const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
         messages: [
-          { role: "system", content: "You are a professional crypto journalist and translator. Return ONLY valid JSON with keys en, ru, ua." },
+          { role: "system", content: "You are a professional crypto journalist and translator. Return ONLY valid JSON with keys en, ru, ua. Do not include extra text or markdown wrap." },
           { role: "user", content: prompt }
         ],
         temperature: 0.5,
-        max_tokens: 1500
+        max_tokens: 3000,
+        reasoning: { max_tokens: 0 } // Отключаем трату токенов на рассуждения
       },
       {
         headers: {
@@ -44,9 +45,11 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it concis
       }
     );
 
-    rawContent = response.data?.choices?.[0]?.message?.content || "";
-    // ДОБАВЬТЕ ЭТУ СТРОЧКУ ДЛЯ ОТЛАДКИ:
-   console.log("Полный ответ от OpenRouter:", JSON.stringify(response.data, null, 2));
+    const message = response.data?.choices?.[0]?.message;
+    // Если content пустой, берем reasoning или reasoning_details
+    rawContent = message?.content || message?.reasoning || "";
+    
+    console.log("Полученный текст статьи:", rawContent ? rawContent.substring(0, 100) + "..." : "ПУСТО");
  } catch (apiError) {
     console.error("Ошибка API OpenRouter:", apiError.response?.data || apiError.message);
     throw apiError;
