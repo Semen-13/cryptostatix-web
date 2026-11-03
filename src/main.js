@@ -143,30 +143,55 @@ if (section === 'analytics' && itemIndex === 12) {
     
     // Асинхронно подтягиваем данные из нашей Netlify-функции
     // Просто используйте относительный путь для всех окружений
+// 1. Словник для текстів завантаження залежно від обраної мови
+const loadingTexts = {
+    'ENG': 'Loading the latest market review...',
+    'UKR': 'Завантаження свіжого огляду ринку...',
+    'RU': 'Загрузка свежего обзора рынка...'
+};
+
+// Вибираємо текст завантаження відповідно до поточної мови (lang)
+const currentLoadingText = loadingTexts[lang] || loadingTexts['RU'];
+
+// Одразу виводимо статус завантаження правильною мовою
+detailBodyEl.innerHTML = `<p style="color: #4da6ff; text-align: center;">${currentLoadingText}</p>`;
+
 const endpoint = '/.netlify/functions/generate-seo';
 
-    fetch(endpoint)
-        .then(res => res.json())
-        .then(result => {
-            if (result.success && result.data) {
-                let currentLang = 'ru';
-                if (lang === 'ENG') currentLang = 'en';
-                if (lang === 'UKR') currentLang = 'ua';
+fetch(endpoint)
+    .then(res => res.json())
+    .then(result => {
+        console.log("Распарсенный JSON от функции:", result);
+        console.log("Текущий язык интерфейса (lang):", lang);
 
-                const articleHtml = sanitizeArticleHtml(
-                    result.data[currentLang] || result.data.en || '',
-                    '<p style="color: #ff4d4d;">Статья пока недоступна.</p>'
-                );
-                
-                detailBodyEl.innerHTML = articleHtml;
-            } else {
-                detailBodyEl.innerHTML = '<p style="color: #ff4d4d;">Статья пока недоступна.</p>';
+        if (result.success && result.data) {
+            let articlesData = result.data;
+            if (typeof articlesData === 'string') {
+                try {
+                    articlesData = JSON.parse(articlesData);
+                } catch (e) {
+                    console.error('Ошибка парсинга JSON статьи:', e);
+                }
             }
-        })
-        .catch(err => {
-            console.error('Ошибка загрузки SEO-статьи:', err);
-            detailBodyEl.innerHTML = '<p style="color: #ff4d4d;">Ошибка соединения с сервером.</p>';
-        });
+
+            let currentLang = 'ru';
+            if (lang === 'ENG') currentLang = 'en';
+            if (lang === 'UKR') currentLang = 'ua';
+
+            const articleHtml = sanitizeArticleHtml(
+                articlesData[currentLang] || articlesData.en || '',
+                '<p style="color: #ff4d4d;">Статья пока недоступна.</p>'
+            );
+            
+            detailBodyEl.innerHTML = articleHtml;
+        } else {
+            detailBodyEl.innerHTML = '<p style="color: #ff4d4d;">Статья пока недоступна.</p>';
+        }
+    })
+    .catch(err => {
+        console.error('Ошибка загрузки SEO-статьи:', err);
+        detailBodyEl.innerHTML = '<p style="color: #ff4d4d;">Ошибка соединения с сервером.</p>';
+    });
 } else {
     // Для всех остальных блоков оставляем стандартное поведение
     detailBodyEl.innerHTML = buildDetailBody(section, itemIndex, item, lang);
