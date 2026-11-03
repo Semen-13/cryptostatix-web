@@ -2,39 +2,39 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 
-// Основная функция генерации и сохранения
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function runGeneration() {
-  console.log("Генерация обзора через openrouter/free...");
+  console.log("Шаг 1: Генерация развернутого обзора на английском языке...");
 
   const openRouterApiKey = process.env.OPENROUTER_API_KEY;
   if (!openRouterApiKey) {
     throw new Error("OpenRouter API key is missing");
   }
 
-  const prompt = `
-Write a short, concise daily cryptocurrency market review focused on the opening of the new trading day. Analyze Bitcoin trends, Fear & Greed Index, and RSI signals. 
-Return the result strictly as a valid JSON object with keys "en", "ru", and "ua":
-- "en": article in English.
-- "ru": direct translation/adaptation of the article in Russian.
-- "ua": direct translation/adaptation of the article in Ukrainian.
-Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it very concise and compact.
+  // Промпт для глубокой и детальной английской статьи
+  const englishPrompt = `
+Write a detailed, analytical daily cryptocurrency market review for the opening of the new trading day. 
+Include:
+- Comprehensive analysis of current Bitcoin trends and price action.
+- Detailed breakdown of the Fear & Greed Index and market sentiment.
+- RSI signals and key support/resistance levels.
+Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Make it rich, analytical, and professional.
+Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
   `;
 
-  let rawContent = "";
+  let englishContent = "";
   try {
-    const response = await axios.post(
+    const responseEn = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
         messages: [
-          { 
-            role: "system", 
-            content: "You are a crypto API endpoint. Output ONLY raw valid JSON containing keys 'en', 'ru', 'ua'. Do not write any thoughts, reasoning, explanation, or markdown formatting blocks like ```json." 
-          },
-          { role: "user", content: prompt }
+          { role: "system", content: "You are a professional crypto journalist. Output ONLY raw HTML." },
+          { role: "user", content: englishPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 4000
+        temperature: 0.4,
+        max_tokens: 3000
       },
       {
         headers: {
@@ -46,44 +46,95 @@ Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Keep it very c
       }
     );
 
-    const message = response.data?.choices?.[0]?.message;
-    rawContent = message?.content || "";
-    console.log("Чистый текст ответа:", rawContent.substring(0, 150));
+    const messageEn = responseEn.data?.choices?.[0]?.message;
+    englishContent = messageEn?.content || "";
+    englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
+    console.log("Английская версия успешно сгенерирована. Длина:", englishContent.length);
+
   } catch (apiError) {
-    console.error("Ошибка API OpenRouter:", apiError.response?.data || apiError.message);
+    console.error("Ошибка при генерации английской версии:", apiError.response?.data || apiError.message);
     throw apiError;
   }
 
-  let resultJson = {};
-  if (rawContent) {
-    try {
-      resultJson = JSON.parse(rawContent);
-    } catch (parseError) {
-      try {
-        const firstBrace = rawContent.indexOf('{');
-        const lastBrace = rawContent.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1) {
-          const jsonSubstring = rawContent.substring(firstBrace, lastBrace + 1);
-          resultJson = JSON.parse(jsonSubstring);
-        } else {
-          throw new Error("JSON braces not found");
+  // Пауза 5 секунд между запросами
+  console.log("Ожидание перед переводом на русский...");
+  await sleep(5000);
+
+  // Шаг 2: Перевод на русский
+  let russianContent = englishContent;
+  try {
+    const responseRu = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "openrouter/free",
+        messages: [
+          { role: "system", content: "You are a professional translator. Translate the given English crypto review into professional Russian. Keep all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. Output ONLY raw HTML." },
+          { role: "user", content: englishContent }
+        ],
+        temperature: 0.3,
+        max_tokens: 3000
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${openRouterApiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "http://localhost:8888",
+          "X-Title": "CryptoStatix PRO"
         }
-      } catch (innerError) {
-        console.warn("Не удалось распарсить JSON, используем безопасный шаблон.");
       }
-    }
+    );
+    russianContent = responseRu.data?.choices?.[0]?.message?.content || englishContent;
+    russianContent = russianContent.replace(/```html/g, "").replace(/```/g, "").trim();
+    console.log("Русская версия успешно переведена!");
+  } catch (err) {
+    console.error("Ошибка перевода на русский:", err.message);
   }
 
+  // Пауза 5 секунд перед следующим переводом
+  console.log("Ожидание перед переводом на украинский...");
+  await sleep(5000);
+
+  // Шаг 3: Перевод на украинский (основываясь на качественном русском тексте для идеальной грамматики)
+  let ukrainianContent = englishContent;
+  try {
+    const responseUa = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "openrouter/free",
+        messages: [
+          { role: "system", content: "You are a professional translator. Translate the given review into professional Ukrainian. Keep all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. Output ONLY raw HTML." },
+          { role: "user", content: russianContent }
+        ],
+        temperature: 0.3,
+        max_tokens: 3000
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${openRouterApiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "http://localhost:8888",
+          "X-Title": "CryptoStatix PRO"
+        }
+      }
+    );
+    ukrainianContent = responseUa.data?.choices?.[0]?.message?.content || englishContent;
+    ukrainianContent = ukrainianContent.replace(/```html/g, "").replace(/```/g, "").trim();
+    console.log("Украинская версия успешно переведена!");
+  } catch (err) {
+    console.error("Ошибка перевода на украинский:", err.message);
+  }
+
+  // Финальная сборка в JSON
   const articlesData = {
     date: new Date().toISOString(),
-    en: resultJson.en || "<h2>Daily Market Review</h2><p>Market review is temporarily being updated. Please check back in a moment.</p>",
-    ru: resultJson.ru || resultJson.en || "<h2>Ежедневный обзор рынка</h2><p>Обзор рынка временно обновляется. Пожалуйста, зайдите чуть позже.</p>",
-    ua: resultJson.ua || resultJson.en || "<h2>Щоденний огляд ринку</h2><p>Огляд ринку тимчасово оновлюється. Будь ласка, зайдіть трохи згодом.</p>"
+    en: englishContent,
+    ru: russianContent,
+    ua: ukrainianContent
   };
 
   const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
   fs.writeFileSync(filePath, JSON.stringify(articlesData, null, 2), 'utf8');
-  console.log("Статья успешно сохранена в data/latest_market_review.json!");
+  console.log("Многоязычный детальный обзор успешно сохранен в data/latest_market_review.json!");
   return articlesData;
 }
 
