@@ -86,11 +86,11 @@ const responseEn = await axios.post(
     throw apiError;
   }
 
-  // Пауза перед переводом на русский
+// Пауза перед переводом на русский
   console.log("Ожидание перед переводом на русский...");
   await sleep(5000);
 
-  let russianContent = englishContent;
+  let russianContent = "";
   try {
     const responseRu = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -112,11 +112,19 @@ const responseEn = await axios.post(
         }
       }
     );
-    russianContent = responseRu.data?.choices?.[0]?.message?.content || englishContent;
+    
+    const choiceRu = responseRu.data?.choices?.[0];
+    russianContent = choiceRu?.message?.content || choiceRu?.text || "";
     russianContent = russianContent.replace(/```html/g, "").replace(/```/g, "").trim();
-    console.log("Русская версия успешно переведена!");
+
+    if (!russianContent || russianContent.length < 50) {
+      throw new Error("Модель вернула пустой перевод на русский язык.");
+    }
+
+    console.log("Русская версия успешно переведена! Длина:", russianContent.length);
   } catch (err) {
-    console.error("Ошибка перевода на русский:", err.message);
+    console.error("Ошибка перевода на русский:", err.response?.data || err.message);
+    throw new Error("Не удалось перевести статью на русский язык."); // Прерываем выполнение, чтобы не сохранять ложные данные
   }
 
 // Пауза перед переводом на украинский
