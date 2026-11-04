@@ -50,8 +50,8 @@ const responseEn = await axios.post(
           { role: "system", content: "You are a professional crypto journalist. Output ONLY raw HTML starting directly with <p>." },
           { role: "user", content: englishPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 2000
+        temperature: 0.4,
+        max_tokens: 3000
       },
       {
         headers: {
