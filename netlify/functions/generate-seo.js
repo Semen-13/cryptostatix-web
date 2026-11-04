@@ -5,7 +5,23 @@ import path from "path";
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function runGeneration() {
-  console.log("Шаг 1: Генерация развернутого обзора на английском языке...");
+  console.log("Получение актуальных рыночных данных...");
+
+  let marketDataSummary = "Bitcoin price is around current market levels.";
+  try {
+    const marketRes = await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true");
+    const btcPrice = marketRes.data?.bitcoin?.usd;
+    const btcChange = marketRes.data?.bitcoin?.usd_24h_change?.toFixed(2);
+
+    if (btcPrice) {
+      marketDataSummary = `Current real-time Bitcoin price is $${btcPrice} with a 24-hour change of ${btcChange}%.`;
+      console.log(`Актуальная цена BTC получена: $${btcPrice}`);
+    }
+  } catch (err) {
+    console.warn("Не удалось подтянуть внешние данные, используем стандартные фолбэк-значения:", err.message);
+  }
+
+  console.log("Шаг 1: Генерация развернутого обзора на английском языке с актуальными данными...");
 
   const openRouterApiKey = process.env.OPENROUTER_API_KEY;
   if (!openRouterApiKey) {
@@ -14,11 +30,13 @@ async function runGeneration() {
 
   const englishPrompt = `
 Write a detailed, analytical daily cryptocurrency market review for the opening of the new trading day. 
+Incorporate these exact real-time parameters at the very beginning of the article: ${marketDataSummary}
+
 Include:
-- Comprehensive analysis of current Bitcoin trends and price action.
+- Comprehensive analysis of current Bitcoin trends and price action based on this exact price.
 - Detailed breakdown of the Fear & Greed Index and market sentiment.
 - RSI signals and key support/resistance levels.
-Use HTML tags like <h2>, <p>, <strong>, <ul>, <li>. No <h1> tags. Make it rich, analytical, and professional.
+CRITICAL FORMATTING RULE: DO NOT use any <h2>, <h1> or titles at the beginning. Start directly with the first paragraph using a <p> tag. Make it rich, analytical, and professional.
 Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
   `;
 
@@ -29,7 +47,7 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
       {
         model: "openrouter/free",
         messages: [
-          { role: "system", content: "You are a professional crypto journalist. Output ONLY raw HTML." },
+          { role: "system", content: "You are a professional crypto journalist. Output ONLY raw HTML starting directly with <p>." },
           { role: "user", content: englishPrompt }
         ],
         temperature: 0.4,
@@ -44,8 +62,6 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
         }
       }
     );
-
-    console.log("RAW API Response (En):", JSON.stringify(responseEn.data).substring(0, 300));
 
     const messageEn = responseEn.data?.choices?.[0]?.message;
     englishContent = messageEn?.content || responseEn.data?.choices?.[0]?.text || "";
@@ -73,7 +89,7 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
       {
         model: "openrouter/free",
         messages: [
-          { role: "system", content: "You are a professional translator. Translate the given English crypto review into professional Russian. Keep all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. Output ONLY raw HTML." },
+          { role: "system", content: "You are a professional translator. Translate the given English crypto review into professional Russian. Keep all HTML tags (<p>, <strong>, <ul>, <li>) exactly as they are, DO NOT add <h2> or <h1> tags at the beginning. Output ONLY raw HTML." },
           { role: "user", content: englishContent }
         ],
         temperature: 0.3,
@@ -95,19 +111,19 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
     console.error("Ошибка перевода на русский:", err.message);
   }
 
-// Пауза перед переводом на украинский
+  // Пауза перед переводом на украинский
   console.log("Ожидание перед переводом на украинский...");
   await sleep(5000);
 
-  let ukrainianContent = russianContent; // В качестве базы берем русский текст
+  let ukrainianContent = russianContent;
   try {
     const responseUa = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
         model: "openrouter/free",
         messages: [
-          { role: "system", content: "You are a professional translator. Translate the given Russian crypto review into professional Ukrainian. Keep all HTML tags (<h2>, <p>, <strong>, <ul>, <li>) exactly as they are. Output ONLY raw HTML." },
-          { role: "user", content: russianContent } // Переводим с русского текста
+          { role: "system", content: "You are a professional translator. Translate the given Russian crypto review into professional Ukrainian. Keep all HTML tags (<p>, <strong>, <ul>, <li>) exactly as they are, DO NOT add <h2> or <h1> tags at the beginning. Output ONLY raw HTML." },
+          { role: "user", content: russianContent }
         ],
         temperature: 0.3,
         max_tokens: 3000
@@ -142,7 +158,7 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
 
   const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
   fs.writeFileSync(filePath, JSON.stringify(articlesData, null, 2), 'utf8');
-  console.log("Многоязычный детальный обзор успешно сохранен в data/latest_market_review.json!");
+  console.log("Многоязычный детальный обзор с актуальными данными успешно сохранен в data/latest_market_review.json!");
   return articlesData;
 }
 
