@@ -167,54 +167,80 @@ const responseEn = await axios.post(
   console.log("Ожидание перед переводом на украинский...");
   await sleep(5000);
 
-  let ukrainianContent = russianContent;
-  try {
-    const responseUa = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "openrouter/free",
-        messages: [
-          { role: "system", content: "You are a direct translation engine. Translate the provided HTML text into professional Ukrainian. DO NOT output any reasoning, drafts, notes, or markdown formatting. Output ONLY the final translated HTML string starting with <p>." },
-          { role: "user", content: `Translate this text to Ukrainian, keeping all HTML tags (<p>, <strong>, <ul>, <li>) and returning ONLY the resulting HTML:\n\n${russianContent}` }
-        ],
-        temperature: 0.1,
-        max_tokens: 3000
-      },
-      {
-        headers: {
-          "Authorization": `Bearer ${openRouterApiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:8888",
-          "X-Title": "CryptoStatix PRO"
+  let ukrainianContent = "";
+  let uaSuccess = false;
+  let uaAttempts = 3;
+
+  for (let i = 1; i <= uaAttempts; i++) {
+    try {
+      console.log(`Попытка перевода на украинский (${i}/${uaAttempts})...`);
+      const responseUa = await axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model: "openrouter/free",
+          messages: [
+            { 
+              role: "system", 
+              content: "You are a professional translator. Translate the provided English text into professional Ukrainian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
+            },
+            { role: "user", content: englishContent } // Переводим напрямую с английского оригинала!
+          ],
+          temperature: 0.2,
+          max_tokens: 4000
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${openRouterApiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:8888",
+            "X-Title": "CryptoStatix PRO"
+          }
         }
+      );
+
+      const choiceUa = responseUa.data?.choices?.[0];
+      let uaRes = choiceUa?.message?.content || choiceUa?.text || "";
+      
+      uaRes = uaRes
+        .replace(/<think>[\s\S]*?<\/think>/gi, "")
+        .replace(/```html/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const finishReason = choiceUa?.finish_reason;
+      const isCutOff = finishReason === 'length';
+      const endsWithHtmlTag = /<\/(p|ul|ol|li|div|h[3-6])>$/i.test(uaRes);
+
+      if (
+        uaRes && 
+        uaRes.length >= 100 && 
+        !uaRes.includes("*Sentence") && 
+        !uaRes.includes("*Draft:") &&
+        !isCutOff &&
+        endsWithHtmlTag
+      ) {
+        ukrainianContent = uaRes;
+        uaSuccess = true;
+        console.log("Украинская версия успешно переведена! Длина:", ukrainianContent.length);
+        break;
       }
-    );
 
-    const choiceUa = responseUa.data?.choices?.[0];
-    const uaRes = choiceUa?.message?.content || choiceUa?.text || "";
-    
-    // Очищаем от возможных артефактов, если модель все же попыталась их выдать
-    let cleanedUa = uaRes.replace(/```html/g, "").replace(/```/g, "").trim();
-    if (cleanedUa.includes("*Sentence") || cleanedUa.includes("*Draft:")) {
-      // Если проскочили черновики, берем только чистый HTML абзац или используем безопасную замену
-      cleanedUa = "";
+      console.warn(`Получен некорректный или об обрезанный украинский ответ (finish_reason: ${finishReason}), пробуем снова...`);
+      await sleep(3000);
+    } catch (err) {
+      console.warn(`Попытка ${i} на украинском не удалась:`, err.response?.data || err.message);
+      if (i === uaAttempts) {
+        console.error("Ошибка перевода на украинский: исчерпаны все попытки.");
+      }
+      await sleep(3000);
     }
+  }
 
-    if (cleanedUa.length > 50) {
-      ukrainianContent = cleanedUa;
-      console.log("Украинская версия успешно переведена!");
-    } else {
-      console.warn("Включаем программную адаптацию для украинского текста.");
-      ukrainianContent = russianContent
-        .replace(/открытии сессии/g, "початку сесії")
-        .replace(/торгуется примерно по/g, "торгується приблизно за")
-        .replace(/соответствует умеренному росту/g, "відповідає помірному зростанню")
-        .replace(/предыдущего дня/g, "попереднього дня")
-        .replace(/консолидации/g, "консолідації")
-        .replace(/индекс Страха и Жадности/g, "індекс Страху та Жадібності");
-    }
-  } catch (err) {
-    console.error("Ошибка перевода на украинский:", err.message);
+  // Если все попытки провалились, в качестве подстраховки берем английский контент, 
+  // чтобы не записывать ломанный или смешанный русско-украинский текст
+  if (!uaSuccess) {
+    console.warn("Внимание: не удалось получить чистый украинский перевод. Используем английскую версию как запасной вариант.");
+    ukrainianContent = englishContent;
   }
 
   // Финальная сборка в JSON
