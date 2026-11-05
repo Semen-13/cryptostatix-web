@@ -137,33 +137,33 @@ window.showDetail = function (section, itemIndex) {
   document.getElementById('detail-title').textContent = `${label} — ${itemTitle}`;
 const detailBodyEl = document.getElementById('detail-body');
 
-// Проверяем: если это секция analytics и 12-й блок, загружаем ИИ-статью
 if (section === 'analytics' && itemIndex === 12) {
-    detailBodyEl.innerHTML = '<p style="color: #38bdf8; text-align: center; padding: 40px;">Загрузка свежего обзора рынка...</p>';
-    
-    // Асинхронно подтягиваем данные из нашей Netlify-функции
-    // Просто используйте относительный путь для всех окружений
-// 1. Словник для текстів завантаження залежно від обраної мови
-const loadingTexts = {
-    'ENG': 'Loading the latest market review...',
-    'UKR': 'Завантаження свіжого огляду ринку...',
-    'RU': 'Загрузка свежего обзора рынка...'
-};
-
-// Вибираємо текст завантаження відповідно до поточної мови (lang)
-const currentLoadingText = loadingTexts[lang] || loadingTexts['RU'];
-
-// Одразу виводимо статус завантаження правильною мовою
-detailBodyEl.innerHTML = `<p style="color: #4da6ff; text-align: center;">${currentLoadingText}</p>`;
+    const reviewMessages = {
+        ENG: {
+            loading: 'Loading the latest market review...',
+            unavailable: 'The market review is not available yet.',
+            connectionError: 'Unable to connect to the server.'
+        },
+        RUS: {
+            loading: 'Загрузка свежего обзора рынка...',
+            unavailable: 'Статья пока недоступна.',
+            connectionError: 'Ошибка соединения с сервером.'
+        },
+        UKR: {
+            loading: 'Завантаження свіжого огляду ринку...',
+            unavailable: 'Стаття поки що недоступна.',
+            connectionError: 'Помилка з’єднання із сервером.'
+        }
+    };
+    const messages = reviewMessages[lang] || reviewMessages.RUS;
+    const unavailableHtml = `<p style="color: #ff4d4d;">${messages.unavailable}</p>`;
+    detailBodyEl.innerHTML = `<p style="color: #4da6ff; text-align: center;">${messages.loading}</p>`;
 
 const endpoint = '/.netlify/functions/generate-seo';
 
 fetch(endpoint)
     .then(res => res.json())
     .then(result => {
-        console.log("Распарсенный JSON от функции:", result);
-        console.log("Текущий язык интерфейса (lang):", lang);
-
         if (result.success && result.data) {
             let articlesData = result.data;
             if (typeof articlesData === 'string') {
@@ -174,23 +174,21 @@ fetch(endpoint)
                 }
             }
 
-            let currentLang = 'ru';
-            if (lang === 'ENG') currentLang = 'en';
-            if (lang === 'UKR') currentLang = 'ua';
+            const currentLang = lang === 'ENG' ? 'en' : lang === 'UKR' ? 'ua' : 'ru';
 
             const articleHtml = sanitizeArticleHtml(
-                articlesData[currentLang] || articlesData.en || '',
-                '<p style="color: #ff4d4d;">Статья пока недоступна.</p>'
+                articlesData[currentLang] || '',
+                unavailableHtml
             );
             
             detailBodyEl.innerHTML = articleHtml;
         } else {
-            detailBodyEl.innerHTML = '<p style="color: #ff4d4d;">Статья пока недоступна.</p>';
+            detailBodyEl.innerHTML = unavailableHtml;
         }
     })
     .catch(err => {
         console.error('Ошибка загрузки SEO-статьи:', err);
-        detailBodyEl.innerHTML = '<p style="color: #ff4d4d;">Ошибка соединения с сервером.</p>';
+        detailBodyEl.innerHTML = `<p style="color: #ff4d4d;">${messages.connectionError}</p>`;
     });
 } else {
     // Для всех остальных блоков оставляем стандартное поведение

@@ -744,23 +744,44 @@ async function loadDailyMarketReview() {
     const container = document.getElementById('seo-article-container');
     if (!container) return;
 
-    container.innerHTML = '<p>Загрузка свежего обзора рынка...</p>';
+    const savedLanguage = localStorage.getItem('selectedLanguage') || localStorage.getItem('siteLang') || 'RUS';
+    const language = savedLanguage === 'ENG' || savedLanguage === 'en'
+        ? 'en'
+        : savedLanguage === 'UKR' || savedLanguage === 'ua'
+            ? 'ua'
+            : 'ru';
+    const messages = {
+        en: {
+            loading: 'Loading the latest market review...',
+            unavailable: 'The market review is not available yet.',
+            connectionError: 'Unable to connect to the server.'
+        },
+        ru: {
+            loading: 'Загрузка свежего обзора рынка...',
+            unavailable: 'Статья пока недоступна.',
+            connectionError: 'Ошибка соединения с сервером.'
+        },
+        ua: {
+            loading: 'Завантаження свіжого огляду ринку...',
+            unavailable: 'Стаття поки що недоступна.',
+            connectionError: 'Помилка з’єднання із сервером.'
+        }
+    }[language];
+
+    container.innerHTML = `<p>${messages.loading}</p>`;
 
     try {
         const response = await fetch('/.netlify/functions/generate-seo');
         const result = await response.json();
 
         if (result.success && result.data) {
-            let lang = localStorage.getItem('siteLang') || 'ru';
-            if (!result.data[lang]) lang = 'en';
-
-            container.innerHTML = result.data[lang];
+            container.innerHTML = result.data[language] || `<p>${messages.unavailable}</p>`;
         } else {
-            container.innerHTML = '<p>Статья пока недоступна.</p>';
+            container.innerHTML = `<p>${messages.unavailable}</p>`;
         }
     } catch (err) {
         console.error('Ошибка загрузки статьи:', err);
-        container.innerHTML = '<p>Ошибка соединения с сервером.</p>';
+        container.innerHTML = `<p>${messages.connectionError}</p>`;
     }
 }
 

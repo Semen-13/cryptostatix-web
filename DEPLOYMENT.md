@@ -112,6 +112,20 @@ node dev-server.js
 
 В функции получите через `process.env.binance_api_timeout`
 
+## Ежедневный обзор и Netlify Blobs
+
+GitHub Actions генерирует обзор и сохраняет его в хранилище Netlify Blobs (`market-reviews`, ключ `latest`). Генерация больше не коммитит JSON и не отправляет push в репозиторий. Netlify-функция `generate-seo` читает готовый обзор из Blobs; локально без Netlify credentials она продолжает использовать `data/latest_market_review.json`.
+
+Добавьте в **GitHub repository → Settings → Secrets and variables → Actions** секреты:
+
+- `OPENROUTER_API_KEY` — ключ генерации и перевода статьи.
+- `NETLIFY_SITE_ID` — Site ID проекта Netlify.
+- `NETLIFY_AUTH_TOKEN` — Netlify personal access token с доступом к сайту.
+
+Рабочий процесс `.github/workflows/cron-review.yml` запускается ежедневно в 00:00 UTC или вручную через **Actions → Trigger Daily Market Review → Run workflow**. Запустите его вручную один раз после добавления секретов, чтобы заполнить хранилище первым обзором. Если отсутствуют секреты Netlify, запуск завершится ошибкой вместо локальной записи результата.
+
+Для Netlify Functions используется Node.js 22 (задается в `netlify.toml`), совместимый с установленной версией `@netlify/blobs`.
+
 ## Дополнительные ресурсы
 
 - [Netlify Functions документация](https://docs.netlify.com/functions/overview/)

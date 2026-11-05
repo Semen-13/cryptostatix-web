@@ -1,10 +1,59 @@
 import axios from "axios";
 import fs from "fs";
 import path from "path";
+import { getStore } from "@netlify/blobs";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const reviewStoreName = "market-reviews";
+const reviewStoreKey = "latest";
+const reviewFilePath = path.join(process.cwd(), "data", "latest_market_review.json");
 
-async function runGeneration() {
+function getReviewStore(required = false) {
+  const siteID = process.env.NETLIFY_SITE_ID;
+  const token = process.env.NETLIFY_AUTH_TOKEN;
+  const hasNetlifyContext = Boolean(
+    process.env.NETLIFY_BLOBS_CONTEXT || globalThis.netlifyBlobsContext
+  );
+
+  if (siteID && token) {
+    return getStore({ name: reviewStoreName, siteID, token });
+  }
+
+  if (hasNetlifyContext) {
+    return getStore(reviewStoreName);
+  }
+
+  if (required) {
+    throw new Error("NETLIFY_SITE_ID and NETLIFY_AUTH_TOKEN are required to save the review to Netlify Blobs");
+  }
+
+  return null;
+}
+
+async function saveReview(articlesData, store = getReviewStore()) {
+  if (store) {
+    await store.setJSON(reviewStoreKey, articlesData);
+    console.log("Многоязычный обзор успешно сохранен в Netlify Blobs.");
+    return;
+  }
+
+  fs.writeFileSync(reviewFilePath, JSON.stringify(articlesData, null, 2), "utf8");
+  console.log("Обзор сохранен локально в data/latest_market_review.json.");
+}
+
+async function readReview(store) {
+  if (store) {
+    return await store.get(reviewStoreKey, { type: "json" }) || {};
+  }
+
+  if (fs.existsSync(reviewFilePath)) {
+    return JSON.parse(fs.readFileSync(reviewFilePath, "utf8"));
+  }
+
+  return {};
+}
+
+async function runGeneration(store = getReviewStore()) {
   console.log("Получение актуальных рыночных данных...");
 
   let marketDataSummary = "Bitcoin price is around current market levels.";
@@ -251,9 +300,7 @@ const responseEn = await axios.post(
     ua: ukrainianContent
   };
 
-  const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
-  fs.writeFileSync(filePath, JSON.stringify(articlesData, null, 2), 'utf8');
-  console.log("Многоязычный детальный обзор с актуальными данными успешно сохранен в data/latest_market_review.json!");
+  await saveReview(articlesData, store);
   return articlesData;
 }
 
@@ -267,19 +314,14 @@ export default async (req, context) => {
   const isAuthorized = secretParam === "12345" || headerSecret === expectedSecret;
 
   try {
-    const filePath = path.join(process.cwd(), 'data', 'latest_market_review.json');
-    let articlesData = {};
-    
-    if (fs.existsSync(filePath)) {
-      const fileContent = fs.readFileSync(filePath, 'utf8');
-      articlesData = JSON.parse(fileContent);
-    }
+    const store = getReviewStore();
+    let articlesData = await readReview(store);
 
     const todayStr = new Date().toISOString().split('T')[0];
     const isNewDay = articlesData && articlesData.date ? !articlesData.date.startsWith(todayStr) : true;
 
     if (isAuthorized && isNewDay) {
-      articlesData = await runGeneration();
+      articlesData = await runGeneration(store);
     }
 
     return new Response(JSON.stringify({
@@ -287,7 +329,10 @@ export default async (req, context) => {
       data: articlesData
     }), {
       status: 200,
-      headers: { "Content-Type": "application/json" }
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=60, stale-while-revalidate=300"
+      }
     });
 
   } catch (error) {
@@ -301,7 +346,7 @@ export default async (req, context) => {
 
 // Если скрипт запущен напрямую через Node.js из GitHub Actions
 if (process.argv[1] && process.argv[1].endsWith('generate-seo.js')) {
-  runGeneration()
+  runGeneration(getReviewStore(true))
     .then(() => process.exit(0))
     .catch((err) => {
       console.error("Ошибка при генерации из CLI:", err);
