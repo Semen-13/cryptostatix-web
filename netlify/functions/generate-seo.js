@@ -90,7 +90,7 @@ const responseEn = await axios.post(
   console.log("Ожидание перед переводом на русский...");
   await sleep(5000);
 
-let russianContent = "";
+  let russianContent = "";
   let success = false;
   let attempts = 3;
 
@@ -104,12 +104,12 @@ let russianContent = "";
           messages: [
             { 
               role: "system", 
-              content: "You are a professional translator. Translate the provided English text into professional Russian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags." 
+              content: "You are a professional translator. Translate the provided English text into professional Russian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
             },
             { role: "user", content: englishContent }
           ],
           temperature: 0.2,
-          max_tokens: 3000
+          max_tokens: 4000 // Увеличили лимит токенов, чтобы текст не обрывался
         },
         {
           headers: {
@@ -130,12 +130,25 @@ let russianContent = "";
         .replace(/```/g, "")
         .trim();
 
-      if (russianContent && russianContent.length >= 50 && !russianContent.includes("Analyze the Request")) {
+      // Проверяем, не оборвался ли ответ из-за лимита токенов
+      const finishReason = choiceRu?.finish_reason;
+      const isCutOff = finishReason === 'length';
+
+      // Проверяем, что текст достаточно длинный, не содержит мусора и заканчивается корректным HTML-тегом
+      const endsWithHtmlTag = /<\/(p|ul|ol|li|div|h[3-6])>$/i.test(russianContent);
+
+      if (
+        russianContent && 
+        russianContent.length >= 100 && 
+        !russianContent.includes("Analyze the Request") &&
+        !isCutOff &&
+        endsWithHtmlTag
+      ) {
         success = true;
         break;
       }
       
-      console.warn("Получен некорректный ответ, пробуем снова...");
+      console.warn(`Получен некорректный или об обрезанный ответ (finish_reason: ${finishReason}), пробуем снова...`);
       await sleep(3000);
     } catch (err) {
       console.warn(`Попытка ${i} не удалась:`, err.response?.data || err.message);
@@ -145,7 +158,7 @@ let russianContent = "";
   }
 
   if (!success) {
-    throw new Error("Не удалось перевести статью на русский язык после нескольких попыток.");
+    throw new Error("Не удалось корректно перевести статью на русский язык (текст обрывается или содержит ошибки).");
   }
 
   console.log("Русская версия успешно переведена! Длина:", russianContent.length);
