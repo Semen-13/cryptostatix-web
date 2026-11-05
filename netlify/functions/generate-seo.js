@@ -97,10 +97,13 @@ const responseEn = await axios.post(
       {
         model: "openrouter/free",
         messages: [
-          { role: "system", content: "You are a professional translator. Translate the given English crypto review into professional Russian. Keep all HTML tags (<p>, <strong>, <ul>, <li>) exactly as they are, DO NOT add <h2> or <h1> tags at the beginning. Output ONLY raw HTML." },
+          { 
+            role: "system", 
+            content: "You are a professional translator. Translate the provided English text into professional Russian. Output ONLY the translated HTML string. Do NOT include markdown code blocks (like ```html), do NOT include any introductory phrases, explanations, analysis, or thinking process. Start directly with the HTML tags." 
+          },
           { role: "user", content: englishContent }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 3000
       },
       {
@@ -115,10 +118,17 @@ const responseEn = await axios.post(
     
     const choiceRu = responseRu.data?.choices?.[0];
     russianContent = choiceRu?.message?.content || choiceRu?.text || "";
-    russianContent = russianContent.replace(/```html/g, "").replace(/```/g, "").trim();
 
-    if (!russianContent || russianContent.length < 50) {
-      throw new Error("Модель вернула пустой перевод на русский язык.");
+    // Удаляем теги мыслительных процессов (если модель их выдает), markdown-блоки и лишние пробелы
+    russianContent = russianContent
+      .replace(/<think>[\s\S]*?<\/think>/gi, "")
+      .replace(/```html/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    // Защита от попадания аналитического мусора или системных промптов в ответ
+    if (!russianContent || russianContent.length < 50 || russianContent.includes("Analyze the Request")) {
+      throw new Error("Модель вернула некорректный ответ или служебные инструкции вместо перевода.");
     }
 
     console.log("Русская версия успешно переведена! Длина:", russianContent.length);
