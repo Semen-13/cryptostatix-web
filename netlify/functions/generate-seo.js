@@ -90,52 +90,65 @@ const responseEn = await axios.post(
   console.log("Ожидание перед переводом на русский...");
   await sleep(5000);
 
-  let russianContent = "";
-  try {
-    const responseRu = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "openrouter/free",
-        messages: [
-          { 
-            role: "system", 
-            content: "You are a professional translator. Translate the provided English text into professional Russian. Output ONLY the translated HTML string. Do NOT include markdown code blocks (like ```html), do NOT include any introductory phrases, explanations, analysis, or thinking process. Start directly with the HTML tags." 
-          },
-          { role: "user", content: englishContent }
-        ],
-        temperature: 0.2,
-        max_tokens: 3000
-      },
-      {
-        headers: {
-          "Authorization": `Bearer ${openRouterApiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:8888",
-          "X-Title": "CryptoStatix PRO"
+let russianContent = "";
+  let success = false;
+  let attempts = 3;
+
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      console.log(`Попытка перевода на русский (${i}/${attempts})...`);
+      const responseRu = await axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model: "openrouter/free",
+          messages: [
+            { 
+              role: "system", 
+              content: "You are a professional translator. Translate the provided English text into professional Russian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags." 
+            },
+            { role: "user", content: englishContent }
+          ],
+          temperature: 0.2,
+          max_tokens: 3000
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${openRouterApiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:8888",
+            "X-Title": "CryptoStatix PRO"
+          }
         }
+      );
+      
+      const choiceRu = responseRu.data?.choices?.[0];
+      russianContent = choiceRu?.message?.content || choiceRu?.text || "";
+
+      russianContent = russianContent
+        .replace(/<think>[\s\S]*?<\/think>/gi, "")
+        .replace(/```html/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+      if (russianContent && russianContent.length >= 50 && !russianContent.includes("Analyze the Request")) {
+        success = true;
+        break;
       }
-    );
-    
-    const choiceRu = responseRu.data?.choices?.[0];
-    russianContent = choiceRu?.message?.content || choiceRu?.text || "";
-
-    // Удаляем теги мыслительных процессов (если модель их выдает), markdown-блоки и лишние пробелы
-    russianContent = russianContent
-      .replace(/<think>[\s\S]*?<\/think>/gi, "")
-      .replace(/```html/gi, "")
-      .replace(/```/g, "")
-      .trim();
-
-    // Защита от попадания аналитического мусора или системных промптов в ответ
-    if (!russianContent || russianContent.length < 50 || russianContent.includes("Analyze the Request")) {
-      throw new Error("Модель вернула некорректный ответ или служебные инструкции вместо перевода.");
+      
+      console.warn("Получен некорректный ответ, пробуем снова...");
+      await sleep(3000);
+    } catch (err) {
+      console.warn(`Попытка ${i} не удалась:`, err.response?.data || err.message);
+      if (i === attempts) throw err;
+      await sleep(3000);
     }
-
-    console.log("Русская версия успешно переведена! Длина:", russianContent.length);
-  } catch (err) {
-    console.error("Ошибка перевода на русский:", err.response?.data || err.message);
-    throw new Error("Не удалось перевести статью на русский язык."); // Прерываем выполнение, чтобы не сохранять ложные данные
   }
+
+  if (!success) {
+    throw new Error("Не удалось перевести статью на русский язык после нескольких попыток.");
+  }
+
+  console.log("Русская версия успешно переведена! Длина:", russianContent.length);
 
 // Пауза перед переводом на украинский
   console.log("Ожидание перед переводом на украинский...");
