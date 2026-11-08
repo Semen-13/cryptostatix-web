@@ -203,8 +203,8 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
     }
     console.log("Русская версия успешно переведена!");
 
-    // ==========================================
-    // ШАГ 4: ПЕРЕВОД НА УКРАИНСКИЙ (3 попытки)
+ // ==========================================
+    // ШАГ 4: ПЕРЕВОД НА УКРАИНСКИЙ (с русской версии)
     // ==========================================
     console.log("Ожидание перед переводом на украинский...");
     await sleep(4000);
@@ -222,9 +222,10 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
             messages: [
               { 
                 role: "system", 
-                content: "You are a professional crypto translator. Translate the provided English text into professional Ukrainian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
+                content: "You are a professional crypto translator. Translate the provided Russian text into professional Ukrainian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
               },
-              { role: "user", content: englishContent }
+              // БЕРЕМ РУССКУЮ ВЕРСИЮ ВМЕСТО АНГЛИЙСКОЙ
+              { role: "user", content: russianContent }
             ],
             temperature: 0.2,
             max_tokens: 4000
@@ -268,7 +269,6 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
       throw new Error("Не удалось корректно перевести статью на украинский язык.");
     }
     console.log("Украинская версия успешно переведена!");
-
     // ==========================================
     // ШАГ 5: СОХРАНЕНИЕ В NETLIFY BLOBS (стор "trending-topics")
     // ==========================================
