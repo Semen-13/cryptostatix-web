@@ -63,43 +63,32 @@ async function runGeneration(store = getTrendStore()) {
       throw new Error("OpenRouter API key is missing");
     }
 
+ // ==========================================
+    // ШАГ 1: ДЕТЕКТОР ТРЕНДОВ (CoinGecko API)
     // ==========================================
-    // ШАГ 1: ДЕТЕКТОР ТРЕНДОВ (CoinGecko + Binance)
-    // ==========================================
-    console.log('Шаг 1: Поиск трендового актива...');
+    console.log('Шаг 1: Поиск трендового актива через CoinGecko...');
     
-    const cgResponse = await axios.get('https://api.coingecko.com/api/v3/search/trending');
-    const trendingCoins = cgResponse.data.coins.map(c => c.item.symbol.toUpperCase());
-
-    const binanceResponse = await axios.get('https://api.binance.com/api/v3/ticker/24hr');
-    const binanceData = binanceResponse.data;
-
-    const qualifiedCoins = binanceData.filter(ticker => {
-      const isUSDT = ticker.symbol.endsWith('USDT');
-      const volumeUSD = parseFloat(ticker.quoteVolume);
-      const symbolWithoutUSDT = ticker.symbol.replace('USDT', '');
-      return isUSDT && volumeUSD >= 10000000 && trendingCoins.includes(symbolWithoutUSDT);
-    });
-
-    qualifiedCoins.sort((a, b) => parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent));
-
     let selectedTicker = "BTC";
     let priceChange = "+0%";
-    if (qualifiedCoins.length > 0) {
-      selectedTicker = qualifiedCoins[0].symbol.replace('USDT', '');
-      priceChange = `${parseFloat(qualifiedCoins[0].priceChangePercent).toFixed(2)}%`;
-    } else {
-      const fallback = binanceData
-        .filter(t => t.symbol.endsWith('USDT') && parseFloat(t.quoteVolume) >= 20000000)
-        .sort((a, b) => parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent))[0];
-      if (fallback) {
-        selectedTicker = fallback.symbol.replace('USDT', '');
-        priceChange = `${parseFloat(fallback.priceChangePercent).toFixed(2)}%`;
+
+    try {
+      const cgTrendingRes = await axios.get('https://api.coingecko.com/api/v3/search/trending');
+      const trendingCoins = cgTrendingRes.data.coins;
+
+      if (trendingCoins && trendingCoins.length > 0) {
+        // Берем первый попавшийся трендовый коин с CoinGecko
+        const topCoin = trendingCoins[0].item;
+        selectedTicker = topCoin.symbol.toUpperCase();
+        // У CoinGecko в трендах может не быть точного % изменения, пробуем вытащить или ставим дефолт
+        priceChange = topCoin.data?.price_change_percentage_24h?.usd 
+          ? `${parseFloat(topCoin.data.price_change_percentage_24h.usd).toFixed(2)}%` 
+          : "+5.0%";
       }
+    } catch (cgError) {
+      console.warn("Не удалось получить тренды с CoinGecko, используем резервный актив (BTC):", cgError.message);
     }
 
     console.log(`🎯 Выбран актив дня: ${selectedTicker} (Изменение за 24ч: ${priceChange})`);
-
     // ==========================================
     // ШАГ 2: ГЕНЕРАЦИЯ АНГЛИЙСКОЙ ВЕРСИИ ОБЗОРА
     // ==========================================
