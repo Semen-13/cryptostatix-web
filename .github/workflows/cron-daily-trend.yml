@@ -8,6 +8,8 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,3 +28,15 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: node netlify/functions/daily-trend.js
+
+      - name: Commit topic JSON
+        run: |
+          git add data/latest_trending_topic.json
+          if git diff --cached --quiet; then
+            echo "Topic JSON is unchanged."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Update topic of the day" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+            git push
+          fi

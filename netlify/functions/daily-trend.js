@@ -329,8 +329,13 @@ export default async () => {
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runGeneration(getTrendStore(Boolean(process.env.CI)))
+  const store = getTrendStore(Boolean(process.env.CI));
+  runGeneration(store)
     .then((topic) => {
+      if (store) {
+        fs.writeFileSync(trendFilePath, JSON.stringify(topic, null, 2), 'utf8');
+        console.log(`Тема дня также сохранена локально в ${trendFilePath}.`);
+      }
       console.log(`Тема дня (${topic.ticker}) создана и сохранена.`);
       process.exit(0);
     })
