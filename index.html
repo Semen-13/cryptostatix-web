@@ -137,6 +137,10 @@
 
         <div class="nav-buttons">
             <a href="#" class="nav-btn" id="nav-analytics" onclick="showPage('analytics')">Analytics</a>
+            <a href="#" class="nav-btn" id="nav-daily-review"
+                onclick="showPage('daily-review'); loadDailyMarketReview(); return false;">Daily Market Review</a>
+            <a href="#" class="nav-btn" id="nav-topic-day"
+                onclick="showPage('topic-day'); loadTopicOfDay(); return false;">Topic of the Day</a>
             <a href="#" class="nav-btn" id="nav-screeners" onclick="showPage('screeners')">Screeners</a>
             <a href="#" class="nav-btn" id="nav-about" onclick="showPage('about')">About us</a>
         </div>
@@ -157,6 +161,23 @@
         </div>
     </div>
 
+    <!-- Daily Market Review Page -->
+    <div id="daily-review" class="subpage">
+        <h2 id="daily-review-title">Daily Market Review</h2>
+        <div class="daily-review-content" id="seo-article-container" aria-live="polite">
+            <p>Загрузка свежего обзора рынка...</p>
+        </div>
+        <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
+    </div>
+
+    <!-- Topic of the Day Page -->
+    <div id="topic-day" class="subpage">
+        <h2 id="topic-day-title">Topic of the Day</h2>
+        <div class="daily-review-content" id="topic-day-article-container" aria-live="polite">
+            <p>Загрузка свежей темы...</p>
+        </div>
+        <button class="back-btn" onclick="showPage('home')">TO HOME</button>
+    </div>
 
 
     <!-- Analytics Page -->
@@ -164,52 +185,52 @@
         <h2>Аналитика</h2>
         <div class="subpage-content">
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 1)">
-                <img src="/fear-greed.jpg" alt="Crypto Fear & Greed Index" class="grid-img">
+                <img src="/fear-greed-terminal.jpg" alt="Crypto Fear & Greed Index" class="grid-img">
                 <span class="grid-caption">Crypto Fear &amp; Greed Index</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 2)">
-                <img src="/global_exchange_radar.png" alt="Global Exchange Radar" class="grid-img">
+                <img src="/global-exchange-radar.png" alt="Global Exchange Radar" class="grid-img">
                 <span class="grid-caption">Global Exchange Radar</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 3)">
-                <img src="/dominance.png" alt="Dominance" class="grid-img">
+                <img src="/dominance-terminal.png" alt="Dominance" class="grid-img">
                 <span class="grid-caption">Dominance</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 4)">
-                <img src="/open_interest.png" alt="Open Interest" class="grid-img">
+                <img src="/dominance-history.png" alt="Dominance History" class="grid-img">
                 <span class="grid-caption">dominance(history)</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 5)">
-                <img src="/heatmap.png" alt="Heatmap" class="grid-img">
+                <img src="/heatmap-terminal.png" alt="Heatmap" class="grid-img">
                 <span class="grid-caption">Heatmap</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 6)">
-                <img src="/rsi.png" alt="RSI PRO Signals" class="grid-img">
+                <img src="/rsi-pro-signals.png" alt="RSI PRO Signals" class="grid-img">
                 <span class="grid-caption">RSI PRO Signals</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 7)">
-                <img src="/whale.png" alt="Whale Terminal" class="grid-img">
+                <img src="/whale-terminal.png" alt="Whale Terminal" class="grid-img">
                 <span class="grid-caption">Whale Terminal</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 8)">
-                <img src="/oi.png" alt="OI Terminal" class="grid-img">
+                <img src="/oi-terminal.png" alt="OI Terminal" class="grid-img">
                 <span class="grid-caption">OI Terminal</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 9)">
-                <img src="/smart-suite.png" alt="Smart Suite" class="grid-img">
+                <img src="/smart-suite-intelligence.png" alt="Smart Suite Intelligence" class="grid-img">
                 <span class="grid-caption">Smart Suite Intelligence</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 10)">
-                <img src="/economic-calendar.png" alt="Market Intelligence" class="grid-img">
+                <img src="/market-intelligence-terminal.png" alt="Market Intelligence" class="grid-img">
                 <span class="grid-caption">Market Intelligence</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 11)">
-                <img src="/binance-futures.png" alt="Binance Futures PRO" class="grid-img">
+                <img src="/binance-futures-pro.png" alt="Binance Futures PRO" class="grid-img">
                 <span class="grid-caption">Binance Futures PRO</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('analytics', 12)">
-                <img src="/crypto-news.png" alt="Daily Market Review" class="grid-img">
-                <span class="grid-caption">Daily Market Review</span>
+                <img src="/market-overview.png" alt="Обзор рынка" class="grid-img">
+                <span class="grid-caption">Обзор рынка</span>
             </div>
         </div>
         <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
@@ -220,20 +241,20 @@
         <h2>Скринеры</h2>
         <div class="subpage-content" style="grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr);">
             <div class="grid-item grid-item--image" onclick="showDetail('screeners', 1)">
-                <img src="/ai-forecast.png" alt="Grid Screener PRO" class="grid-img">
+                <img src="/grid-screener-pro.png" alt="Grid Screener PRO" class="grid-img">
                 <span class="grid-caption">Grid Screener PRO</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('screeners', 2)">
-                <img src="/binance-futures.png" alt="Скринер Топ-15" class="grid-img">
+                <img src="/top-15-screener.png" alt="Скринер Топ-15" class="grid-img">
                 <span class="grid-caption">Скринер Топ-15</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('screeners', 3)">
-                <img src="/crypto_trend_screener.png" alt="Скринер тренда" class="grid-img">
+                <img src="/trend-screener.png" alt="Скринер тренда" class="grid-img">
                 <span class="grid-caption">Скринер тренда</span>
             </div>
             <div class="grid-item grid-item--image" onclick="showDetail('screeners', 4)">
-                <img src="/global_exchange_radar.png" alt="Global Exchange Radar" class="grid-img">
-                <span class="grid-caption">Global Exchange Radar</span>
+                <img src="/rsi-screener.png" alt="Скринер RSI" class="grid-img">
+                <span class="grid-caption">Скринер RSI</span>
             </div>
         </div>
         <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
@@ -338,6 +359,11 @@
                         </a>
                     </div>
                 </div>
+                <a id="about-email" href="mailto:admin@cryptostatix.pp.ua"
+                    title="Click to copy email"
+                    style="display: inline-flex; align-items: center; justify-content: center; margin: 12px 0 0 auto; color: var(--accent); text-decoration: none; font-size: 0.78rem; line-height: 1.4; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(0, 255, 136, 0.25); background: rgba(0, 255, 136, 0.05); border-radius: 999px; padding: 8px 14px; transition: all 0.2s ease; cursor: pointer;">
+                    admin@cryptostatix.pp.ua
+                </a>
             </div>
         </div>
         <button class="back-btn" onclick="showPage('home')">НА ГЛАВНУЮ</button>
@@ -739,6 +765,7 @@
             if (e.key === 'Enter') handleAiSend();
         });
     </script>
+<script>
 // Функция загрузки ежедневного обзора рынка
 async function loadDailyMarketReview() {
     const container = document.getElementById('seo-article-container');
@@ -771,7 +798,11 @@ async function loadDailyMarketReview() {
     container.innerHTML = `<p>${messages.loading}</p>`;
 
     try {
-        const response = await fetch('/.netlify/functions/generate-seo');
+        const endpoint = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+            ? 'http://127.0.0.1:5174/.netlify/functions/generate-seo'
+            : '/.netlify/functions/generate-seo';
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
         const result = await response.json();
 
         if (result.success && result.data) {
@@ -785,17 +816,62 @@ async function loadDailyMarketReview() {
     }
 }
 
-// Привязываем клик к 12-му блоку аналитики
-document.addEventListener('DOMContentLoaded', () => {
-    const dailyReviewCard = document.querySelector('.analytics-grid > *:nth-child(12), .cards-container > *:nth-child(12), .grid > *:nth-child(12)');
-    
-    if (dailyReviewCard) {
-        dailyReviewCard.addEventListener('click', () => {
-            console.log('Клик по 12-му блоку! Загружаем обзор...');
-            loadDailyMarketReview();
-        });
+async function loadTopicOfDay() {
+    const container = document.getElementById('topic-day-article-container');
+    if (!container) return;
+
+    const savedLanguage = localStorage.getItem('selectedLanguage') || localStorage.getItem('siteLang') || 'RUS';
+    const language = savedLanguage === 'ENG' || savedLanguage === 'en'
+        ? 'en'
+        : savedLanguage === 'UKR' || savedLanguage === 'ua'
+            ? 'ua'
+            : 'ru';
+    const messages = {
+        en: {
+            loading: 'Loading the latest topic...',
+            unavailable: 'The topic is not available yet.',
+            connectionError: 'Unable to connect to the server.'
+        },
+        ru: {
+            loading: 'Загрузка свежей темы...',
+            unavailable: 'Статья пока недоступна.',
+            connectionError: 'Ошибка соединения с сервером.'
+        },
+        ua: {
+            loading: 'Завантаження свіжої теми...',
+            unavailable: 'Стаття поки що недоступна.',
+            connectionError: 'Помилка з’єднання із сервером.'
+        }
+    }[language];
+
+    container.innerHTML = `<p>${messages.loading}</p>`;
+
+    try {
+        const endpoint = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+            ? 'http://127.0.0.1:5174/.netlify/functions/daily-trend'
+            : '/.netlify/functions/daily-trend';
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+        const result = await response.json();
+        const article = result.data?.translations?.[language];
+
+        if (!result.success || !article?.content) {
+            container.innerHTML = `<p>${messages.unavailable}</p>`;
+            return;
+        }
+
+        const title = document.createElement('h3');
+        title.textContent = article.title;
+        const content = document.createElement('div');
+        content.innerHTML = article.content;
+        container.replaceChildren(title, content);
+    } catch (err) {
+        console.error('Ошибка загрузки темы дня:', err);
+        container.innerHTML = `<p>${messages.connectionError}</p>`;
     }
-});
+}
+</script>
+
 </body>
 
 </html>

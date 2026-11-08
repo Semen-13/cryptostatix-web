@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import generateSeoHandler from './netlify/functions/generate-seo.js';
+import dailyTrendHandler from './netlify/functions/daily-trend.js';
 import askAiHandler from './netlify/functions/ask-ai.js';
 import { handler as rsiHandler } from './netlify/functions/rsi-scan.js';
 
@@ -159,6 +160,23 @@ app.get('/.netlify/functions/generate-seo', async (req, res) => {
         res.send(body);
     } catch (e) {
         console.error('generate-seo route error', e);
+        res.status(500).json({ success: false, error: String(e) });
+    }
+});
+
+app.get('/.netlify/functions/daily-trend', async (req, res) => {
+    try {
+        const response = await dailyTrendHandler();
+        const body = await response.text();
+        res.status(response.status);
+        response.headers.forEach((value, key) => {
+            if (key.toLowerCase() !== 'content-length') {
+                res.setHeader(key, value);
+            }
+        });
+        res.send(body);
+    } catch (e) {
+        console.error('daily-trend route error', e);
         res.status(500).json({ success: false, error: String(e) });
     }
 });

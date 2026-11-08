@@ -69,7 +69,7 @@ const detailConfig = {
       { title: 'Smart Suite Intelligence', desc: 'Exchange flows and liquidation heatmaps.' },
       { title: 'Market Intelligence', titleRus: 'Календарь событий', titleEng: 'Economic Calendar', titleUkr: 'Календар подій', desc: 'Economic events and volatility analysis.' },
       { title: 'Binance Futures PRO', desc: 'Pro terminal for Binance Futures.' },
-      { title: 'Daily Market Review', titleRus: 'Ежедневный обзор рынка', titleUkr: 'Щоденний огляд ринку', desc: 'Crypto news, daily insights and market overview.' }
+      { title: 'Market Overview', titleRus: 'Обзор рынка', titleEng: 'Market Overview', titleUkr: 'Огляд ринку', desc: 'Live crypto market data and TradingView charts.' }
     ]
   },
   screeners: {
@@ -85,15 +85,22 @@ const detailConfig = {
   }
 };
 
-function sanitizeArticleHtml(html, fallbackHtml = '') {
-  if (!html || typeof html !== 'string') return fallbackHtml;
-
-  const cleaned = html.replace(/^\s*<h[1-2][^>]*>.*?<\/h[1-2]>\s*/is, '').trim();
-  return cleaned || fallbackHtml;
-}
-
 /** * 4. ЛОГИКА СТРАНИЦ (NAVIGATION)
  */
+function renderDetailTitle(element, label, title, section, index, lang) {
+  element.textContent = `${label} — ${title}`;
+  if (section !== 'analytics' || index !== 12) return;
+
+  const subtitle = document.createElement('span');
+  subtitle.className = 'detail-title-subtitle';
+  subtitle.textContent = lang === 'ENG'
+    ? '(Top 100 CoinGecko)'
+    : lang === 'UKR'
+      ? '(топ 100 CoinGecko)'
+      : '(топ 100 CoinGecko)';
+  element.append(' ', subtitle);
+}
+
 window.showPage = function (pageId) {
   const home = document.getElementById('home');
   const pages = document.querySelectorAll('.subpage');
@@ -134,66 +141,10 @@ window.showDetail = function (section, itemIndex) {
   if (lang === 'UKR' && item.titleUkr) itemTitle = item.titleUkr;
   if (lang === 'RUS' && item.titleRus) itemTitle = item.titleRus;
 
-  document.getElementById('detail-title').textContent = `${label} — ${itemTitle}`;
+  renderDetailTitle(document.getElementById('detail-title'), label, itemTitle, section, itemIndex, lang);
 const detailBodyEl = document.getElementById('detail-body');
 
-if (section === 'analytics' && itemIndex === 12) {
-    const reviewMessages = {
-        ENG: {
-            loading: 'Loading the latest market review...',
-            unavailable: 'The market review is not available yet.',
-            connectionError: 'Unable to connect to the server.'
-        },
-        RUS: {
-            loading: 'Загрузка свежего обзора рынка...',
-            unavailable: 'Статья пока недоступна.',
-            connectionError: 'Ошибка соединения с сервером.'
-        },
-        UKR: {
-            loading: 'Завантаження свіжого огляду ринку...',
-            unavailable: 'Стаття поки що недоступна.',
-            connectionError: 'Помилка з’єднання із сервером.'
-        }
-    };
-    const messages = reviewMessages[lang] || reviewMessages.RUS;
-    const unavailableHtml = `<p style="color: #ff4d4d;">${messages.unavailable}</p>`;
-    detailBodyEl.innerHTML = `<p style="color: #4da6ff; text-align: center;">${messages.loading}</p>`;
-
-const endpoint = '/.netlify/functions/generate-seo';
-
-fetch(endpoint)
-    .then(res => res.json())
-    .then(result => {
-        if (result.success && result.data) {
-            let articlesData = result.data;
-            if (typeof articlesData === 'string') {
-                try {
-                    articlesData = JSON.parse(articlesData);
-                } catch (e) {
-                    console.error('Ошибка парсинга JSON статьи:', e);
-                }
-            }
-
-            const currentLang = lang === 'ENG' ? 'en' : lang === 'UKR' ? 'ua' : 'ru';
-
-            const articleHtml = sanitizeArticleHtml(
-                articlesData[currentLang] || '',
-                unavailableHtml
-            );
-            
-            detailBodyEl.innerHTML = articleHtml;
-        } else {
-            detailBodyEl.innerHTML = unavailableHtml;
-        }
-    })
-    .catch(err => {
-        console.error('Ошибка загрузки SEO-статьи:', err);
-        detailBodyEl.innerHTML = `<p style="color: #ff4d4d;">${messages.connectionError}</p>`;
-    });
-} else {
-    // Для всех остальных блоков оставляем стандартное поведение
-    detailBodyEl.innerHTML = buildDetailBody(section, itemIndex, item, lang);
-}
+detailBodyEl.innerHTML = buildDetailBody(section, itemIndex, item, lang);
   // Ensure newly inserted detail content is localized (covers templates/iframes inserted dynamically)
   try { window.selectLanguage(localStorage.getItem('selectedLanguage') || lang); } catch (e) { /* ignore */ }
 
@@ -1112,11 +1063,10 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
   }
 
   if (section === 'analytics' && index === 12) {
-    // Блок временно очищен, готов к переработке
     return `
-      <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%; display: flex; align-items: center; justify-content: center;">
-        <div style="text-align: center; color: rgba(255,255,255,0.3); font-family: 'Orbitron', sans-serif; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;">
-          — В разработке —
+      <div style="width: 100%; flex: 1; padding: 0 40px; box-sizing: border-box; height: 100%;">
+        <div class="detail-chart-placeholder" style="--detail-color: ${color}; width: 100%; margin: 0; height: 100%;">
+          <iframe src="/ai-forecast-terminal.html" title="AI Forecast Terminal" width="100%" style="height: 100%; min-height: 100%; display: block; border-radius: 14px;" frameborder="0"></iframe>
         </div>
       </div>
     `;
@@ -1284,6 +1234,8 @@ window.selectLanguage = function (langCode) {
       button: 'Eng.',
       options: ['Eng.', 'Rus.', 'Ukr.'],
       navAnalytics: 'Analytics',
+      navDailyReview: 'Daily Market Review',
+      navTopicDay: 'Topic of the Day',
       navScreeners: 'Screeners',
       navAbout: 'About us',
       aboutTitle: 'About CryptoStatix',
@@ -1303,6 +1255,7 @@ window.selectLanguage = function (langCode) {
       aboutItem1: 'Urgent alerts on abnormal market movements.',
       aboutItem2: 'Deep dives into promising tokens.',
       aboutItem3: 'Feature updates for our web platform.',
+      aboutEmail: 'admin@cryptostatix.pp.ua',
       aboutTgLink: '🔗 CryptoStatix_news | Analytics & Data',
       aiWelcome: 'Hello! I am your AI assistant in the world of CryptoStatix. Analyzing the market 24/7. Which asset shall we discuss today? 📈',
       aiPlaceholder: 'Enter your request...',
@@ -1373,6 +1326,8 @@ window.selectLanguage = function (langCode) {
       button: 'Рус.',
       options: ['Анг.', 'Рус.', 'Укр.'],
       navAnalytics: 'Аналитика',
+      navDailyReview: 'Ежедневный обзор рынка',
+      navTopicDay: 'Тема дня',
       navScreeners: 'Скринеры',
       navAbout: 'О проекте',
       aboutTitle: 'О проекте CryptoStatix',
@@ -1392,6 +1347,7 @@ window.selectLanguage = function (langCode) {
       aboutItem1: 'Срочные уведомления об аномальных движениях рынка.',
       aboutItem2: 'Обзоры перспективных токенов.',
       aboutItem3: 'Обновления функционала нашего сайта.',
+      aboutEmail: 'admin@cryptostatix.pp.ua',
       aboutTgLink: 'CryptoStatix_news/Аналитика и данные',
       aiWelcome: 'Привет! Я твой AI-ассистент в мире CryptoStatix. Анализирую рынок 24/7. Какой актив обсудим сегодня? 📈',
       aiPlaceholder: 'Введите ваш запрос...',
@@ -1460,6 +1416,8 @@ window.selectLanguage = function (langCode) {
       button: 'Укр.',
       options: ['Анг.', 'Рос.', 'Укр.'],
       navAnalytics: 'Аналітика',
+      navDailyReview: 'Щоденний огляд ринку',
+      navTopicDay: 'Тема дня',
       navScreeners: 'Скрінери',
       navAbout: 'Про проект',
       aboutTitle: 'Про проект CryptoStatix',
@@ -1479,6 +1437,7 @@ window.selectLanguage = function (langCode) {
       aboutItem1: 'Термінові повідомлення про аномальні рухи ринку.',
       aboutItem2: 'Огляди перспективних токенів.',
       aboutItem3: 'Оновлення функціоналу нашого сайту.',
+      aboutEmail: 'admin@cryptostatix.pp.ua',
       aboutTgLink: '🔗 CryptoStatix_news | Аналітика та дані',
       aiWelcome: 'Привіт! Я твій AI-асистент у світі CryptoStatix. Аналізую ринок 24/7. Який актив обговоримо сьогодні? 📈',
       aiPlaceholder: 'Введіть ваш запит...',
@@ -1555,15 +1514,23 @@ window.selectLanguage = function (langCode) {
 
   // Update navigation buttons
   const navAnalytics = document.getElementById('nav-analytics');
+  const navDailyReview = document.getElementById('nav-daily-review');
+  const navTopicDay = document.getElementById('nav-topic-day');
   const navScreeners = document.getElementById('nav-screeners');
   const navAbout = document.getElementById('nav-about');
   if (navAnalytics) navAnalytics.textContent = current.navAnalytics;
+  if (navDailyReview) navDailyReview.textContent = current.navDailyReview;
+  if (navTopicDay) navTopicDay.textContent = current.navTopicDay;
   if (navScreeners) navScreeners.textContent = current.navScreeners;
   if (navAbout) navAbout.textContent = current.navAbout;
 
   // Update Subpage Titles & Back Buttons
   const analyticsTitle = document.querySelector('#analytics h2');
   if (analyticsTitle) analyticsTitle.textContent = current.navAnalytics;
+  const dailyReviewTitle = document.getElementById('daily-review-title');
+  if (dailyReviewTitle) dailyReviewTitle.textContent = current.navDailyReview;
+  const topicDayTitle = document.getElementById('topic-day-title');
+  if (topicDayTitle) topicDayTitle.textContent = current.navTopicDay;
   const screenersTitle = document.querySelector('#screeners h2');
   if (screenersTitle) screenersTitle.textContent = current.navScreeners;
 
@@ -1732,6 +1699,7 @@ window.selectLanguage = function (langCode) {
     'about-community-item-1': 'aboutItem1',
     'about-community-item-2': 'aboutItem2',
     'about-community-item-3': 'aboutItem3',
+    'about-email': 'aboutEmail',
     'about-tg-link': 'aboutTgLink'
   };
 
@@ -1764,17 +1732,60 @@ window.selectLanguage = function (langCode) {
   if (aiWelcome) aiWelcome.textContent = current.aiWelcome;
   if (aiInput) aiInput.placeholder = current.aiPlaceholder;
 
-  // Hide/Show Community block (Russian only)
+  // Keep Telegram only for Russian; email remains visible in every language.
   const communitySec = document.getElementById('about-community-section');
   const missionSec = document.getElementById('about-mission-section');
+  const tgLink = document.getElementById('about-tg-link');
+  const emailLink = document.getElementById('about-email');
+  const communityDesc = document.getElementById('about-community-desc');
+  const communityItems = [
+    document.getElementById('about-community-item-1'),
+    document.getElementById('about-community-item-2'),
+    document.getElementById('about-community-item-3')
+  ];
+
   if (communitySec && missionSec) {
     if (langCode === 'RUS') {
       communitySec.style.display = 'block';
       missionSec.style.flex = '1';
+      if (communityDesc) communityDesc.style.display = 'none';
+      communityItems.forEach(item => { if (item) item.style.display = 'none'; });
+      if (tgLink) tgLink.closest('a').style.display = 'inline-flex';
     } else {
       communitySec.style.display = 'none';
       missionSec.style.flex = '1 1 100%';
     }
+  }
+
+  if (emailLink) {
+    emailLink.title = 'Copy email address';
+    emailLink.setAttribute('aria-label', 'Copy email address');
+    emailLink.style.display = 'inline-flex';
+    emailLink.style.cursor = 'pointer';
+
+    const copyEmailAddress = async () => {
+      const address = 'admin@cryptostatix.pp.ua';
+      try {
+        await navigator.clipboard.writeText(address);
+        const previousText = emailLink.textContent;
+        emailLink.textContent = 'Copied!';
+        emailLink.style.color = '#00130b';
+        emailLink.style.background = 'rgba(0, 255, 136, 0.9)';
+        setTimeout(() => {
+          emailLink.textContent = previousText;
+          emailLink.style.color = 'var(--accent)';
+          emailLink.style.background = 'rgba(0, 255, 136, 0.05)';
+        }, 900);
+      } catch (error) {
+        console.warn('Clipboard copy failed:', error);
+      }
+    };
+
+    emailLink.onmouseenter = copyEmailAddress;
+    emailLink.onclick = (event) => {
+      event.preventDefault();
+      copyEmailAddress();
+    };
   }
 
   // Update labels and selection highlight in the menu
@@ -1821,7 +1832,7 @@ window.selectLanguage = function (langCode) {
     if (langCode === 'UKR' && item.titleUkr) itemTitle = item.titleUkr;
     if (langCode === 'RUS' && item.titleRus) itemTitle = item.titleRus;
 
-    document.getElementById('detail-title').textContent = `${label} — ${itemTitle}`;
+    renderDetailTitle(document.getElementById('detail-title'), label, itemTitle, detailOrigin, currentDetailIndex, langCode);
     
     // Refresh body
     document.getElementById('detail-body').innerHTML = buildDetailBody(detailOrigin, currentDetailIndex, item, langCode);

@@ -158,17 +158,20 @@ h1 {
 /* Navigation Buttons */
 .nav-buttons {
   position: absolute;
-  top: 190px;
-  right: 50px;
+  top: 200px;
+  left: 24px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  align-items: flex-start;
+  gap: 10px;
   z-index: 20;
 }
 
 .nav-btn {
-  width: 200px;
-  height: 60px;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  height: 56px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -177,12 +180,14 @@ h1 {
   border: none;
   color: var(--text-main);
   font-weight: 700;
+  font-size: 0.82rem;
   text-transform: uppercase;
   text-decoration: none;
-  letter-spacing: 2px;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+  clip-path: polygon(4% 0, 100% 0, 96% 100%, 0% 100%);
   position: relative;
   overflow: hidden;
 }
@@ -203,7 +208,7 @@ h1 {
 }
 
 .nav-btn:hover {
-  transform: translateX(-15px) scale(1.05);
+  transform: translateX(6px) scale(1.02);
   box-shadow: 0 0 30px var(--accent-glow);
 }
 
@@ -275,6 +280,47 @@ h1 {
   overflow: hidden;
   position: relative;
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+}
+
+#topic-day {
+  align-items: stretch;
+  padding: 100px 16px 16px;
+}
+
+#daily-review {
+  align-items: stretch;
+  padding: 100px 16px 16px;
+}
+
+.daily-review-content {
+  width: 100%;
+  max-width: 1200px;
+  flex: 1;
+  min-height: 0;
+  align-self: center;
+  padding: 28px;
+  overflow: auto;
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(0, 255, 136, 0.06), rgba(255, 255, 255, 0.02));
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.08), inset 0 0 30px rgba(0, 255, 136, 0.025);
+  color: var(--text-main);
+  line-height: 1.7;
+}
+
+.daily-review-content > p {
+  text-align: center;
+}
+
+.daily-review-content h3 {
+  color: var(--accent);
+  font-family: 'Orbitron', sans-serif;
+  margin: 0 0 1.25em;
+  text-align: center;
+}
+
+.daily-review-content p + p {
+  margin-top: 1em;
 }
 
 /* Screener — 2 columns, full height */
@@ -442,6 +488,12 @@ h1 {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: calc(100% - 200px);
+}
+
+.detail-title-subtitle {
+  font-size: 0.58em;
+  letter-spacing: 1px;
+  text-transform: none;
 }
 
 /* Header info block */
