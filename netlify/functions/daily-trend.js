@@ -202,9 +202,8 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
       throw new Error("Не удалось корректно перевести статью на русский язык.");
     }
     console.log("Русская версия успешно переведена!");
-
- // ==========================================
-    // ШАГ 4: ПЕРЕВОД НА УКРАИНСКИЙ (с русской версии)
+// ==========================================
+    // ШАГ 4: ПЕРЕВОД НА УКРАИНСКИЙ (с авто-фолбэком на английский)
     // ==========================================
     console.log("Ожидание перед переводом на украинский...");
     await sleep(4000);
@@ -224,7 +223,6 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
                 role: "system", 
                 content: "You are a professional crypto translator. Translate the provided Russian text into professional Ukrainian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
               },
-              // БЕРЕМ РУССКУЮ ВЕРСИЮ ВМЕСТО АНГЛИЙСКОЙ
               { role: "user", content: russianContent }
             ],
             temperature: 0.2,
@@ -260,15 +258,18 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
         console.warn(`Повтор перевода (finish_reason: ${finishReason})...`);
         await sleep(3000);
       } catch (err) {
-        if (i === 3) throw err;
+        console.warn(`Попытка ${i} не удалась:`, err.message);
         await sleep(3000);
       }
     }
 
-    if (!successUa) {
-      throw new Error("Не удалось корректно перевести статью на украинский язык.");
+    // БЕЗОПАСНЫЙ ФОЛБЭК: Если перевести так и не удалось, берем английскую версию
+    if (!successUa || !ukrainianContent) {
+      console.warn("⚠️ Не удалось перевести на украинский язык после 3 попыток. Используем английскую версию как фолбэк.");
+      ukrainianContent = englishContent;
+    } else {
+      console.log("Украинская версия успешно переведена!");
     }
-    console.log("Украинская версия успешно переведена!");
     // ==========================================
     // ШАГ 5: СОХРАНЕНИЕ В NETLIFY BLOBS (стор "trending-topics")
     // ==========================================
