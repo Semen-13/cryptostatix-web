@@ -137,10 +137,19 @@
 
         <div class="nav-buttons">
             <a href="#" class="nav-btn" id="nav-analytics" onclick="showPage('analytics')">Analytics</a>
-            <a href="#" class="nav-btn" id="nav-daily-review"
-                onclick="showPage('daily-review'); loadDailyMarketReview(); return false;">Daily Market Review</a>
-            <a href="#" class="nav-btn" id="nav-topic-day"
-                onclick="showPage('topic-day'); loadTopicOfDay(); return false;">Topic of the Day</a>
+
+            <div class="nav-market-pulse" id="nav-market-pulse">
+                <button type="button" class="nav-btn nav-market-pulse-trigger" id="nav-market-pulse-trigger">Рыночный пульс</button>
+                <div class="nav-market-pulse-menu" aria-label="Market Pulse menu">
+                    <a href="#" class="nav-btn nav-sub-btn" id="nav-daily-review"
+                        onclick="showPage('daily-review'); loadDailyMarketReview(); return false;">Ежедневный обзор рынка</a>
+                    <a href="#" class="nav-btn nav-sub-btn" id="nav-topic-day"
+                        onclick="showPage('topic-day'); loadTopicOfDay(); return false;">Тема дня</a>
+                    <a href="#" class="nav-btn nav-sub-btn" id="nav-weekly-headliners"
+                        onclick="showPage('weekly-headliners'); loadWeeklyHeadliners(); return false;">Хедлайнеры недели</a>
+                </div>
+            </div>
+
             <a href="#" class="nav-btn" id="nav-screeners" onclick="showPage('screeners')">Screeners</a>
             <a href="#" class="nav-btn" id="nav-about" onclick="showPage('about')">About us</a>
         </div>
@@ -163,7 +172,10 @@
 
     <!-- Daily Market Review Page -->
     <div id="daily-review" class="subpage">
-        <h2 id="daily-review-title">Daily Market Review</h2>
+        <div class="market-pulse-heading">
+            <h2 id="daily-review-title">Daily Market Review</h2>
+            <p class="market-pulse-subtitle" id="daily-review-subtitle">Аналитика и обработка данных: Swappy AI Assistant</p>
+        </div>
         <div class="daily-review-content" id="seo-article-container" aria-live="polite">
             <p>Загрузка свежего обзора рынка...</p>
         </div>
@@ -172,9 +184,24 @@
 
     <!-- Topic of the Day Page -->
     <div id="topic-day" class="subpage">
-        <h2 id="topic-day-title">Topic of the Day</h2>
+        <div class="market-pulse-heading">
+            <h2 id="topic-day-title">Topic of the Day</h2>
+            <p class="market-pulse-subtitle" id="topic-day-subtitle">Аналитика и обработка данных: Swappy AI Assistant</p>
+        </div>
         <div class="daily-review-content" id="topic-day-article-container" aria-live="polite">
             <p>Загрузка свежей темы...</p>
+        </div>
+        <button class="back-btn" onclick="showPage('home')">TO HOME</button>
+    </div>
+
+    <!-- Weekly Headliners Page -->
+    <div id="weekly-headliners" class="subpage">
+        <div class="market-pulse-heading">
+            <h2 id="weekly-headliners-title">Weekly Headliners</h2>
+            <p class="market-pulse-subtitle" id="weekly-headliners-subtitle">Аналитика и обработка данных: Swappy AI Assistant</p>
+        </div>
+        <div class="daily-review-content weekly-headliners-content" id="weekly-headliners-container" aria-live="polite">
+            <p>Загрузка материала...</p>
         </div>
         <button class="back-btn" onclick="showPage('home')">TO HOME</button>
     </div>
@@ -868,6 +895,61 @@ async function loadTopicOfDay() {
     } catch (err) {
         console.error('Ошибка загрузки темы дня:', err);
         container.innerHTML = `<p>${messages.connectionError}</p>`;
+    }
+}
+
+async function loadWeeklyHeadliners() {
+    const container = document.getElementById('weekly-headliners-container');
+    if (!container) return;
+
+    const savedLanguage = localStorage.getItem('selectedLanguage') || localStorage.getItem('siteLang') || 'RUS';
+    const language = savedLanguage === 'ENG' || savedLanguage === 'en'
+        ? 'en'
+        : savedLanguage === 'UKR' || savedLanguage === 'ua'
+            ? 'ua'
+            : 'ru';
+    const messages = {
+        en: {
+            loading: 'Loading weekly headliners...',
+            unavailable: 'Weekly headliners have not been added yet.',
+            connectionError: 'Unable to load weekly headliners.'
+        },
+        ru: {
+            loading: 'Загрузка хедлайнеров недели...',
+            unavailable: 'Хедлайнеры недели пока не добавлены.',
+            connectionError: 'Не удалось загрузить хедлайнеры недели.'
+        },
+        ua: {
+            loading: 'Завантаження хедлайнерів тижня...',
+            unavailable: 'Хедлайнери тижня ще не додані.',
+            connectionError: 'Не вдалося завантажити хедлайнери тижня.'
+        }
+    }[language];
+
+    container.textContent = messages.loading;
+
+    try {
+        const endpoint = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+            ? 'http://127.0.0.1:5174/.netlify/functions/weekly-headliners'
+            : '/.netlify/functions/weekly-headliners';
+        const response = await fetch(endpoint);
+        if (response.status === 404) {
+            container.textContent = messages.unavailable;
+            return;
+        }
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+        const result = await response.json();
+        const content = result.translations?.[language];
+        if (!result.success || !content?.trim()) {
+            container.textContent = messages.unavailable;
+            return;
+        }
+
+        container.textContent = content;
+    } catch (err) {
+        console.error('Ошибка загрузки хедлайнеров недели:', err);
+        container.textContent = messages.connectionError;
     }
 }
 </script>

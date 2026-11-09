@@ -21,6 +21,8 @@ I've successfully created the **CryptoStatix** landing page. It is a high-perfor
 -   `index.html`: Main structure with SEO metadata.
 -   `src/main.js`: Business logic, ticker initialization, and page transition effects.
 -   `src/style.css`: Premium styling system and animations.
+- `data/weekly_headliners.txt`: Manually maintained plain-text content for the Weekly Headliners page. Replace its contents and redeploy to publish updates.
+- `netlify/functions/weekly-headliners.js`: Serves the Weekly Headliners text to the site.
 -   `public/bg.jpg`: Your custom background image.
 
 ---

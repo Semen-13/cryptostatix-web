@@ -3,5 +3,8 @@
   publish = "dist"
   functions = "netlify/functions"
 
-[build.environment]
+  [functions]
+    included_files = ["data/weekly_headliners.txt"]
+
+  [build.environment]
   NODE_VERSION = "22"

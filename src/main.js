@@ -94,10 +94,10 @@ function renderDetailTitle(element, label, title, section, index, lang) {
   const subtitle = document.createElement('span');
   subtitle.className = 'detail-title-subtitle';
   subtitle.textContent = lang === 'ENG'
-    ? '(Top 100 CoinGecko)'
+    ? '(Top 100)'
     : lang === 'UKR'
-      ? '(топ 100 CoinGecko)'
-      : '(топ 100 CoinGecko)';
+      ? '(топ 100)'
+      : '(топ 100)';
   element.append(' ', subtitle);
 }
 
@@ -1233,9 +1233,12 @@ window.selectLanguage = function (langCode) {
     'ENG': {
       button: 'Eng.',
       options: ['Eng.', 'Rus.', 'Ukr.'],
+      navMarketPulse: 'Market Pulse',
       navAnalytics: 'Analytics',
       navDailyReview: 'Daily Market Review',
       navTopicDay: 'Topic of the Day',
+      navWeeklyHeadliners: 'Weekly Headliners',
+      marketPulseSubtitle: 'Analytics and data processing: Swappy AI Assistant',
       navScreeners: 'Screeners',
       navAbout: 'About us',
       aboutTitle: 'About CryptoStatix',
@@ -1325,9 +1328,12 @@ window.selectLanguage = function (langCode) {
     'RUS': {
       button: 'Рус.',
       options: ['Анг.', 'Рус.', 'Укр.'],
+      navMarketPulse: 'Рыночный пульс',
       navAnalytics: 'Аналитика',
       navDailyReview: 'Ежедневный обзор рынка',
       navTopicDay: 'Тема дня',
+      navWeeklyHeadliners: 'Хедлайнеры недели',
+      marketPulseSubtitle: 'Аналитика и обработка данных: Swappy AI Assistant',
       navScreeners: 'Скринеры',
       navAbout: 'О проекте',
       aboutTitle: 'О проекте CryptoStatix',
@@ -1415,9 +1421,12 @@ window.selectLanguage = function (langCode) {
     'UKR': {
       button: 'Укр.',
       options: ['Анг.', 'Рос.', 'Укр.'],
+      navMarketPulse: 'Ринковий пульс',
       navAnalytics: 'Аналітика',
       navDailyReview: 'Щоденний огляд ринку',
       navTopicDay: 'Тема дня',
+      navWeeklyHeadliners: 'Хедлайнери тижня',
+      marketPulseSubtitle: 'Аналітика та обробка даних: Swappy AI Assistant',
       navScreeners: 'Скрінери',
       navAbout: 'Про проект',
       aboutTitle: 'Про проект CryptoStatix',
@@ -1514,13 +1523,17 @@ window.selectLanguage = function (langCode) {
 
   // Update navigation buttons
   const navAnalytics = document.getElementById('nav-analytics');
+  const navMarketPulseTrigger = document.getElementById('nav-market-pulse-trigger');
   const navDailyReview = document.getElementById('nav-daily-review');
   const navTopicDay = document.getElementById('nav-topic-day');
+  const navWeeklyHeadliners = document.getElementById('nav-weekly-headliners');
   const navScreeners = document.getElementById('nav-screeners');
   const navAbout = document.getElementById('nav-about');
   if (navAnalytics) navAnalytics.textContent = current.navAnalytics;
+  if (navMarketPulseTrigger) navMarketPulseTrigger.textContent = current.navMarketPulse;
   if (navDailyReview) navDailyReview.textContent = current.navDailyReview;
   if (navTopicDay) navTopicDay.textContent = current.navTopicDay;
+  if (navWeeklyHeadliners) navWeeklyHeadliners.textContent = current.navWeeklyHeadliners;
   if (navScreeners) navScreeners.textContent = current.navScreeners;
   if (navAbout) navAbout.textContent = current.navAbout;
 
@@ -1531,6 +1544,11 @@ window.selectLanguage = function (langCode) {
   if (dailyReviewTitle) dailyReviewTitle.textContent = current.navDailyReview;
   const topicDayTitle = document.getElementById('topic-day-title');
   if (topicDayTitle) topicDayTitle.textContent = current.navTopicDay;
+  const weeklyHeadlinersTitle = document.getElementById('weekly-headliners-title');
+  if (weeklyHeadlinersTitle) weeklyHeadlinersTitle.textContent = current.navWeeklyHeadliners;
+  document.querySelectorAll('.market-pulse-subtitle').forEach((subtitle) => {
+    subtitle.textContent = current.marketPulseSubtitle;
+  });
   const screenersTitle = document.querySelector('#screeners h2');
   if (screenersTitle) screenersTitle.textContent = current.navScreeners;
 

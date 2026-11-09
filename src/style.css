@@ -212,6 +212,45 @@ h1 {
   box-shadow: 0 0 30px var(--accent-glow);
 }
 
+.nav-market-pulse {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.nav-market-pulse-trigger {
+  margin: 0;
+  width: 320px;
+}
+
+.nav-market-pulse-menu {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 10px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-8px);
+  transition: all 0.25s ease;
+  z-index: 30;
+}
+
+.nav-market-pulse:hover .nav-market-pulse-menu,
+.nav-market-pulse:focus-within .nav-market-pulse-menu,
+.nav-market-pulse.open .nav-market-pulse-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+.nav-sub-btn {
+  width: 320px;
+  max-width: calc(100vw - 48px);
+}
+
 .main-footer {
   position: absolute;
   bottom: 25px;
@@ -266,6 +305,26 @@ h1 {
   text-shadow: 0 0 20px var(--accent-glow);
 }
 
+.market-pulse-heading {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.market-pulse-heading h2 {
+  position: static;
+}
+
+.market-pulse-subtitle {
+  margin: 8px 0 0;
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 12px rgba(0, 255, 136, 0.25);
+}
+
 .subpage-content {
   width: 98%;
   max-width: 1400px;
@@ -292,6 +351,11 @@ h1 {
   padding: 100px 16px 16px;
 }
 
+#weekly-headliners {
+  align-items: stretch;
+  padding: 100px 16px 16px;
+}
+
 .daily-review-content {
   width: 100%;
   max-width: 1200px;
@@ -306,6 +370,10 @@ h1 {
   box-shadow: 0 0 30px rgba(0, 255, 136, 0.08), inset 0 0 30px rgba(0, 255, 136, 0.025);
   color: var(--text-main);
   line-height: 1.7;
+}
+
+.weekly-headliners-content {
+  white-space: pre-wrap;
 }
 
 .daily-review-content > p {
