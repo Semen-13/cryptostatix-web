@@ -3,6 +3,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { submitToGoogleIndex } from '../../src/utils/indexer.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const trendStoreName = 'trending-topics';
@@ -298,7 +299,10 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
       }
     };
 
-    await saveTopic(finalPayload, store);
+await saveTopic(finalPayload, store);
+
+    // Добавляем в sitemap и пингуем Google Indexing API
+    await submitToGoogleIndex(`trending/${selectedTicker.toLowerCase()}`);
 
     console.log('✅ Топ тема дня успешно сформирована!');
 
