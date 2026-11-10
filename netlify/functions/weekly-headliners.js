@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { submitToGoogleIndex } from '../../src/utils/indexer.js';
 
 const headlinersFilePath = path.join(process.cwd(), "data", "weekly_headliners.txt");
 
@@ -31,6 +32,13 @@ export default async function handler(request) {
         status: 404,
         headers: { "Content-Type": "application/json; charset=utf-8" },
       });
+    }
+
+    // Уведомляем Google Indexing API о том, что главная страница / контент обновились
+    try {
+      await submitToGoogleIndex(""); // Пингуем корень сайта, где выводятся хедлайнеры
+    } catch (indexErr) {
+      console.warn("⚠️ Ошибка автоиндексации хедлайнеров:", indexErr.message);
     }
 
     return new Response(JSON.stringify({ success: true, translations }), {

@@ -2,6 +2,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { getStore } from "@netlify/blobs";
+import { submitToGoogleIndex } from '../../src/utils/indexer.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const reviewStoreName = "market-reviews";
@@ -31,14 +32,18 @@ function getReviewStore(required = false) {
 }
 
 async function saveReview(articlesData, store = getReviewStore()) {
+  const currentDate = new Date().toISOString().split('T')[0];
+
   if (store) {
     await store.setJSON(reviewStoreKey, articlesData);
     console.log("Многоязычный обзор успешно сохранен в Netlify Blobs.");
-    return;
+  } else {
+    fs.writeFileSync(reviewFilePath, JSON.stringify(articlesData, null, 2), "utf8");
+    console.log("Обзор сохранен локально в data/latest_market_review.json.");
   }
 
-  fs.writeFileSync(reviewFilePath, JSON.stringify(articlesData, null, 2), "utf8");
-  console.log("Обзор сохранен локально в data/latest_market_review.json.");
+  // Добавляем в sitemap и пингуем Google Indexing API
+  await submitToGoogleIndex(`reviews/${currentDate}`);
 }
 
 async function readReview(store) {
