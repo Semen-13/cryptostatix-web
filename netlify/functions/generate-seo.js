@@ -229,10 +229,10 @@ const responseEn = await axios.post(
           model: "openrouter/free",
           messages: [
             { 
-              role: "system", 
-              content: "You are a professional translator. Translate the provided English text into professional Ukrainian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
-            },
-            { role: "user", content: englishContent } // Переводим напрямую с английского оригинала!
+                role: "system", 
+                content: "You are a professional crypto translator. Translate the provided Russian text into professional Ukrainian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
+              },
+              { role: "user", content: russianContent }
           ],
           temperature: 0.2,
           max_tokens: 4000
