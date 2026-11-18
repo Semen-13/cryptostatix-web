@@ -36,11 +36,18 @@ async function saveTopic(topic, store) {
     await store.setJSON('latest', topic);
     await store.setJSON(`history/${topic.date}`, topic);
     console.log('Тема дня сохранена в Netlify Blobs.');
-    return;
   }
 
-  fs.writeFileSync(trendFilePath, JSON.stringify(topic, null, 2), 'utf8');
-  console.log(`Тема дня сохранена локально в ${trendFilePath}.`);
+  // Дополнительно всегда сохраняем локально, чтобы файл обновлялся в репозитории
+  try {
+    if (!fs.existsSync(path.dirname(trendFilePath))) {
+      fs.mkdirSync(path.dirname(trendFilePath), { recursive: true });
+    }
+    fs.writeFileSync(trendFilePath, JSON.stringify(topic, null, 2), 'utf8');
+    console.log(`Тема дня сохранена локально в ${trendFilePath}.`);
+  } catch (localErr) {
+    console.warn("Не удалось сохранить локальный файл темы:", localErr.message);
+  }
 }
 
 async function readTopic(store = getTrendStore()) {

@@ -34,12 +34,21 @@ function getReviewStore(required = false) {
 async function saveReview(articlesData, store = getReviewStore()) {
   const currentDate = new Date().toISOString().split('T')[0];
 
+  // 1. Сохраняем в Netlify Blobs (если доступно)
   if (store) {
     await store.setJSON(reviewStoreKey, articlesData);
     console.log("Многоязычный обзор успешно сохранен в Netlify Blobs.");
-  } else {
+  }
+
+  // 2. Дополнительно всегда сохраняем локально, чтобы файл в репозитории обновлялся
+  try {
+    if (!fs.existsSync(path.dirname(reviewFilePath))) {
+      fs.mkdirSync(path.dirname(reviewFilePath), { recursive: true });
+    }
     fs.writeFileSync(reviewFilePath, JSON.stringify(articlesData, null, 2), "utf8");
     console.log("Обзор сохранен локально в data/latest_market_review.json.");
+  } catch (localErr) {
+    console.warn("Не удалось сохранить файл локально:", localErr.message);
   }
 
   // Добавляем в sitemap и пингуем Google Indexing API
