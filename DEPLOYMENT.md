@@ -114,7 +114,7 @@ node dev-server.js
 
 ## Ежедневный обзор и Netlify Blobs
 
-GitHub Actions генерирует обзор и сохраняет его в хранилище Netlify Blobs (`market-reviews`, ключ `latest`). Генерация больше не коммитит JSON и не отправляет push в репозиторий. Netlify-функция `generate-seo` читает готовый обзор из Blobs; локально без Netlify credentials она продолжает использовать `data/latest_market_review.json`.
+GitHub Actions генерирует обзор и сохраняет его только в хранилище Netlify Blobs (`market-reviews`, ключ `latest`). Генерация не создаёт и не коммитит JSON-файлы с результатами статей. Netlify-функция `generate-seo` читает готовый обзор только из Blobs.
 
 Добавьте в **GitHub repository → Settings → Secrets and variables → Actions** секреты:
 
@@ -124,7 +124,7 @@ GitHub Actions генерирует обзор и сохраняет его в �
 
 Рабочий процесс `.github/workflows/cron-review.yml` запускается ежедневно в 00:00 UTC или вручную через **Actions → Trigger Daily Market Review → Run workflow**. Запустите его вручную один раз после добавления секретов, чтобы заполнить хранилище первым обзором. Если отсутствуют секреты Netlify, запуск завершится ошибкой вместо локальной записи результата.
 
-Тема дня генерируется workflow `.github/workflows/cron-daily-trend.yml` ежедневно в 02:00 UTC — через два часа после обзора рынка. Для отладки workflow можно запустить вручную через **Actions → Generate Topic of the Day → Run workflow**. Он использует те же секреты, сохраняет публикацию в Netlify Blobs (`trending-topics`, ключ `latest`, история — `history/YYYY-MM-DD`) и обновляет `data/latest_trending_topic.json` в репозитории. Workflow требуется право `contents: write`, чтобы закоммитить обновленный JSON. Локальный запуск `node netlify/functions/daily-trend.js` сохраняет результат в тот же JSON-файл, если Netlify credentials не заданы. Страница «Тема дня» загружает последнюю опубликованную статью через Netlify Function; в локальной разработке используется тот же JSON-файл.
+Тема дня генерируется workflow `.github/workflows/cron-daily-trend.yml` ежедневно в 02:00 UTC — через два часа после обзора рынка. Для отладки workflow можно запустить вручную через **Actions → Generate Topic of the Day → Run workflow**. Он использует те же секреты и сохраняет публикацию только в Netlify Blobs (`trending-topics`, ключ `latest`, история — `history/YYYY-MM-DD`). Локальный запуск `node netlify/functions/daily-trend.js` требует настройки Netlify credentials и не создаёт JSON-файл в репозитории. Страница «Тема дня» загружает последнюю опубликованную статью через Netlify Function.
 
 Для Netlify Functions используется Node.js 22 (задается в `netlify.toml`), совместимый с установленной версией `@netlify/blobs`.
 

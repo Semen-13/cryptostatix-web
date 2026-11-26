@@ -103,6 +103,24 @@
         .info-block-item strong { color: var(--blue); display: block; margin-bottom: 4px; }
         .info-rule-box { background: rgba(74, 144, 226, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--blue); margin: 20px 0; }
         .gemini-tip { color: var(--c-ex-greed); font-style: italic; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .fear-greed-description-link {
+            appearance: none;
+            display: inline;
+            padding: 0;
+            border: 0;
+            border-bottom: 1px solid #4a90e2;
+            background: transparent;
+            color: #67b7ff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .fear-greed-description-link:hover,
+        .fear-greed-description-link:focus-visible {
+            color: #00e676;
+            border-bottom-color: #00e676;
+            outline: none;
+        }
     </style>
 </head>
 <body>
@@ -132,7 +150,7 @@
 
     <main class="content-area">
         <h1 class="info-title">Обзор панели CryptoStatix: Fear & Greed Terminal</h1>
-        <p>Этот аналитический модуль предназначен для быстрого определения рыночных настроений. Индекс Fear & Greed (Страх и Жадность) агрегирует данные о волатильности, объемах торгов, социальных сетях и доминировании BTC, помогая понять, находится ли рынок в фазе панических распродаж или неоправданного оптимизма.</p>
+        <p>Этот аналитический модуль предназначен для быстрого определения рыночных настроений. <button type="button" class="fear-greed-description-link" onclick="parent.openCheatDetail(0, 'analytics')">Индекс Fear & Greed (Страх и Жадность)</button> агрегирует данные о волатильности, объемах торгов, социальных сетях и доминировании BTC, помогая понять, находится ли рынок в фазе панических распродаж или неоправданного оптимизма.</p>
 
         <h2 class="info-subtitle">Описание функциональных блоков</h2>
         <div class="info-block-item">
@@ -287,7 +305,17 @@ async function init() {
 
     // Update Text Content
     document.querySelector('.info-title').innerText = t.infoTitle;
-    document.querySelector('.info-title + p').innerText = t.infoIntro;
+    const introLinkNames = {
+        ENG: 'Fear & Greed Index',
+        RUS: 'Индекс Fear & Greed (Страх и Жадность)',
+        UKR: 'Індекс Fear & Greed (Страх і Жадібність)'
+    };
+    const introLinkName = introLinkNames[lang] || introLinkNames.RUS;
+    const introHtml = t.infoIntro.replace(
+        introLinkName,
+        `<button type="button" class="fear-greed-description-link" onclick="parent.openCheatDetail(0, 'analytics')">${introLinkName}</button>`
+    );
+    document.querySelector('.info-title + p').innerHTML = introHtml;
     const subtitles = document.querySelectorAll('.info-subtitle');
     subtitles[0].innerText = t.infoSub1;
     subtitles[1].innerText = t.infoSub2;

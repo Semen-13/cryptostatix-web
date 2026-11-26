@@ -34,7 +34,7 @@
 <div class="widget-container">
     <div class="header">
         <div>
-            <div class="label">BTC Open Interest (Total)</div>
+            <div class="label" id="oiLabel">Open Interest (Total)</div>
             <span id="totalOiUsd">$0.00 M</span>
         </div>
         <div style="text-align: right">
@@ -61,6 +61,19 @@
 </div>
 
 <script>
+    const oiLanguage = localStorage.getItem('selectedLanguage') || 'RUS';
+    const oiLabels = {
+        ENG: 'Open Interest (Total)',
+        RUS: 'Операционный интерес (Всего)',
+        UKR: 'Операційний інтерес (Усього)'
+    };
+    document.getElementById('oiLabel').textContent = oiLabels[oiLanguage] || oiLabels.RUS;
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'selectedLanguage') {
+            document.getElementById('oiLabel').textContent = oiLabels[event.newValue] || oiLabels.RUS;
+        }
+    });
+
     const ctx = document.getElementById('oiChart').getContext('2d');
     
     const gradient = ctx.createLinearGradient(0, 0, 0, 180);

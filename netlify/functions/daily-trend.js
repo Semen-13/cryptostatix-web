@@ -1,13 +1,9 @@
 import { getStore } from '@netlify/blobs';
 import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { submitToGoogleIndex } from '../../src/utils/indexer.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const trendStoreName = 'trending-topics';
-const trendFilePath = path.join(process.cwd(), 'data', 'latest_trending_topic.json');
 
 function getTrendStore(required = false) {
   const siteID = process.env.NETLIFY_SITE_ID;
@@ -32,24 +28,49 @@ function getTrendStore(required = false) {
 }
 
 async function saveTopic(topic, store) {
-  if (store) {
-    await store.setJSON('latest', topic);
-    await store.setJSON(`history/${topic.date}`, topic);
-    console.log('Тема дня сохранена в Netlify Blobs.');
-    return;
+  if (!store) {
+    throw new Error('Netlify Blobs store is required to save the trending topic');
   }
 
-  fs.writeFileSync(trendFilePath, JSON.stringify(topic, null, 2), 'utf8');
-  console.log(`Тема дня сохранена локально в ${trendFilePath}.`);
+  await store.setJSON('latest', topic);
+  await store.setJSON(`history/${topic.date}`, topic);
+  console.log('Тема дня сохранена в Netlify Blobs.');
+}
+
+async function saveNoTopicNotice(store, ticker = null, priceChange = null) {
+  const currentDate = new Date().toISOString().split('T')[0];
+  const topic = {
+    ticker,
+    price_change: priceChange,
+    date: currentDate,
+    timestamp: new Date().toISOString(),
+    translations: {
+      en: {
+        title: 'No Topic of the Day Today',
+        meta_description: 'There is no Topic of the Day today because our AI assistant is unwell.',
+        content: "<p>Our AI assistant is feeling a little under the weather today, so there will be no Topic of the Day. Thank you for your understanding—we'll be back once our silicon patient has recovered!</p>"
+      },
+      ru: {
+        title: 'Сегодня без темы дня',
+        meta_description: 'Сегодня темы дня не будет: наш ИИ немного приболел.',
+        content: '<p>Наш ИИ сегодня немного приболел, поэтому «Темы дня» не будет. Спасибо за понимание — вернемся, как только наш кремниевый пациент поправится!</p>'
+      },
+      ua: {
+        title: 'Сьогодні без теми дня',
+        meta_description: 'Сьогодні теми дня не буде: наш ШІ трохи прихворів.',
+        content: '<p>Наш ШІ сьогодні трохи прихворів, тому «Теми дня» не буде. Дякуємо за розуміння — повернемося, щойно наш кремнієвий пацієнт одужає!</p>'
+      }
+    }
+  };
+
+  await saveTopic(topic, store);
+  console.warn('Сохранено уведомление: сегодня темы дня не будет.');
+  return topic;
 }
 
 async function readTopic(store = getTrendStore()) {
   if (store) {
     return await store.get('latest', { type: 'json' }) || null;
-  }
-
-  if (fs.existsSync(trendFilePath)) {
-    return JSON.parse(fs.readFileSync(trendFilePath, 'utf8'));
   }
 
   return null;
@@ -61,7 +82,8 @@ async function runGeneration(store = getTrendStore()) {
 
     const openRouterApiKey = process.env.OPENROUTER_API_KEY;
     if (!openRouterApiKey) {
-      throw new Error("OpenRouter API key is missing");
+      console.error("OpenRouter API key is missing; publishing the no-topic notice.");
+      return saveNoTopicNotice(store);
     }
 
  // ==========================================
@@ -108,38 +130,60 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
     `;
 
     let englishContent = "";
-    const responseEn = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "openrouter/free",
-        messages: [
-          { role: "system", content: "You are a professional crypto analyst. Output ONLY raw HTML starting directly with <p>." },
-          { role: "user", content: englishPrompt }
-        ],
-        temperature: 0.4,
-        max_tokens: 3000
-      },
-      {
-        headers: {
-          "Authorization": `Bearer ${openRouterApiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:8888",
-          "X-Title": "CryptoStatix PRO"
-        }
-      }
-    );
+    let englishGenerationError;
+    let emptyEnglishResponseReceived = false;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const responseEn = await axios.post(
+          "https://openrouter.ai/api/v1/chat/completions",
+          {
+            model: "openrouter/free",
+            messages: [
+              { role: "system", content: "You are a professional crypto analyst. Output ONLY raw HTML starting directly with <p>." },
+              { role: "user", content: englishPrompt }
+            ],
+            temperature: 0.4,
+            max_tokens: 3000
+          },
+          {
+            headers: {
+              "Authorization": `Bearer ${openRouterApiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "http://localhost:8888",
+              "X-Title": "CryptoStatix PRO"
+            }
+          }
+        );
 
-    const choice = responseEn.data?.choices?.[0];
-    englishContent = choice?.message?.content || choice?.text || "";
-    englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
+        const choice = responseEn.data?.choices?.[0];
+        englishContent = choice?.message?.content || choice?.text || "";
+        englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
+
+        if (englishContent) break;
+
+        emptyEnglishResponseReceived = true;
+        console.warn(`Получен пустой ответ при генерации английской версии (${attempt}/3).`);
+      } catch (generationError) {
+        englishGenerationError = generationError;
+        console.warn(`Ошибка при генерации английской версии (${attempt}/3):`, generationError.response?.data || generationError.message);
+      }
+
+      if (attempt < 3) await sleep(3000);
+    }
 
     if (!englishContent) {
-      englishContent = `<p>At the opening of the trading session, <strong>${selectedTicker}</strong> has captured market attention with a 24-hour price change of <strong>${priceChange}</strong>. Traders and investors are closely monitoring volume spikes and key technical indicators.</p>`;
+      console.warn(
+        emptyEnglishResponseReceived
+          ? "После трех пустых ответов публикуем уведомление об отсутствии темы дня."
+          : "Не удалось получить ответ от OpenRouter; публикуем уведомление об отсутствии темы дня.",
+        englishGenerationError?.message || ""
+      );
+      return saveNoTopicNotice(store, selectedTicker, priceChange);
     }
     console.log("Английская версия успешно подготовлена. Длина:", englishContent.length);
 
     // ==========================================
-    // ШАГ 3: ПЕРЕВОД НА РУССКИЙ (3 попытки)
+    // ШАГ 3: ПЕРЕВОД НА РУССКИЙ (5 попыток)
     // ==========================================
     console.log("Ожидание перед переводом на русский...");
     await sleep(4000);
@@ -147,9 +191,9 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
     let russianContent = "";
     let successRu = false;
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 5; i++) {
       try {
-        console.log(`Попытка перевода на русский (${i}/3)...`);
+        console.log(`Попытка перевода на русский (${i}/5)...`);
         const responseRu = await axios.post(
           "https://openrouter.ai/api/v1/chat/completions",
           {
@@ -194,13 +238,14 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
         console.warn(`Повтор перевода (finish_reason: ${finishReason})...`);
         await sleep(3000);
       } catch (err) {
-        if (i === 3) throw err;
+        console.warn(`Попытка перевода на русский (${i}/5) не удалась:`, err.response?.data || err.message);
         await sleep(3000);
       }
     }
 
     if (!successRu) {
-      throw new Error("Не удалось корректно перевести статью на русский язык.");
+      console.warn("Не удалось подготовить русский перевод; публикуем уведомление об отсутствии темы дня.");
+      return saveNoTopicNotice(store, selectedTicker, priceChange);
     }
     console.log("Русская версия успешно переведена!");
 // ==========================================
@@ -212,9 +257,9 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
     let ukrainianContent = "";
     let successUa = false;
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 5; i++) {
       try {
-        console.log(`Попытка перевода на украинский (${i}/3)...`);
+        console.log(`Попытка перевода на украинский (${i}/5)...`);
         const responseUa = await axios.post(
           "https://openrouter.ai/api/v1/chat/completions",
           {
@@ -222,9 +267,9 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
             messages: [
               { 
                 role: "system", 
-                content: "You are a professional crypto translator. Translate the provided Russian text into professional Ukrainian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
+                content: "You are a professional crypto translator. Translate the provided English text into professional Ukrainian. Preserve all HTML tags and important details. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
               },
-              { role: "user", content: russianContent }
+              { role: "user", content: englishContent }
             ],
             temperature: 0.2,
             max_tokens: 4000
@@ -266,7 +311,7 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
 
     // БЕЗОПАСНЫЙ ФОЛБЭК: Если перевести так и не удалось, берем английскую версию
     if (!successUa || !ukrainianContent) {
-      console.warn("⚠️ Не удалось перевести на украинский язык после 3 попыток. Используем английскую версию как фолбэк.");
+      console.warn("⚠️ Не удалось перевести на украинский язык после 5 попыток. Используем английскую версию как фолбэк.");
       ukrainianContent = englishContent;
     } else {
       console.log("Украинская версия успешно переведена!");
@@ -332,14 +377,10 @@ export default async () => {
   }
 };
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && process.argv[1].endsWith('daily-trend.js')) {
   const store = getTrendStore(Boolean(process.env.CI));
   runGeneration(store)
     .then((topic) => {
-      if (store) {
-        fs.writeFileSync(trendFilePath, JSON.stringify(topic, null, 2), 'utf8');
-        console.log(`Тема дня также сохранена локально в ${trendFilePath}.`);
-      }
       console.log(`Тема дня (${topic.ticker}) создана и сохранена.`);
       process.exit(0);
     })

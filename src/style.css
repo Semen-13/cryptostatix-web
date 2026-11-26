@@ -168,7 +168,7 @@ h1 {
 }
 
 .nav-btn {
-  width: 320px;
+  width: 260px;
   max-width: calc(100vw - 48px);
   height: 56px;
   padding: 0 24px;
@@ -221,7 +221,7 @@ h1 {
 
 .nav-market-pulse-trigger {
   margin: 0;
-  width: 320px;
+  width: 260px;
 }
 
 .nav-market-pulse-menu {
@@ -292,7 +292,8 @@ h1 {
   transform: translateY(0);
 }
 
-.subpage h2 {
+.subpage > h2,
+.subpage > .market-pulse-heading > h2 {
   position: absolute;
   top: 20px;
   left: 20px;
@@ -309,10 +310,14 @@ h1 {
   position: absolute;
   top: 20px;
   left: 20px;
+  right: 20px;
 }
 
-.market-pulse-heading h2 {
+.subpage > .market-pulse-heading > h2 {
   position: static;
+  font-size: clamp(1rem, 3.2vw, 2.5rem);
+  letter-spacing: clamp(2px, 0.7vw, 10px);
+  white-space: nowrap;
 }
 
 .market-pulse-subtitle {
@@ -356,6 +361,330 @@ h1 {
   padding: 100px 16px 16px;
 }
 
+#new-crypto-faces {
+  align-items: stretch;
+  padding: 100px 16px 16px;
+}
+
+#cheatsheet {
+  align-items: stretch;
+  padding: 100px 16px 12px;
+}
+
+#cheatsheet-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 18px;
+  line-height: 1.15;
+}
+
+#cheatsheet-title-text {
+  display: block;
+}
+
+.cheatsheet-content {
+  width: 100%;
+  max-width: 1250px;
+  flex: 1;
+  min-height: 0;
+  align-self: center;
+  padding: 10px 12px;
+  overflow: hidden;
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(0, 255, 136, 0.05), rgba(15, 23, 42, 0.95));
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.08), inset 0 0 30px rgba(0, 255, 136, 0.025);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.cheatsheet-subtitle {
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.64rem, 0.95vw, 0.82rem);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  opacity: 0.9;
+}
+
+.cheatsheet-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cheat-sheet-tile {
+  appearance: none;
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(7, 12, 20, 0.95));
+  color: #f8fafc;
+  text-align: left;
+  padding: 8px 12px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+}
+
+.cheat-sheet-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 255, 136, 0.75);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.12);
+}
+
+.cheat-sheet-number {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.62rem;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+}
+
+.cheat-sheet-name {
+  font-size: clamp(0.68rem, 1vw, 0.82rem);
+  line-height: 1.35;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.cheat-detail-panel {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 26px;
+  border-radius: 18px;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  background: rgba(15, 23, 42, 0.94);
+  box-shadow: 0 0 24px rgba(125, 211, 252, 0.08);
+}
+
+.cheat-detail-heading {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.cheat-detail-title {
+  margin: 0 0 16px;
+  color: #fff;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+}
+
+.cheat-detail-text {
+  margin: 0 0 18px;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.cheat-detail-sections {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.cheat-detail-section {
+  padding: 12px 14px;
+  border-left: 2px solid rgba(125, 211, 252, 0.55);
+  background: rgba(125, 211, 252, 0.045);
+  border-radius: 0 8px 8px 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.cheat-detail-section strong {
+  color: #fff;
+  margin-right: 6px;
+}
+
+.cheat-sheet-inline-link {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.8);
+  background: transparent;
+  color: #10b981;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cheat-sheet-inline-link:hover,
+.cheat-sheet-inline-link:focus-visible {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  outline: none;
+}
+
+.cheat-detail-rules {
+  display: grid;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.cheat-detail-rules strong {
+  color: #fff;
+}
+
+.cheatsheet-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.cheatsheet-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+.cheatsheet-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.3);
+  border-radius: 4px;
+}
+.cheatsheet-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+.cs-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.cs-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 18px rgba(0, 255, 136, 0.15);
+  transform: translateY(-2px);
+  background: rgba(0, 255, 136, 0.03);
+}
+
+.cs-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 8px;
+}
+
+.cs-card-title {
+  color: var(--accent);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.88rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.cs-card-badge {
+  font-size: 0.65rem;
+  font-family: 'Orbitron', sans-serif;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(0, 255, 136, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.cs-item {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cs-item-title {
+  color: #fff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+
+.cs-item-desc {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+  padding-left: 2px;
+}
+
+.cs-formula {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px dashed rgba(0, 255, 136, 0.35);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #00ff88;
+  font-family: monospace;
+  font-size: 0.76rem;
+  margin: 4px 0;
+  display: inline-block;
+  word-break: break-all;
+}
+
+.cs-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.cs-tag-long {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid #10b981;
+}
+.cs-tag-short {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+.cs-tag-warn {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+}
+
+@media (max-width: 900px) {
+  .cheatsheet-content {
+    padding: 8px;
+  }
+  .cheatsheet-scroll {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .cheat-sheet-tile {
+    padding: 6px 8px;
+  }
+  .cheat-sheet-name {
+    font-size: clamp(0.6rem, 1.6vw, 0.78rem);
+  }
+}
+
 .daily-review-content {
   width: 100%;
   max-width: 1200px;
@@ -373,6 +702,10 @@ h1 {
 }
 
 .weekly-headliners-content {
+  white-space: pre-wrap;
+}
+
+.new-crypto-faces-content {
   white-space: pre-wrap;
 }
 
@@ -538,6 +871,10 @@ h1 {
   flex: 1;
   padding-top: 68px;
   padding-bottom: 25px;
+}
+
+.detail-subpage--analytics .detail-content {
+  padding-top: 14px;
 }
 
 .detail-content > h2:first-child {
@@ -962,4 +1299,17 @@ h1 {
   background: rgba(0, 255, 136, 0.05);
   font-weight: 900;
   position: relative;
+}
+.weekly-headliners-content a,
+.new-crypto-faces-content a {
+    color: var(--accent);
+    font-weight: 800;
+    text-decoration-color: rgba(0, 255, 136, 0.7);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+}
+
+.weekly-headliners-content a:hover,
+.new-crypto-faces-content a:hover {
+    color: #ffffff;
 }

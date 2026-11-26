@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import generateSeoHandler from './netlify/functions/generate-seo.js';
 import dailyTrendHandler from './netlify/functions/daily-trend.js';
 import weeklyHeadlinersHandler from './netlify/functions/weekly-headliners.js';
+import newCryptoFacesHandler from './netlify/functions/new-crypto-faces.js';
 import askAiHandler from './netlify/functions/ask-ai.js';
 import { handler as rsiHandler } from './netlify/functions/rsi-scan.js';
 
@@ -195,6 +196,23 @@ app.get('/.netlify/functions/weekly-headliners', async (req, res) => {
         res.send(body);
     } catch (e) {
         console.error('weekly-headliners route error', e);
+        res.status(500).json({ success: false, error: String(e) });
+    }
+});
+
+app.get('/.netlify/functions/new-crypto-faces', async (req, res) => {
+    try {
+        const response = await newCryptoFacesHandler(new Request(`http://localhost:${PORT}${req.originalUrl}`));
+        const body = await response.text();
+        res.status(response.status);
+        response.headers.forEach((value, key) => {
+            if (key.toLowerCase() !== 'content-length') {
+                res.setHeader(key, value);
+            }
+        });
+        res.send(body);
+    } catch (e) {
+        console.error('new-crypto-faces route error', e);
         res.status(500).json({ success: false, error: String(e) });
     }
 });

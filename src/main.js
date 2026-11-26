@@ -52,6 +52,220 @@ updatePrices();
 
 /** * 3. КОНФИГУРАЦИЯ АНАЛИТИКИ
  */
+const cheatSheetTopics = [
+  {
+    id: 'fear-greed',
+    title: {
+      ENG: 'Fear & Greed Index',
+      RUS: 'Индекс страха и жадности',
+      UKR: 'Індекс страху та жадібності'
+    },
+    text: {
+      ENG: 'A market-sentiment index measuring the emotional state of cryptocurrency participants on a scale from 0 to 100.',
+      RUS: 'Индикатор рыночных настроений криптовалютных участников, оценивающий эмоциональное состояние рынка по шкале от 0 до 100.',
+      UKR: 'Індикатор ринкових настроїв учасників криптовалютного ринку, який оцінює емоційний стан ринку за шкалою від 0 до 100.'
+    },
+    details: {
+      ENG: [
+        { label: 'Scale', text: '0–24: Extreme Fear; 25–44: Fear; 45–55: Neutral; 56–75: Greed; 76–100: Extreme Greed.' },
+        { label: 'How it is calculated', text: 'The classical approach combines market indicators with fixed weights: volatility (25%), market momentum and volume (25%), social-media activity (15%), market surveys (15%), Bitcoin dominance (10%), and Google Trends (10%). Exact components and weightings may differ by data provider. The normalized components are combined into a single 0–100 score.' },
+        { label: 'How to use it', text: 'Use the index as a sentiment filter, not as a trading signal. Extreme Fear may indicate panic or oversold conditions; Extreme Greed may indicate excessive optimism or a crowded market. Check the trend over several days, the BTC chart, structure, volume, funding, and your entry setup before making a decision.' },
+        { label: 'Typical context', text: 'The index is most useful for contrarian analysis: in persistent fear, reduce risk and look for confirmed buying opportunities; in persistent greed, tighten risk and look for confirmed selling or profit-taking zones. One-day readings can be caused by news and should not be traded in isolation.' },
+        { label: 'Limitations', text: 'It does not predict price with certainty and is not a complete valuation model. The index is lagging and derived from multiple indirect signals, so always combine it with technical and fundamental confirmation.' }
+      ],
+      RUS: [
+        { label: 'Шкала', text: '0–24 — крайний страх; 25–44 — страх; 45–55 — нейтрально; 56–75 — жадность; 76–100 — крайняя жадность.' },
+        { label: 'Как рассчитывается', text: 'Классическая методика объединяет рыночные показатели с фиксированными весами: волатильность — 25%, рыночный импульс и объем торгов — 25%, активность в социальных сетях — 15%, опросы рынка — 15%, доминирование Bitcoin — 10%, данные Google Trends — 10%. Состав компонентов и веса могут различаться у конкретного поставщика данных. Нормализованные показатели объединяются в итоговый балл от 0 до 100.' },
+        { label: 'Как использовать', text: 'Используйте индекс как фильтр настроений, а не как готовый торговый сигнал. Крайний страх может указывать на панику или перепроданность; крайняя жадность — на избыточный оптимизм или перегретый рынок. Перед решением проверяйте динамику за несколько дней, график BTC, структуру рынка, объемы, фандинг и вашу точку входа.' },
+        { label: 'Практический контекст', text: 'Индекс особенно полезен для контртрендового анализа: при устойчивом страхе снижайте риск и ищите подтвержденные покупки; при устойчивой жадности ужесточайте контроль риска и рассматривайте продажу или фиксацию прибыли. Однодневный скачок нередко связан с новостями и не должен использоваться как единственный основание для сделки.' },
+        { label: 'Ограничения', text: 'Индекс не предсказывает цену с гарантией и не заменяет оценку фундаментальной стоимости актива. Это агрегированный и отчасти запаздывающий показатель, поэтому его нужно сочетать с техническим и фундаментальным подтверждением.' }
+      ],
+      UKR: [
+        { label: 'Шкала', text: '0–24 — крайній страх; 25–44 — страх; 45–55 — нейтрально; 56–75 — жадібність; 76–100 — крайня жадібність.' },
+        { label: 'Як розраховується', text: 'Класична методика об’єднує ринкові показники з фіксованими вагами: волатильність — 25%, ринковий імпульс і обсяг торгів — 25%, активність у соціальних мережах — 15%, опитування ринку — 15%, домінування Bitcoin — 10%, дані Google Trends — 10%. Склад компонентів і ваги можуть відрізнятися в конкретного провайдера даних. Нормалізовані показники об’єднуються в підсумковий бал від 0 до 100.' },
+        { label: 'Як використовувати', text: 'Використовуйте індекс як фільтр настроїв, а не як готовий торговий сигнал. Крайній страх може вказувати на паніку або перепроданість; крайня жадібність — на надмірний оптимізм або перегрітий ринок. Перед рішенням перевіряйте динаміку за кілька днів, графік BTC, структуру ринку, обсяги, фандинг і свою точку входу.' },
+        { label: 'Практичний контекст', text: 'Індекс особливо корисний для контртрендового аналізу: за стійкого страху знижуйте ризик і шукайте підтверджені покупки; за стійкої жадібності посилюйте контроль ризику та розглядайте продаж чи фіксацію прибутку. Одноденний стрибок часто пов’язаний із новинами і не має бути єдиною основою для угоди.' },
+        { label: 'Обмеження', text: 'Індикатор не передбачає ціну з гарантією і не замінює оцінку фундаментальної вартості активу. Це агрегований і частково запізнілий показник, тому його слід поєднувати з технічним і фундаментальним підтвердженням.' }
+      ]
+    }
+  },
+  {
+    id: 'rsi',
+    title: { ENG: 'RSI (Relative Strength Index)', RUS: 'Индикатор RSI', UKR: 'Індикатор RSI' },
+    text: {
+      ENG: 'RSI is a momentum oscillator that compares recent average gains and losses to estimate the speed and strength of price moves. Its value ranges from 0 to 100.',
+      RUS: 'RSI — осциллятор импульса, который сопоставляет средний рост и снижение цены за выбранный период, чтобы оценить скорость и силу движения. Значение находится в диапазоне от 0 до 100.',
+      UKR: 'RSI — осцилятор імпульсу, який зіставляє середнє зростання та зниження ціни за вибраний період, щоб оцінити швидкість і силу руху. Значення перебуває в діапазоні від 0 до 100.'
+    },
+    details: {
+      ENG: [
+        { label: 'What it measures', text: 'RSI (Relative Strength Index), developed by J. Welles Wilder, measures the magnitude of recent upward and downward price changes. The common default is 14 bars; the period counts candles, not minutes or days. On a 15-minute chart, RSI 14 uses the last 14 candles (about 3.5 hours).' },
+        { label: 'Calculation', text: 'For each bar: Gain = max(Close now − Close previous, 0); Loss = max(Close previous − Close now, 0). First average gain/loss is the arithmetic mean over n bars. Then Wilder smoothing is used: AvgGain = (previous AvgGain × (n − 1) + current Gain) / n; AvgLoss is calculated the same way. RS = AvgGain / AvgLoss; RSI = 100 − 100 / (1 + RS). The result is bounded between 0 and 100.' },
+        { label: 'Classic levels', text: 'Above 70 is conventionally called overbought and below 30 oversold; 50 is a momentum midpoint. These are context zones, not automatic sell or buy instructions. In strong trends RSI can remain above 70 or below 30 for a long time. Some traders widen thresholds to 80/20 in strong trends to reduce premature counter-trend signals.' },
+        { label: 'How to use it', text: 'First identify market structure and the higher-timeframe trend. In an uptrend, look for RSI holding or recovering around 40–50 and confirm with price action; in a downtrend, watch for rejection around 50–60. A move across 50 can help assess momentum. Divergence (price makes a new high while RSI makes a lower high, or vice versa) warns that momentum may be weakening, but it can persist and needs confirmation. Use RSI with levels, volume, and a defined risk plan.' },
+        { label: 'Suggested chart timeframes', text: 'Scalping: 1–5 minute charts; RSI 7–9 reacts faster but is noisier, so confirm on 15-minute or higher charts. Intraday: 5-minute to 1-hour charts, commonly RSI 14. Swing trading: 4-hour to daily charts, RSI 14 or 21 for a smoother reading. Position trading: daily and weekly charts, commonly RSI 14–21. These are starting points, not universal settings; choose the timeframe that matches your holding period and test it on the asset traded.' },
+        { label: 'Limitations and risk', text: 'RSI is based on past closing prices, can lag, and can give repeated false reversals in a strong trend or low-liquidity market. A single RSI reading does not predict a reversal. Confirm the setup, size positions by a preset risk limit, and never rely on RSI alone.' }
+      ],
+      RUS: [
+        { label: 'Что измеряет', text: 'RSI (Relative Strength Index, индекс относительной силы), разработанный Дж. Уэллсом Уайлдером, измеряет величину недавних повышений и снижений цены. Стандартный период — 14 свечей: период считает свечи, а не минуты или дни. На 15-минутном графике RSI 14 учитывает последние 14 свечей (примерно 3,5 часа).' },
+        { label: 'Математика расчета', text: 'Для каждой свечи: Рост = max(Текущая цена закрытия − Предыдущая цена закрытия, 0); Снижение = max(Предыдущая цена закрытия − Текущая цена закрытия, 0). Первые средние рост и снижение — это обычные средние за n свечей. Далее применяется сглаживание Уайлдера: Средний рост = (Предыдущий средний рост × (n − 1) + Текущий рост) / n; среднее снижение рассчитывается аналогично. RS = Средний рост / Среднее снижение; RSI = 100 − 100 / (1 + RS). Результат находится в пределах от 0 до 100.' },
+        { label: 'Классические уровни', text: 'Выше 70 обычно называют зоной перекупленности, ниже 30 — перепроданности; уровень 50 служит серединой импульса. Это зоны для анализа, а не автоматические команды купить или продать. В сильном тренде RSI может долго оставаться выше 70 или ниже 30. Некоторые трейдеры расширяют пороги до 80/20 в сильном тренде, чтобы реже получать преждевременные контртрендовые сигналы.' },
+        { label: 'Как пользоваться', text: 'Сначала определите структуру рынка и направление старшего таймфрейма. В восходящем тренде следите, удерживается ли RSI в районе 40–50 или возвращается выше, и ищите подтверждение в движении цены; в нисходящем — наблюдайте за отказом от роста в районе 50–60. Пересечение уровня 50 помогает оценить импульс. Дивергенция (цена обновляет максимум, а RSI — нет, или наоборот) предупреждает об ослаблении импульса, но может сохраняться долго и требует подтверждения. Сочетайте RSI с уровнями, объемом и заранее определенным риском.' },
+        { label: 'Примерные таймфреймы', text: 'Скальпинг: графики 1–5 минут; RSI 7–9 быстрее реагирует, но дает больше шума, поэтому подтверждайте сигнал на 15-минутном или более старшем графике. Внутридневная торговля: 5 минут – 1 час, часто RSI 14. Свинг-трейдинг: 4 часа – 1 день, RSI 14 или 21 для более плавных значений. Позиционная торговля: дневной и недельный графики, обычно RSI 14–21. Это отправные настройки, а не универсальные правила: выбирайте график под предполагаемое время удержания сделки и проверяйте настройки на торгуемом активе.' },
+        { label: 'Ограничения и риск', text: 'RSI основан на прошлых ценах закрытия, может запаздывать и давать повторные ложные развороты в сильном тренде или на низколиквидном рынке. Одно значение RSI не предсказывает разворот. Подтверждайте сценарий, рассчитывайте размер позиции по заранее заданному риску и не используйте RSI как единственный критерий сделки.' }
+      ],
+      UKR: [
+        { label: 'Що вимірює', text: 'RSI (Relative Strength Index, індекс відносної сили), розроблений Дж. Веллсом Вайлдером, вимірює величину нещодавніх зростань і знижень ціни. Стандартний період — 14 свічок: він рахує свічки, а не хвилини чи дні. На 15-хвилинному графіку RSI 14 враховує останні 14 свічок (приблизно 3,5 години).' },
+        { label: 'Математика розрахунку', text: 'Для кожної свічки: Зростання = max(Поточна ціна закриття − Попередня ціна закриття, 0); Зниження = max(Попередня ціна закриття − Поточна ціна закриття, 0). Перші середні зростання та зниження — це звичайні середні за n свічок. Далі застосовується згладжування Вайлдера: Середнє зростання = (Попереднє середнє зростання × (n − 1) + Поточне зростання) / n; середнє зниження обчислюється так само. RS = Середнє зростання / Середнє зниження; RSI = 100 − 100 / (1 + RS). Результат перебуває в межах від 0 до 100.' },
+        { label: 'Класичні рівні', text: 'Вище 70 зазвичай називають зоною перекупленості, нижче 30 — перепроданості; рівень 50 є серединою імпульсу. Це зони для аналізу, а не автоматичні команди купити чи продати. У сильному тренді RSI може довго залишатися вище 70 або нижче 30. Деякі трейдери розширюють пороги до 80/20 у сильному тренді, щоб рідше отримувати передчасні контртрендові сигнали.' },
+        { label: 'Як користуватися', text: 'Спочатку визначте структуру ринку та напрямок старшого таймфрейму. У висхідному тренді стежте, чи RSI утримується в районі 40–50 або повертається вище, і шукайте підтвердження в русі ціни; у низхідному — спостерігайте за відхиленням від зростання в районі 50–60. Перетин рівня 50 допомагає оцінити імпульс. Дивергенція (ціна оновлює максимум, а RSI — ні, або навпаки) попереджає про ослаблення імпульсу, але може зберігатися довго й потребує підтвердження. Поєднуйте RSI з рівнями, обсягом і заздалегідь визначеним ризиком.' },
+        { label: 'Орієнтовні таймфрейми', text: 'Скальпінг: графіки 1–5 хвилин; RSI 7–9 реагує швидше, але дає більше шуму, тому підтверджуйте сигнал на 15-хвилинному або старшому графіку. Внутрішньоденна торгівля: 5 хвилин – 1 година, часто RSI 14. Свінг-трейдинг: 4 години – 1 день, RSI 14 або 21 для плавніших значень. Позиційна торгівля: денний і тижневий графіки, зазвичай RSI 14–21. Це початкові налаштування, а не універсальні правила: обирайте графік відповідно до очікуваного часу утримання угоди та перевіряйте налаштування на активі, яким торгуєте.' },
+        { label: 'Обмеження та ризик', text: 'RSI базується на минулих цінах закриття, може запізнюватися та давати повторні хибні розвороти у сильному тренді або на низьколіквідному ринку. Одне значення RSI не передбачає розворот. Підтверджуйте сценарій, розраховуйте розмір позиції відповідно до заздалегідь визначеного ризику й не використовуйте RSI як єдиний критерій угоди.' }
+      ]
+    }
+  },
+  {
+    id: 'open-interest',
+    title: { ENG: 'Open Interest', RUS: 'Операционный интерес', UKR: 'Операційний інтерес' },
+    text: {
+      ENG: 'Open Interest is the total number of outstanding derivative contracts that have not yet been closed or settled.',
+      RUS: 'Операционный интерес — это общее количество открытых деривативных контрактов, которые ещё не были закрыты или рассчитаны.',
+      UKR: 'Операційний інтерес — це загальна кількість відкритих деривативних контрактів, які ще не було закрито або розраховано.'
+    },
+    details: {
+      ENG: [
+        { label: 'Definition', text: 'Open Interest (OI) is the number of currently open futures or perpetual contracts on a specific market. It counts both a long and a short position as one contract held, because both sides are created from the same contract. It is not the same as trading volume: volume counts contract transfers during a period, while OI shows how many positions remain open at a given moment.' },
+        { label: 'How to read it', text: 'OI rising together with price growth suggests that new long positions are entering; it can support a bullish move, but crowded leverage increases the risk of a liquidation squeeze. OI rising with falling price suggests that new short positions are entering. If price moves while OI falls, positions are more likely being closed, so the move may be weaker or less sustainable.' },
+        { label: 'Trading applications', text: 'Use OI as a confirmation and risk filter for an existing setup. Rising OI plus a breakout and increasing volume can confirm entry interest; falling OI after an impulse may indicate liquidation and profit-taking rather than a new trend. A strong divergence between OI and price, especially near key levels, can signal an approaching reversal or volatility spike.' },
+        { label: 'Useful combinations', text: 'Compare OI with price, spot and futures volume, funding rate, liquidation data, and the long/short ratio. The most important time unit is a change in OI: compare the current value with the previous 1-hour, 4-hour, or daily reading. A sharp OI increase can mean new leverage, but it does not reveal whether the money is entering from the buy or sell side.' },
+        { label: 'Practical example', text: 'Bitcoin rises 3%, OI rises 8%, and funding becomes strongly positive: buyers are aggressive, but the market may be long-crowded. Wait for a breakout confirmation if the setup supports continuation, or tighten risk and avoid chasing the move. If price remains near resistance while OI rises rapidly and liquidation activity increases, prepare for a failed-breakout or squeeze scenario.' },
+        { label: 'Limitations', text: 'OI is a lagging aggregate and differs between exchanges. It does not show direction of individual capital or predict a reversal on its own. A high OI value is not automatically bullish or bearish; the interpretation depends on price direction, OI change, funding, volume, and market structure.' }
+      ],
+      RUS: [
+        { label: 'Определение', text: 'Операционный интерес (Open Interest, OI) — это количество открытых фьючерсных или бессрочных контрактов на конкретном рынке. Длинная и короткая позиции считаются одной открытой парой, то есть она включает как объём обязательств покупателей, так и обязательств продавцов. OI не является объёмом торгов: объём считает совершённые сделки за период, а OI показывает, сколько контрактов остаётся открытым в данный момент.' },
+        { label: 'Как читать изменение', text: 'Рост OI вместе с ростом цены означает, что в рынок входят новые длинные позиции: движение может получить поддержку, но избыточное плечо повышает риск резкой ликвидации. Рост OI на падающем рынке часто говорит о новых коротких позициях. Если цена движется, а OI снижается, прежние сделки закрываются; импульс может быть реакцией ликвидации или фиксации прибыли и не всегда устойчивым.' },
+        { label: 'Применение в торговле', text: 'Используйте OI как подтверждение и фильтр риска для уже определённого сценария. Рост OI вместе с пробоем и увеличением объёма может подтверждать появление нового интереса. Снижение OI после резкого импульса может указывать на закрытие позиций и фиксацию прибыли. Несоответствие цены и OI у ключевого уровня помогает искать разворотную ловушку или сокращение риска перед высокой волатильностью.' },
+        { label: 'Полезные сочетания', text: 'Сравнивайте OI с направлением цены, объёмами спота и фьючерсов, ставкой фандинга, ликвидациями и соотношением лонг/шорт. Особенно важны изменения, а не абсолютное значение: смотрите на разницу за 1 час, 4 часа и сутки. Резкий рост OI означает больше открытого плеча, но сам по себе не показывает, поступал ли капитал на стороне покупателей или продавцов.' },
+        { label: 'Практический пример', text: 'Bitcoin вырос на 3%, OI увеличился на 8%, а фандинг стал резко положительным: покупатели активны, но рынок перегружен лонгами. Для продолжения нужно подтверждение пробоя, а при входе следует сократить размер позиции и контролировать риск. Если цена остановилась у сопротивления, OI продолжает расти и растёт число ликвидаций, можно готовиться к ложному пробою или сжатию позиций.' },
+        { label: 'Ограничения', text: 'OI — агрегированный показатель, который может различаться на разных биржах и запаздывать на коротких таймфреймах. Он не раскрывает направление каждого капитала и не предсказывает разворот самостоятельно. Рост или высокий уровень OI не является однозначно бычьим или медвежьим признаком: оценка зависит от изменения OI, цены, фандинга, объёма и рыночной структуры.' }
+      ],
+      UKR: [
+        { label: 'Визначення', text: 'Операційний інтерес (Open Interest, OI) — це кількість відкритих ф’ючерсних або безстрокових контрактів на конкретному ринку. Довга та коротка позиції разом рахуються як один відкритий контракт. OI не є обсягом торгів: обсяг показує виконані угоди за період, а OI — скільки контрактів залишається відкритими в певний момент.' },
+        { label: 'Як читати зміну', text: 'Зростання OI разом із ростом ціни означає, що в ринок входять нові довгі позиції: рух може отримати підтримку, але надмірне плече підвищує ризик швидкої ліквідації. Зростання OI на падінні часто свідчить про нові короткі позиції. Якщо ціна рухається, а OI знижується, попередні угоди закриваються; імпульс може бути реакцією на ліквідацію або фіксацію прибутку й не завжди буде стійким.' },
+        { label: 'Застосування в торгівлі', text: 'Використовуйте OI як підтвердження та фільтр ризику для вже визначеного сценарію. Ріст OI разом із пробоєм і збільшенням обсягу може підтверджувати появу нового інтересу. Зниження OI після різкого імпульсу може вказувати на закриття позицій і фіксацію прибутку. Розбіжність ціни й OI біля ключового рівня допомагає шукати пастку на розворот або скоротити ризик перед волатильністю.' },
+        { label: 'Корисні поєднання', text: 'Порівнюйте OI із напрямком ціни, обсягами спотового й ф’ючерсного ринків, ставкою фандингу, ліквідаціями та співвідношенням лонг/шорт. Особливо важливо дивитися на зміну OI, а не на абсолютне значення: порівнюйте поточні дані із показниками за 1 годину, 4 години й добу. Різкий ріст OI означає більше відкритого плеча, але сам по собі не показує, чи приходить капітал на боці покупців чи продавців.' },
+        { label: 'Практичний приклад', text: 'Bitcoin виріс на 3%, OI збільшився на 8%, а фандинг став різко позитивним: покупці активні, але ринок може бути перевантажений довгими позиціями. Для продовження потрібне підтвердження пробою, а під час входу варто зменшити розмір позиції та контролювати ризик. Якщо ціна зупинилася біля опору, OI продовжує рости, а ліквідації зростають, слід бути готовим до хибного пробою чи стискання позицій.' },
+        { label: 'Обмеження', text: 'OI — агрегований показник, який може відрізнятися на різних біржах і запізнюватися на коротких таймфреймах. Він не показує напрямок окремого капіталу й самостійно не передбачає розворот. Ріст або високий рівень OI не є однозначно бичачим чи ведмежим знаком: оцінка залежить від зміни OI, ціни, фандингу, обсягу та ринкової структури.' }
+      ]
+    }
+  },
+  {
+    id: 'funding-rate',
+    title: { ENG: 'Funding Rate', RUS: 'Ставка финансирования', UKR: 'Ставка фінансування' },
+    text: {
+      ENG: 'The funding rate is a periodic payment between long and short perpetual-futures traders that keeps the contract price close to the spot price.',
+      RUS: 'Ставка финансирования — это периодический платеж между лонгами и шортами в бессрочных фьючерсах, который удерживает цену контракта близко к спотовой цене.',
+      UKR: 'Ставка фінансування — це періодичний платіж між лонгами та шортами в безстрокових ф’ючерсах, який утримує ціну контракту близько до спотової ціни.'
+    },
+    details: {
+      ENG: [
+        { label: 'Definition', text: 'Funding is a fee exchanged directly between traders who hold perpetual futures, not a fee paid to the exchange. It usually occurs every 8 hours on major derivatives exchanges, although the schedule can differ. The funding mechanism is designed to align the perpetual contract price with the underlying spot market.' },
+        { label: 'How to read it', text: 'A positive funding rate means that the contract trades above spot on average and most open positions are long. Long holders pay short holders. This suggests bullish positioning, but strongly positive rates can indicate crowded leverage and a higher risk of a sharp correction. A negative rate means the contract trades below spot on average and shorts pay longs. This reflects bearish positioning and may increase the risk of a short squeeze.' },
+        { label: 'Trading applications', text: 'Use funding as a sentiment and risk-management filter, not as an independent entry signal. Extreme positive funding near resistance can support a reversal or profit-taking scenario; extreme negative funding near support can support a squeeze or rebound scenario. Always confirm with price structure, Open Interest, volume, liquidations, and higher-timeframe trend.' },
+        { label: 'Change over time', text: 'A changing funding rate is often more informative than one isolated value. Rising positive funding together with rising Open Interest shows that new bullish leverage is accumulating. Falling funding after a strong rally may indicate that leveraged longs are being closed. A stable, near-zero rate usually indicates a more balanced market.' },
+        { label: 'Practical example', text: 'Bitcoin is at resistance, Open Interest is rising, and funding becomes strongly positive: many traders are opening or holding long positions. Avoid chasing the breakout without confirmation. A failed move above resistance, followed by long liquidations, may produce a fast decline. Conversely, during an oversold drop with strongly negative funding, repeated short liquidations and a support reversal can create a rapid rebound.' },
+        { label: 'Limitations', text: 'Funding differs across exchanges and can be affected by each venue’s methodology and mark price. A positive or negative rate does not guarantee that price will move in the opposite direction. Holding a futures position incurs funding costs or provides funding income depending on position side and market conditions, so it must be included in the trade plan.' }
+      ],
+      RUS: [
+        { label: 'Определение', text: 'Фандинг — это ставка или регулярный платеж, который лонги и шорты обменяют друг с другом при удержании бессрочного фьючерсного контракта. Это не комиссия биржи, а механизм выравнивания цены бессрочного контракта с спотовой ценой актива. На крупных биржах расчет обычно происходит каждые 8 часов, но график может отличаться.' },
+        { label: 'Как читать знак', text: 'Положительная ставка означает, что фьючерс торгуется дороже спота и лонги доминируют по открытым позициям. Длинные держатели платят шортам. Это по-бычий признак, но экстремально высокая ставка может говорить о перегреве и повышенном риске принудительного закрытия лонгов. Отрицательная ставка означает, что фьючерс торгуется дешевле спота и шорты платят лонгам. Она отражает пессимизм и повышает вероятность шорт-сквиза.' },
+        { label: 'Применение в торговле', text: 'Используйте ставку как фильтр настроений и риска, а не как самостоятельную торговую точку входа. Экстремально положительный фандинг у сопротивления может подтверждать сценарий разворота или фиксации прибыли. Экстремально отрицательный фандинг у поддержки может повысить вероятность отскока и закрытия шортов. Подтверждайте решение структурой цены, Операционным интересом, объемом, ликвидациями и старшим трендом.' },
+        { label: 'Изменение во времени', text: 'Часто важнее не одно значение, а динамика ставки. Рост положительного фандинга вместе с ростом Операционного интереса показывает, что в рынок добавляется бычье кредитное плечо. Падение фандинга после сильного роста может означать закрытие лонгов. Значение около нуля обычно говорит о более сбалансированном рынке.' },
+        { label: 'Практический пример', text: 'Bitcoin находится у сопротивления, Операционный интерес растет, а фандинг становится резко положительным: много трейдеров держат лонги. Входить в покупку на пробой лучше только с подтверждением и меньшим риском. Неудачный пробой с последующими ликвидациями лонгов может вызвать быстрое падение. При перепроданной цене, сильном отрицательном фандинге и закрытии шортов возможен резкий отскок.' },
+        { label: 'Ограничения', text: 'Ставка фандинга отличается по биржам и зависит от методики расчета и цены mark price конкретной площадки. Положительное или отрицательное значение не гарантирует будущий разворот цены. Удержание фьючерсной позиции может приносить или расходовать деньги по ставке фандинга, поэтому эти выплаты необходимо учитывать в расчете риска и результата сделки.' }
+      ],
+      UKR: [
+        { label: 'Визначення', text: 'Фандинг — це ставка або періодичний платіж, який лонги та шорти обмінюють один з одним під час утримання безстрокового ф’ючерсного контракту. Це не комісія біржі, а механізм наближення ціни ф’ючерсу до спотової ціни активу. На великих біржах розрахунок зазвичай відбувається кожні 8 годин, але графік може відрізнятися.' },
+        { label: 'Як читати знак', text: 'Позитивна ставка означає, що ф’ючерс торгується дорожче споту і лонги переважають за відкритими позиціями. Довгі утримувачі платять шортам. Це бичачий ознака, але надмірно висока ставка може свідчити про перегрів і підвищений ризик примусового закриття лонгів. Негативна ставка означає, що ф’ючерс торгується дешевше споту і шорти платять лонгам. Вона відображає песимізм і підвищує ймовірність шорт-сквізу.' },
+        { label: 'Застосування в торгівлі', text: 'Використовуйте ставку як фільтр настроїв і ризику, а не як самостійну точку входу. Екстремально позитивний фандинг біля опору може підтверджувати сценарій розвороту або фіксації прибутку. Екстремально негативний фандинг біля підтримки може підвищити ймовірність відскоку та закриття шортів. Підтверджуйте рішення структурою ціни, Операційним інтересом, обсягом, ліквідаціями та старшим трендом.' },
+        { label: 'Зміна в часі', text: 'Часто важливіша не одна величина, а динаміка ставки. Ріст позитивного фандингу разом із ростом Операційного інтересу показує, що в ринок додається бичаче кредитне плече. Падіння фандингу після сильного зростання може означати закриття лонгів. Значення біля нуля зазвичай свідчить про більш збалансований ринок.' },
+        { label: 'Практичний приклад', text: 'Bitcoin знаходиться біля опору, Операційний інтерес росте, а фандинг стає різко позитивним: багато трейдерів утримують лонги. Покупку на пробій краще відкривати лише з підтвердженням і зменшеним ризиком. Невдалий пробій із наступними ліквідаціями лонгів може спричинити швидке падіння. За перепроданої ціни, сильного негативного фандингу та закриття шортів можливий різкий відскок.' },
+        { label: 'Обмеження', text: 'Ставка фандинга відрізняється на різних біржах і залежить від методики розрахунку та mark price конкретного майданчика. Позитивне чи негативне значення не гарантує майбутнього розвороту ціни. Утримання ф’ючерсної позиції може приносити або витрачати кошти за ставкою фандинга, тому виплати слід враховувати в розрахунку ризику й результату угоди.' }
+      ]
+    }
+  },
+  { id: 'trend', title: { ENG: 'Trend filter', RUS: 'Фильтр тренда', UKR: 'Фільтр тренду' }, text: { ENG: 'Trade with the dominant trend; counter-trend entries are more fragile and need stronger confirmation.', RUS: 'Торгуйте по доминирующему тренду; контртрендовые входы более хрупкие и требуют сильного подтверждения.', UKR: 'Торгуйте за домінуючим трендом; контртрендові входи більш крихкі і вимагають сильного підтвердження.' } },
+  { id: 'support', title: { ENG: 'Support / resistance', RUS: 'Поддержка / сопротивление', UKR: 'Підтримка / опір' }, text: { ENG: 'Use key zones as decision areas, not as exact prices. Breaks or rejections matter more than the level itself.', RUS: 'Используйте ключевые зоны как зоны принятия решений, а не как точные цены. Пробои и отскоки важнее самой отметки.', UKR: 'Використовуйте ключові зони як зони прийняття рішень, а не як точні ціни. Прориви та відскоки важливіші за саму позначку.' } },
+  { id: 'liquidity', title: { ENG: 'Liquidity sweep', RUS: 'Захват ликвидности', UKR: 'Захоплення ліквідності' }, text: { ENG: 'Many false breakouts occur as stops are hunted. Wait for confirmation after the sweep.', RUS: 'Многие ложные пробои происходят при ловле стопов. Ждите подтверждения после захвата ликвидности.', UKR: 'Багато хибних пробоїв відбуваються під час ловлі стоп-ордера. Чекайте підтвердження після захоплення ліквідності.' } },
+  { id: 'fomo', title: { ENG: 'FOMO control', RUS: 'Контроль FOMO', UKR: 'Контроль FOMO' }, text: { ENG: 'When everyone is excited, step back. The best entries are often boring and delayed.', RUS: 'Когда все в экстазе, отступайте. Лучшие входы часто скучные и запоздалые.', UKR: 'Коли всі в екстазі, відступайте. Найкращі входи часто нудні та запізнілі.' } },
+  { id: 'sessions', title: { ENG: 'Market sessions', RUS: 'Сессии рынка', UKR: 'Сесії ринку' }, text: { ENG: 'Liquidity rises during major sessions. Trade more carefully at low-volume hours when spread and noise are higher.', RUS: 'Ликвидность выше в важные рыночные сессии. Торгуйте осторожнее в низколиквидные часы, когда спред и шум выше.', UKR: 'Ліквідність вища в важливі ринкові сесії. Торгуйте обережніше в низьколіквідні години, коли спред і шум вищі.' } },
+  { id: 'macro', title: { ENG: 'Macro context', RUS: 'Макро контекст', UKR: 'Макро контекст' }, text: { ENG: 'BTC and majors often lead the market. Check larger market structure before trading lower-cap alts.', RUS: 'BTC и мажоры часто задают рынок. Проверяйте более крупную структуру прежде чем входить в низко-капитализацию.', UKR: 'BTC та мажори часто задають ринок. Перевіряйте ширшу структуру перед входом в низько-капітальні альти.' } },
+  { id: 'patterns', title: { ENG: 'Structure', RUS: 'Структура', UKR: 'Структура' }, text: { ENG: 'Look for higher highs / higher lows on uptrends and lower lows / lower highs on downtrends. Structure beats noise.', RUS: 'Смотрите на higher highs / higher lows в восходящем тренде и lower lows / lower highs в нисходящем. Структура важнее шума.', UKR: 'Дивіться на higher highs / higher lows в висхідному тренді та lower lows / lower highs в низхідному. Структура важливіша за шум.' } },
+  { id: 'funding', title: { ENG: 'Funding / leverage', RUS: 'Фандинг / кредитное плечо', UKR: 'Фандинг / кредитне плече' }, text: { ENG: 'Excess leverage and funding spikes often coincide with local tops or panic bottoms. Respect crowded positioning.', RUS: 'Избыточное плечо и пики фандинга часто совпадают с локальными максимумами или паническими минимумами. Учитывайте скопление позиций.', UKR: 'Надмірне плече і піки фандингу часто збігаються з локальними максимумами або панічними мінімумами. Ураховуйте скупчення позицій.' } },
+  { id: 'avoid', title: { ENG: 'What to avoid', RUS: 'Чего избегать', UKR: 'Чого уникати' }, text: { ENG: 'Avoid revenge trades, random entries, and adding on losses without an objective reason.', RUS: 'Избегайте отыгрыша, случайных входов и усугубления убытков без объективной причины.', UKR: 'Уникайте відплати, випадкових входів і поглиблення збитків без об’єктивної причини.' } },
+  { id: 'review', title: { ENG: 'Trade journal', RUS: 'Журнал сделок', UKR: 'Журнал угод' }, text: { ENG: 'Review your trades weekly. The goal is not to be right every time, but to be consistent and learn patterns.', RUS: 'Проверяйте сделки еженедельно. Цель — не быть всегда правым, а быть последовательным и понимать собственные паттерны.', UKR: 'Перевіряйте угоди щотижня. Мета — не бути завжди правим, а бути послідовним і розуміти власні патерни.' } },
+  { id: 'discipline', title: { ENG: 'Discipline', RUS: 'Дисциплина', UKR: 'Дисципліна' }, text: { ENG: 'The plan should define entry, exit, risk, and invalidation. Focus on a few high-quality setups instead of random trades; discipline keeps your edge alive.', RUS: 'План должен определять вход, выход, риск и отмену сценария. Сосредоточьтесь на нескольких качественных сделках вместо случайных входов — дисциплина сохраняет преимущество.', UKR: 'План повинен визначати вхід, вихід, ризик і скасування сценарію. Зосередьтеся на кількох якісних угодах замість випадкових входів — дисципліна зберігає перевагу.' } }
+];
+
+const cheatSheetUi = {
+  ENG: {
+    heading: 'Cheat Sheet',
+    ruleLabel: 'Rule',
+    rule: 'Never trade without a plan.',
+    entryLabel: 'Entry',
+    entry: 'Only enter when structure is confirmed.',
+    executionLabel: 'Execution',
+    execution: 'Execute the plan, not the impulse.'
+  },
+  RUS: {
+    heading: 'Шпаргалка',
+    ruleLabel: 'Правило',
+    rule: 'Не торгуйте без плана.',
+    entryLabel: 'Вход',
+    entry: 'Входите только при подтверждённой структуре.',
+    executionLabel: 'Исполнение',
+    execution: 'Следуйте плану, а не импульсу.'
+  },
+  UKR: {
+    heading: 'Шпаргалка',
+    ruleLabel: 'Правило',
+    rule: 'Не торгуйте без плану.',
+    entryLabel: 'Вхід',
+    entry: 'Входьте лише за підтвердженої структури.',
+    executionLabel: 'Виконання',
+    execution: 'Дотримуйтеся плану, а не дійте імпульсивно.'
+  }
+};
+
+function buildCheatSheetDetail(topic, lang) {
+  const language = cheatSheetUi[lang] || cheatSheetUi.ENG;
+  const title = topic.title[lang] || topic.title.ENG;
+  const text = topic.text[lang] || topic.text.ENG;
+  const details = topic.details?.[lang] || topic.details?.ENG;
+  const detailSections = details
+    ? details.map(section => `
+        <div class="cheat-detail-section">
+          <strong>${section.label}:</strong>
+          <span>${section.text}</span>
+        </div>
+      `).join('')
+    : '';
+
+  return `
+    <div class="cheat-detail-panel">
+      <div class="cheat-detail-heading">${language.heading}</div>
+      <h3 class="cheat-detail-title">${title}</h3>
+      <p class="cheat-detail-text">${text}</p>
+      ${detailSections ? `<div class="cheat-detail-sections">${detailSections}</div>` : ''}
+      <div class="cheat-detail-rules">
+        <div><strong>${language.ruleLabel}:</strong> ${language.rule}</div>
+        <div><strong>${language.entryLabel}:</strong> ${language.entry}</div>
+        <div><strong>${language.executionLabel}:</strong> ${language.execution}</div>
+      </div>
+    </div>
+  `;
+}
+
 const detailConfig = {
   analytics: {
     label: 'АНАЛИТИКА',
@@ -120,10 +334,62 @@ window.showPage = function (pageId) {
   }
 };
 
+window.renderCheatSheetGrid = function () {
+  const container = document.getElementById('cheatsheet-cards-container');
+  if (!container) return;
+
+  const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+  container.innerHTML = cheatSheetTopics.map((topic, index) => {
+    const title = topic.title[lang] || topic.title.ENG;
+    return `
+      <button class="cheat-sheet-tile" type="button" data-index="${index}" aria-label="${title}">
+        <span class="cheat-sheet-number">${String(index + 1).padStart(2, '0')}</span>
+        <span class="cheat-sheet-name">${title}</span>
+      </button>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.cheat-sheet-tile').forEach((tile) => {
+    tile.addEventListener('click', () => {
+      const index = Number(tile.dataset.index);
+      window.openCheatDetail(index);
+    });
+  });
+};
+
+window.openCheatDetail = function (index, origin = 'cheatsheet', returnToIndex = 1) {
+  const topic = cheatSheetTopics[index];
+  if (!topic) return;
+
+  const lang = localStorage.getItem('selectedLanguage') || 'RUS';
+  const title = topic.title[lang] || topic.title.ENG;
+  const detailTitle = document.getElementById('detail-title');
+  const detailBody = document.getElementById('detail-body');
+
+  if (detailTitle) detailTitle.textContent = title;
+  if (detailBody) detailBody.innerHTML = buildCheatSheetDetail(topic, lang);
+
+  const detailPage = document.getElementById('detail-page');
+  detailPage.classList.toggle('detail-subpage--analytics', origin === 'analytics');
+  const cheatsheet = document.getElementById('cheatsheet');
+  if (cheatsheet) cheatsheet.classList.remove('active');
+  if (detailPage) {
+    detailPage.style.display = 'flex';
+    requestAnimationFrame(() => detailPage.classList.add('active'));
+  }
+
+  window.currentDetailSection = origin;
+  window.currentDetailIndex = index + 1;
+  window.detailOrigin = origin;
+  window.cheatDetailOpenedFrom = origin;
+  window.cheatDetailReturnIndex = origin === 'analytics' ? returnToIndex : null;
+};
+
 window.showDetail = function (section, itemIndex) {
   window.currentDetailSection = section;
   window.detailOrigin = section;
   window.currentDetailIndex = itemIndex;
+  window.cheatDetailOpenedFrom = null;
   const config = detailConfig[section];
   if (!config) return;
 
@@ -150,6 +416,7 @@ detailBodyEl.innerHTML = buildDetailBody(section, itemIndex, item, lang);
 
   document.getElementById(section).classList.remove('active');
   const detailPage = document.getElementById('detail-page');
+  detailPage.classList.toggle('detail-subpage--analytics', section === 'analytics');
   detailPage.style.display = 'flex';
   setTimeout(() => {
     document.getElementById(section).style.display = 'none';
@@ -158,11 +425,21 @@ detailBodyEl.innerHTML = buildDetailBody(section, itemIndex, item, lang);
 };
 
 window.closeDetail = function () {
-    window.showPage(window.currentDetailSection || 'analytics'); // Возврат в нужную секцию
-    document.getElementById('detail-page').classList.remove('active');
-    setTimeout(() => {
-        document.getElementById('detail-page').style.display = 'none';
-    }, 300);
+  const returnToAnalyticsIndex = window.cheatDetailOpenedFrom === 'analytics'
+    ? window.cheatDetailReturnIndex || 1
+    : null;
+  const detailPage = document.getElementById('detail-page');
+  detailPage.classList.remove('active');
+
+  setTimeout(() => {
+    detailPage.style.display = 'none';
+    if (returnToAnalyticsIndex) {
+      window.showDetail('analytics', returnToAnalyticsIndex);
+      return;
+    }
+
+    window.showPage(window.currentDetailSection || 'analytics');
+  }, 300);
 };
 
 window.requestSMCAnalysis = async function requestSMCAnalysis() {
@@ -373,9 +650,16 @@ window.requestTop15Screener = async function requestTop15Screener() {
 // Build detail page body content
 function buildDetailBody(section, index, item, lang = 'ENG') {
   const sectionColors = {
-    analytics: '#00ff88'
+    analytics: '#00ff88',
+    cheatsheet: '#7dd3fc'
   };
   const color = sectionColors[section] || '#00ff88';
+
+  if (section === 'cheatsheet') {
+    const topic = cheatSheetTopics[index - 1];
+    if (!topic) return '<p>Topic not found.</p>';
+    return buildCheatSheetDetail(topic, lang || 'ENG');
+  }
 
   if (section === 'analytics' && index === 1) {
     return `
@@ -613,7 +897,16 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     const header = lang === 'ENG' ? '📊 OI & Funding Terminal: Left Axis' : (lang === 'UKR' ? '📊 OI & Funding Terminal: Left Axis' : '📊 OI & Funding Terminal Left Axis');
     const guideTitle = lang === 'ENG' ? '🛠 Quick User Guide' : (lang === 'UKR' ? '🛠 Коротка інструкція' : '🛠 Краткая инструкция');
     
-    const panelTitle = lang === 'ENG' ? 'Top Panel (BTC OI):' : (lang === 'UKR' ? 'Верхня панель (BTC OI):' : 'Верхняя панель (BTC OI):');
+    const oiTermLabel = lang === 'ENG'
+      ? '<button type="button" onclick="openCheatDetail(2, \'analytics\', 8)" style="border: 0; background: transparent; color: #10b981; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; cursor: pointer;">Open Interest</button>'
+      : (lang === 'UKR'
+        ? '<button type="button" onclick="openCheatDetail(2, \'analytics\', 8)" style="border: 0; background: transparent; color: #10b981; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; cursor: pointer;">Операційний інтерес</button>'
+        : '<button type="button" onclick="openCheatDetail(2, \'analytics\', 8)" style="border: 0; background: transparent; color: #10b981; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; cursor: pointer;">Операционный интерес</button>');
+    const panelTitle = lang === 'ENG'
+      ? `Top Panel (${oiTermLabel}):`
+      : (lang === 'UKR'
+        ? `Верхня панель (${oiTermLabel}):`
+        : `Верхняя панель (${oiTermLabel}):`);
     const panelDesc = lang === 'ENG' 
       ? 'Displays the total value of all open positions (Long + Short) for Bitcoin in millions of dollars ($M).'
       : (lang === 'UKR' 
@@ -623,7 +916,11 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
     const chartRise = lang === 'ENG' ? '<strong>Rising Chart:</strong> New capital and aggressive players are entering the market.' : (lang === 'UKR' ? '<strong>Зростання графіка:</strong> В ринок заходять нові гроші та агресивні гравці.' : '<strong>Рост графика:</strong> В рынок заходят новые деньги и агрессивные игроки.');
     const chartFall = lang === 'ENG' ? '<strong>Falling Chart:</strong> Mass liquidations or profit-taking (exiting to cash) are occurring.' : (lang === 'UKR' ? '<strong>Падіння графіка:</strong> Відбуваються масові ліквідації або фіксація прибутку (вихід у кеш).' : '<strong>Падение графика:</strong> Происходят массовые ликвидации или фиксация прибыли (выход в кэш).');
 
-    const fundingTitle = lang === 'ENG' ? 'Funding Rate:' : (lang === 'UKR' ? 'Ставка фінансування (Funding Rate):' : 'Funding Rate (Ставка финансирования):');
+    const fundingTitle = lang === 'ENG'
+      ? '<button type="button" onclick="openCheatDetail(3, \'analytics\', 8)" style="border: 0; background: transparent; color: #10b981; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; cursor: pointer;">Funding Rate:</button>'
+      : (lang === 'UKR'
+        ? '<button type="button" onclick="openCheatDetail(3, \'analytics\', 8)" style="border: 0; background: transparent; color: #10b981; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; cursor: pointer;">Ставка фінансування (Funding Rate):</button>'
+        : '<button type="button" onclick="openCheatDetail(3, \'analytics\', 8)" style="border: 0; background: transparent; color: #10b981; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; cursor: pointer;">Funding Rate (Ставка финансирования):</button>');
     const fundPos = lang === 'ENG' 
       ? '<strong style="color: #10b981;">Positive (Green):</strong> Longs pay Shorts. The market is bullish, but potential overheating is possible.'
       : (lang === 'UKR'
@@ -712,6 +1009,10 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
       : (lang === 'UKR'
         ? 'RSI Signals PRO — це високоточний аналітичний віджет, призначений для миттєвого пошуку торгових можливостей на крипторинку. Інструмент сканує ТОП-50 найбільш ліквідних активів у реальному часі та виводить тільки ті монети, які знаходяться в критичних зонах «перекупленості» або «перепроданості».'
         : 'RSI Signals PRO — это высокоточный аналитический виджет, предназначенный для мгновенного поиска торговых возможностей на крипторынке. Инструмент сканирует ТОП-50 наиболее ликвидных активов в реальном времени и выводит только те монеты, которые находятся в критических зонах «перекупленности» или «перепроданности».');
+    const linkedIntro = intro.replace(
+      'RSI',
+      `<button type="button" class="cheat-sheet-inline-link" aria-label="${lang === 'ENG' ? 'Open RSI guide' : (lang === 'UKR' ? 'Відкрити довідку RSI' : 'Открыть справку RSI')}" onclick="openCheatDetail(1, 'analytics', 6)">RSI</button>`
+    );
 
     const guideTitle = lang === 'ENG' ? '🛠 Quick User Guide' : (lang === 'UKR' ? '🛠 Коротка інструкція' : '🛠 Краткая инструкция пользователя');
     
@@ -779,7 +1080,7 @@ function buildDetailBody(section, index, item, lang = 'ENG') {
         <div class="instructions-panel" style="flex: 1.2; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--detail-color, ${color}); border-radius: 14px; padding: 25px 30px; box-shadow: 0 0 30px color-mix(in srgb, ${color} 15%, transparent); overflow-y: auto; color: rgba(255,255,255,0.8); line-height: 1.6; font-size: 0.85rem; height: 100%;">
           <h3 style="color: ${color}; margin-top: 0; margin-bottom: 20px; font-family: 'Orbitron', sans-serif; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1.5px;">${header}</h3>
           
-          <p style="margin-bottom: 20px; color: #fff; font-weight: 500;">${intro}</p>
+          <p style="margin-bottom: 20px; color: #fff; font-weight: 500;">${linkedIntro}</p>
 
           <h4 style="color: ${color}; margin-top: 25px; margin-bottom: 15px; font-size: 0.95rem; text-transform: uppercase;">${guideTitle}</h4>
           
@@ -1238,9 +1539,13 @@ window.selectLanguage = function (langCode) {
       navDailyReview: 'Daily Market Review',
       navTopicDay: 'Topic of the Day',
       navWeeklyHeadliners: 'Weekly Headliners',
+      navNewCryptoFaces: 'New Faces of the Crypto Market',
       marketPulseSubtitle: 'Analytics and data processing: Swappy AI Assistant',
+      navCheatSheet: 'Cheat Sheet',
       navScreeners: 'Screeners',
       navAbout: 'About us',
+      cheatsheetTitle: 'Cheat Sheet',
+      cheatsheetSubtitle: 'Basic rules, risk management, and key concepts for a crypto trader',
       aboutTitle: 'About CryptoStatix',
       aboutDesc: '<strong>CryptoStatix</strong> is an analytical platform built for traders and investors who prioritize data integrity and speed. We don’t just display charts—we help you visualize market structure through the lens of key metrics.',
       aboutWhatTitle: 'What We Do',
@@ -1333,9 +1638,13 @@ window.selectLanguage = function (langCode) {
       navDailyReview: 'Ежедневный обзор рынка',
       navTopicDay: 'Тема дня',
       navWeeklyHeadliners: 'Хедлайнеры недели',
+      navNewCryptoFaces: 'Новые лица крипторынка',
       marketPulseSubtitle: 'Аналитика и обработка данных: Swappy AI Assistant',
+      navCheatSheet: 'Шпаргалка',
       navScreeners: 'Скринеры',
       navAbout: 'О проекте',
+      cheatsheetTitle: 'Шпаргалка',
+      cheatsheetSubtitle: 'Базовые правила, риск-менеджмент и ключевые концепции для криптотрейдера',
       aboutTitle: 'О проекте CryptoStatix',
       aboutDesc: '<strong>CryptoStatix</strong> — это аналитическая платформа, созданная для трейдеров и инвесторов, которым важна чистота данных и оперативность. Мы не просто показываем графики, мы помогаем увидеть структуру рынка через призму ключевых метрик.',
       aboutWhatTitle: 'Что мы делаем?',
@@ -1426,9 +1735,13 @@ window.selectLanguage = function (langCode) {
       navDailyReview: 'Щоденний огляд ринку',
       navTopicDay: 'Тема дня',
       navWeeklyHeadliners: 'Хедлайнери тижня',
+      navNewCryptoFaces: 'Нові обличчя крипторинку',
       marketPulseSubtitle: 'Аналітика та обробка даних: Swappy AI Assistant',
+      navCheatSheet: 'Шпаргалка',
       navScreeners: 'Скрінери',
       navAbout: 'Про проект',
+      cheatsheetTitle: 'Шпаргалка',
+      cheatsheetSubtitle: 'Базові правила, ризик-менеджмент та ключові концепції для криптотрейдера',
       aboutTitle: 'Про проект CryptoStatix',
       aboutDesc: '<strong>CryptoStatix</strong> — це аналітична платформа, створена для трейдерів та інвесторів, яким важлива чистота даних та оперативність. Ми не просто показуємо графіки, ми допомагаємо побачити структуру ринку через призму ключових метрик.',
       aboutWhatTitle: 'Що ми робимо?',
@@ -1527,6 +1840,8 @@ window.selectLanguage = function (langCode) {
   const navDailyReview = document.getElementById('nav-daily-review');
   const navTopicDay = document.getElementById('nav-topic-day');
   const navWeeklyHeadliners = document.getElementById('nav-weekly-headliners');
+  const navNewCryptoFaces = document.getElementById('nav-new-crypto-faces');
+  const navCheatSheet = document.getElementById('nav-cheatsheet');
   const navScreeners = document.getElementById('nav-screeners');
   const navAbout = document.getElementById('nav-about');
   if (navAnalytics) navAnalytics.textContent = current.navAnalytics;
@@ -1534,6 +1849,8 @@ window.selectLanguage = function (langCode) {
   if (navDailyReview) navDailyReview.textContent = current.navDailyReview;
   if (navTopicDay) navTopicDay.textContent = current.navTopicDay;
   if (navWeeklyHeadliners) navWeeklyHeadliners.textContent = current.navWeeklyHeadliners;
+  if (navNewCryptoFaces) navNewCryptoFaces.textContent = current.navNewCryptoFaces;
+  if (navCheatSheet) navCheatSheet.textContent = current.navCheatSheet;
   if (navScreeners) navScreeners.textContent = current.navScreeners;
   if (navAbout) navAbout.textContent = current.navAbout;
 
@@ -1546,6 +1863,12 @@ window.selectLanguage = function (langCode) {
   if (topicDayTitle) topicDayTitle.textContent = current.navTopicDay;
   const weeklyHeadlinersTitle = document.getElementById('weekly-headliners-title');
   if (weeklyHeadlinersTitle) weeklyHeadlinersTitle.textContent = current.navWeeklyHeadliners;
+  const newCryptoFacesTitle = document.getElementById('new-crypto-faces-title');
+  if (newCryptoFacesTitle) newCryptoFacesTitle.textContent = current.navNewCryptoFaces;
+  const cheatsheetTitle = document.getElementById('cheatsheet-title-text');
+  if (cheatsheetTitle) cheatsheetTitle.textContent = current.cheatsheetTitle || 'Cheat Sheet';
+  const cheatsheetSubtitle = document.getElementById('cheatsheet-subtitle');
+  if (cheatsheetSubtitle) cheatsheetSubtitle.textContent = current.cheatsheetSubtitle || 'Basic rules, risk management, and key concepts for a crypto trader';
   document.querySelectorAll('.market-pulse-subtitle').forEach((subtitle) => {
     subtitle.textContent = current.marketPulseSubtitle;
   });
@@ -1821,6 +2144,10 @@ window.selectLanguage = function (langCode) {
   // Save to localStorage so iframes can pick it up
   localStorage.setItem('selectedLanguage', langCode);
 
+  if (typeof window.renderCheatSheetGrid === 'function') {
+    window.renderCheatSheetGrid();
+  }
+
   // Notify any embedded iframes (same-origin pages) about language change
   try {
     const iframes = document.querySelectorAll('iframe');
@@ -1837,23 +2164,31 @@ window.selectLanguage = function (langCode) {
   // Refresh detail body if open
   const detailPage = document.getElementById('detail-page');
   if (detailPage && detailPage.classList.contains('active') && detailOrigin && currentDetailIndex) {
-    const config = detailConfig[detailOrigin];
-    const item = config.items[currentDetailIndex - 1];
-    
-    // Refresh title
-    let label = config.label;
-    if (langCode === 'ENG') label = config.labelEng || label;
-    if (langCode === 'UKR') label = config.labelUkr || label;
+    if (window.cheatDetailOpenedFrom) {
+      window.openCheatDetail(
+        currentDetailIndex - 1,
+        window.cheatDetailOpenedFrom,
+        window.cheatDetailReturnIndex || 1
+      );
+    } else {
+      const config = detailConfig[detailOrigin];
+      const item = config.items[currentDetailIndex - 1];
 
-    let itemTitle = item.title;
-    if (langCode === 'ENG' && item.titleEng) itemTitle = item.titleEng;
-    if (langCode === 'UKR' && item.titleUkr) itemTitle = item.titleUkr;
-    if (langCode === 'RUS' && item.titleRus) itemTitle = item.titleRus;
+      // Refresh title
+      let label = config.label;
+      if (langCode === 'ENG') label = config.labelEng || label;
+      if (langCode === 'UKR') label = config.labelUkr || label;
 
-    renderDetailTitle(document.getElementById('detail-title'), label, itemTitle, detailOrigin, currentDetailIndex, langCode);
-    
-    // Refresh body
-    document.getElementById('detail-body').innerHTML = buildDetailBody(detailOrigin, currentDetailIndex, item, langCode);
+      let itemTitle = item.title;
+      if (langCode === 'ENG' && item.titleEng) itemTitle = item.titleEng;
+      if (langCode === 'UKR' && item.titleUkr) itemTitle = item.titleUkr;
+      if (langCode === 'RUS' && item.titleRus) itemTitle = item.titleRus;
+
+      renderDetailTitle(document.getElementById('detail-title'), label, itemTitle, detailOrigin, currentDetailIndex, langCode);
+
+      // Refresh body
+      document.getElementById('detail-body').innerHTML = buildDetailBody(detailOrigin, currentDetailIndex, item, langCode);
+    }
   }
 
   // Close the dropdown after selection
@@ -1877,6 +2212,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize language from localStorage
   const savedLang = localStorage.getItem('selectedLanguage') || 'RUS';
   window.selectLanguage(savedLang);
+  if (typeof window.renderCheatSheetGrid === 'function') {
+    window.renderCheatSheetGrid();
+  }
 
   updatePrices();
   setInterval(updatePrices, 60000);

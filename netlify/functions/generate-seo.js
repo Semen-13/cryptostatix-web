@@ -1,13 +1,10 @@
 import axios from "axios";
-import fs from "fs";
-import path from "path";
 import { getStore } from "@netlify/blobs";
 import { submitToGoogleIndex } from '../../src/utils/indexer.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const reviewStoreName = "market-reviews";
 const reviewStoreKey = "latest";
-const reviewFilePath = path.join(process.cwd(), "data", "latest_market_review.json");
 
 function getReviewStore(required = false) {
   const siteID = process.env.NETLIFY_SITE_ID;
@@ -34,25 +31,33 @@ function getReviewStore(required = false) {
 async function saveReview(articlesData, store = getReviewStore()) {
   const currentDate = new Date().toISOString().split('T')[0];
 
-  if (store) {
-    await store.setJSON(reviewStoreKey, articlesData);
-    console.log("Многоязычный обзор успешно сохранен в Netlify Blobs.");
-  } else {
-    fs.writeFileSync(reviewFilePath, JSON.stringify(articlesData, null, 2), "utf8");
-    console.log("Обзор сохранен локально в data/latest_market_review.json.");
+  if (!store) {
+    throw new Error("Netlify Blobs store is required to save the market review");
   }
+
+  await store.setJSON(reviewStoreKey, articlesData);
+  console.log("Многоязычный обзор успешно сохранен в Netlify Blobs.");
 
   // Добавляем в sitemap и пингуем Google Indexing API
   await submitToGoogleIndex(`reviews/${currentDate}`);
 }
 
+async function saveNoReviewNotice(store) {
+  const articlesData = {
+    date: new Date().toISOString(),
+    en: "<p>Our AI assistant is feeling a little under the weather today, so there will be no market review. Thank you for your understanding—we'll be back once our silicon patient has recovered!</p>",
+    ru: "<p>Наш ИИ сегодня немного приболел, поэтому обзора рынка не будет. Спасибо за понимание — вернемся, как только наш кремниевый пациент поправится!</p>",
+    ua: "<p>Наш ШІ сьогодні трохи прихворів, тому огляду ринку не буде. Дякуємо за розуміння — повернемося, щойно наш кремнієвий пацієнт одужає!</p>"
+  };
+
+  await saveReview(articlesData, store);
+  console.warn("Сохранено уведомление: сегодня обзора рынка не будет.");
+  return articlesData;
+}
+
 async function readReview(store) {
   if (store) {
     return await store.get(reviewStoreKey, { type: "json" }) || {};
-  }
-
-  if (fs.existsSync(reviewFilePath)) {
-    return JSON.parse(fs.readFileSync(reviewFilePath, "utf8"));
   }
 
   return {};
@@ -79,7 +84,8 @@ async function runGeneration(store = getReviewStore()) {
 
   const openRouterApiKey = process.env.OPENROUTER_API_KEY;
   if (!openRouterApiKey) {
-    throw new Error("OpenRouter API key is missing");
+    console.error("OpenRouter API key is missing; publishing the no-review notice.");
+    return saveNoReviewNotice(store);
   }
 
   const englishPrompt = `
@@ -95,50 +101,57 @@ Output ONLY raw HTML content without markdown formatting blocks like \`\`\`html.
   `;
 
   let englishContent = "";
-  try {
-const responseEn = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "openrouter/free",
-        messages: [
-          { role: "system", content: "You are a professional crypto journalist. Output ONLY raw HTML starting directly with <p>." },
-          { role: "user", content: englishPrompt }
-        ],
-        temperature: 0.4,
-        max_tokens: 3000
-      },
-      {
-        headers: {
-          "Authorization": `Bearer ${openRouterApiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:8888",
-          "X-Title": "CryptoStatix PRO"
+  let englishGenerationError;
+  let emptyEnglishResponseReceived = false;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const responseEn = await axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model: "openrouter/free",
+          messages: [
+            { role: "system", content: "You are a professional crypto journalist. Output ONLY raw HTML starting directly with <p>." },
+            { role: "user", content: englishPrompt }
+          ],
+          temperature: 0.4,
+          max_tokens: 3000
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${openRouterApiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:8888",
+            "X-Title": "CryptoStatix PRO"
+          }
         }
-      }
-    );
+      );
 
-    // Универсальное извлечение текста из ответа любого формата
-    const choice = responseEn.data?.choices?.[0];
-    englishContent = choice?.message?.content || choice?.text || responseEn.data?.response || "";
-    englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
+      const choice = responseEn.data?.choices?.[0];
+      englishContent = choice?.message?.content || choice?.text || responseEn.data?.response || "";
+      englishContent = englishContent.replace(/```html/g, "").replace(/```/g, "").trim();
 
-    if (!englishContent) {
-      console.warn("Внимание: первый ответ пуст, пробуем сделать резервный текст на основе рыночных данных.");
-      englishContent = `<p>At the opening of the trading day, Bitcoin (BTC) is trading at approximately <strong>$77,973</strong>. The market is showing steady activity, with participants closely monitoring key support and resistance levels as well as short-term RSI dynamics.</p>`;
+      if (englishContent) break;
+
+      emptyEnglishResponseReceived = true;
+      console.warn(`Получен пустой ответ при генерации английской версии (${attempt}/3).`);
+    } catch (apiError) {
+      englishGenerationError = apiError;
+      console.error(`Ошибка при генерации английской версии (${attempt}/3):`, apiError.response?.data || apiError.message);
     }
 
-    console.log("Английская версия успешно подготовлена. Длина:", englishContent.length);
-
-    if (!englishContent) {
-      throw new Error("Получен пустой контент от OpenRouter на первом шаге.");
-    }
-
-    console.log("Английская версия успешно сгенерирована. Длина:", englishContent.length);
-
-  } catch (apiError) {
-    console.error("Ошибка при генерации английской версии:", apiError.response?.data || apiError.message);
-    throw apiError;
+    if (attempt < 3) await sleep(3000);
   }
+
+  if (!englishContent) {
+    console.warn(
+      emptyEnglishResponseReceived
+        ? "После трех пустых ответов публикуем уведомление об отсутствии обзора."
+        : "Не удалось получить ответ от OpenRouter; публикуем уведомление об отсутствии обзора.",
+      englishGenerationError?.message || ""
+    );
+    return saveNoReviewNotice(store);
+  }
+  console.log("Английская версия успешно подготовлена. Длина:", englishContent.length);
 
 // Пауза перед переводом на русский
   console.log("Ожидание перед переводом на русский...");
@@ -146,7 +159,7 @@ const responseEn = await axios.post(
 
   let russianContent = "";
   let success = false;
-  let attempts = 3;
+  let attempts = 5;
 
   for (let i = 1; i <= attempts; i++) {
     try {
@@ -206,13 +219,13 @@ const responseEn = await axios.post(
       await sleep(3000);
     } catch (err) {
       console.warn(`Попытка ${i} не удалась:`, err.response?.data || err.message);
-      if (i === attempts) throw err;
       await sleep(3000);
     }
   }
 
   if (!success) {
-    throw new Error("Не удалось корректно перевести статью на русский язык (текст обрывается или содержит ошибки).");
+    console.warn("Не удалось подготовить русский перевод; публикуем уведомление об отсутствии обзора.");
+    return saveNoReviewNotice(store);
   }
 
   console.log("Русская версия успешно переведена! Длина:", russianContent.length);
@@ -223,7 +236,7 @@ const responseEn = await axios.post(
 
   let ukrainianContent = "";
   let uaSuccess = false;
-  let uaAttempts = 3;
+  let uaAttempts = 5;
 
   for (let i = 1; i <= uaAttempts; i++) {
     try {
@@ -235,9 +248,9 @@ const responseEn = await axios.post(
           messages: [
             { 
                 role: "system", 
-                content: "You are a professional crypto translator. Translate the provided Russian text into professional Ukrainian. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
+                content: "You are a professional crypto translator. Translate the provided English text into professional Ukrainian. Preserve all HTML tags and important details. Output ONLY the translated HTML string. Do NOT include markdown code blocks, introductory phrases, analysis, or thinking process. Start directly with the HTML tags and ensure you complete the entire text without cutting off." 
               },
-              { role: "user", content: russianContent }
+              { role: "user", content: englishContent }
           ],
           temperature: 0.2,
           max_tokens: 4000
